@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  const W=1000,H=540,DT=1/120;
- const SKILLS=[{name:'Very dumb',error:200,samples:8,multiplier:1},{name:'Casual',error:110,samples:28,multiplier:1.35},{name:'Sharp',error:55,samples:90,multiplier:1.8},{name:'Human-ish',error:28,samples:160,multiplier:2.2}];
+ const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:8,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
  class Battle{
@@ -50,7 +50,11 @@
      if(match.winner===target.id)wins++;
     });
     const revenge=grudge>=15?Math.min(3.5,grudge/45):0,leader=wins>=2?2.5:0;
-    return {tank:target,weight:Math.min(5,1+revenge+leader),reason:revenge>=leader&&revenge>0?'grudge':leader>0?'leader':null};
+    // Respond to actual damage in this battle, including splash and falls.
+    // Smarter bots place more weight on a live threat; every rival keeps a chance.
+    const retaliation=Math.min(4,this.damageLedger[target.id][tank.id]/20*SKILLS[this.skill].retaliation);
+    const reason=retaliation>=.5&&retaliation>=Math.max(revenge,leader)?'retaliation':revenge>=leader&&revenge>0?'grudge':leader>0?'leader':null;
+    return {tank:target,weight:Math.min(8,Math.min(5,1+revenge+leader)+retaliation),reason};
    });
   }
   chooseTarget(){

@@ -88,7 +88,7 @@ class MattArcade{
    if(victim&&Math.random()<.5){speaker=victim;lines=['Well, fuck my armor, I guess.','Oh, NOW you learn to aim.','Eat shit. Respectfully.','My warranty is so fucked.','Right in the goddamn deductible.'];}
    else{speaker=shooter.hp>0?shooter:null;lines=kills?['Get absolutely fucked.','Your refund is in the crater.','Skill issue. Terminal one.','Talk shit. Become scrap.','Alt-F4, motherfucker.','That’ll buff out. In hell.']:['Calculated as fuck. Mostly.','Express delivery, asshole.','Right in the motherboard.','That’s some premium bullshit.','I’m as surprised as you are.'];}
   }else if(damage===0&&self===0&&nearest>100){speaker=others[Math.floor(Math.random()*others.length)];lines=['Great shot, dipshit. Wrong planet.','The dirt had it coming, I guess.','Aim assist just fucking quit.','Did you aim with your ass?','That hill owes you money?','Somewhere, a cow is pissed.','All that power. Fuck-all aim.','Your barrel needs glasses.','You missed the whole damn war.','Bold strategy: hit fuck-all.'];}
-  if(speaker===shooter&&damage>=45&&shot.target?.reason){const target=b.tanks.find(t=>t.id===shot.target.id);if(hits.some(h=>h.tank===target&&h.damage>0))lines=shot.target.reason==='grudge'?[target.name+', kept the fucking receipt.','That one was for last time, asshole.']:['Winning streak? Not on my fucking ridge.',target.name+', dynasty cancelled.'];}
+  if(speaker===shooter&&damage>=45&&shot.target?.reason){const target=b.tanks.find(t=>t.id===shot.target.id);if(hits.some(h=>h.tank===target&&h.damage>0))lines=shot.target.reason==='retaliation'?[target.name+', how’s that shit feel?','Return to sender, asshole.']:shot.target.reason==='grudge'?[target.name+', kept the fucking receipt.','That one was for last time, asshole.']:['Winning streak? Not on my fucking ridge.',target.name+', dynasty cancelled.'];}
   this.showQuip(speaker,lines);
  }
  showQuip(speaker,lines){
@@ -101,7 +101,7 @@ class MattArcade{
  tauntRival(){
   const b=this.battle,choice=b.lastTarget;if(!choice?.reason||Math.random()>.55)return;
   const target=b.tanks.find(t=>t.id===choice.id);if(!target)return;
-  this.showQuip(b.active,choice.reason==='grudge'?[target.name+', I remember that shit.','That crater? Still fucking personal.',target.name+', payback has arrived.']:[target.name+', won enough? Eat this.','Someone end '+target.name+'’s damn streak.',target.name+', time to share the suffering.']);
+  this.showQuip(b.active,choice.reason==='retaliation'?[target.name+', you started this shit.',target.name+', my turn, asshole.','Hit me again. See what fucking happens.']:choice.reason==='grudge'?[target.name+', I remember that shit.','That crater? Still fucking personal.',target.name+', payback has arrived.']:[target.name+', won enough? Eat this.','Someone end '+target.name+'’s damn streak.',target.name+', time to share the suffering.']);
  }
  setExpanded(expanded){this.expanded=expanded;this.panel.classList.toggle('game-expanded',expanded);this.$('expand').textContent=expanded?'Restore':'Expand';this.$('expand').setAttribute('aria-pressed',String(expanded));this.onResize();}
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible){this.silence();if(this.expanded)this.setExpanded(false);}this.sync();}

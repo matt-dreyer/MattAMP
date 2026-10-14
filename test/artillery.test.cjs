@@ -90,3 +90,33 @@ test('rivalry persists separately from high scores, expires and deduplicates wit
   const legacy=JSON.parse(fs.readFileSync(file));delete legacy.rivalry;fs.writeFileSync(file,JSON.stringify(legacy));assert.deepEqual(store.read().rivalry,[]);assert.equal(store.read().played,4);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('current-battle retaliation grows with damage and difficulty but keeps other targets possible',()=>{
+ const odds=[];
+ for(let skill=0;skill<4;skill++){
+  const b=battle({skill});b.turn=1;
+  const chance=()=>{const choices=b.targetChoices();return choices.find(c=>c.tank.id===2).weight/choices.reduce((sum,c)=>sum+c.weight,0);};
+  const neutral=chance();b.damageLedger[2][1]=10;const scratched=chance();b.damageLedger[2][1]=40;const hurt=chance();
+  assert.ok(scratched>neutral&&hurt>scratched);assert.ok(hurt<1);odds.push(hurt);
+  if(skill===3){assert.equal(b.targetChoices().find(c=>c.tank.id===2).reason,'retaliation');b.random=()=>.99;assert.notEqual(b.chooseTarget().id,2);}
+ }
+ assert.ok(odds.every((n,i)=>i===0||n>odds[i-1]));assert.ok(odds[3]>.6&&odds[0]<.35);
+});
+test('real incoming damage triggers retaliation equally against human and bot attackers',()=>{
+ const weights=[];
+ for(const attacker of [0,2]){
+  const b=battle({skill:3}),victim=b.tanks[1];b.turn=1;
+  b.explode({x:victim.x+43,y:victim.y,owner:attacker,weapon:'shell'});assert.ok(victim.hp>0&&victim.hp<100);
+  const choice=b.targetChoices().find(c=>c.tank.id===attacker);assert.equal(choice.reason,'retaliation');weights.push(choice.weight);
+  b.tanks[attacker].hp=0;assert.ok(b.targetChoices().every(c=>c.tank.id!==attacker));
+ }
+ assert.equal(weights[0],weights[1]);
+ const self=battle({skill:3});self.turn=1;self.explode({x:self.active.x+43,y:self.active.y,owner:1,weapon:'shell'});assert.ok(self.targetChoices().every(c=>c.weight===1));
+ const miss=battle({skill:3});miss.turn=1;miss.explode({x:-100,y:300,owner:2,weapon:'shell'});assert.ok(miss.targetChoices().every(c=>c.weight===1));
+});
+test('current retaliation combines with existing rivalries and resets with a new battle',()=>{
+ const past=memory(2);past.damage[2][1]=70;const b=battle({skill:3,history:[past,past]});b.turn=1;
+ const before=b.targetChoices().find(c=>c.tank.id===2).weight;b.damageLedger[2][1]=40;
+ assert.ok(b.targetChoices().find(c=>c.tank.id===2).weight>before);
+ const fresh=battle({skill:3,history:[past,past]});fresh.turn=1;assert.equal(fresh.targetChoices().find(c=>c.tank.id===2).weight,before);
+});
