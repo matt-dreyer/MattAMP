@@ -1,6 +1,9 @@
 /* MattAMP renderer: all privileged work goes through the narrow preload API. */
 const $=id=>document.getElementById(id);
 const root=$('deck'),audio=$('audio');
+const startupAudio=new Audio('/startup.mp3');
+startupAudio.preload='auto';
+function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
 let artwork={};
 let state,stations=[],shows=[],metrics=null,mode='full',restoreMode='full',settings=false;
 let playing=false,status='Stopped',current=null,items=[],epoch=0,yt=null,ytReady=null,ytApi=null,ytLoadedId=null,muted=false;
@@ -54,12 +57,13 @@ function render(){
  $('key-status').textContent=state.hasDiKey?(state.keyring?'Listen key saved in the desktop keyring.':'Listen key available for this session. The desktop keyring is unavailable.'):'Your Premium listen key is in DI.FM → Player Settings.';
  applyArtwork();updateBug();icons();resize();
 }
-function stopAll(){
+function stopAll(stopIntro=true){
+ if(stopIntro)stopStartup();
  snapshot();++epoch;radioServers=[];radioIndex=0;audio.pause();audio.removeAttribute('src');audio.load();
  if(yt){try{yt.pauseVideo();}catch{}}
  setStatus('Stopped');return epoch;
 }
-function pause(){if(isVideo()){yt?.pauseVideo();}else audio.pause();snapshot();setStatus('Paused');queueSave();}
+function pause(){stopStartup();if(isVideo()){yt?.pauseVideo();}else audio.pause();snapshot();setStatus('Paused');queueSave();}
 async function apiReady(){
  if(window.YT?.Player)return;
  if(!ytApi)ytApi=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{ytApi=null;reject(new Error('YouTube could not load. Try Audio feed or open the episode on YouTube.'));},12000);window.onYouTubeIframeAPIReady=()=>{clearTimeout(timeout);resolve();};const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.onerror=()=>{clearTimeout(timeout);ytApi=null;reject(new Error('YouTube is unreachable. Try Audio feed.'));};document.head.append(script);});
@@ -73,7 +77,7 @@ async function ensureYoutube(){
    onReady:()=>{clearTimeout(timeout);yt.setVolume(state.volume);$('youtube-placeholder').hidden=true;resolve(yt);resize();},
    onStateChange:e=>{
     if(!isVideo()||mode==='bug'){if(e.data===1)yt.pauseVideo();return;}
-    if(e.data===1){setStatus('Playing',true);error();}
+    if(e.data===1){stopStartup();setStatus('Playing',true);error();}
     if(e.data===2){setStatus('Paused');snapshot();queueSave();}
     if(e.data===3)setStatus('Buffering');
     if(e.data===0){setStatus('Ended');snapshot();queueSave();}
@@ -90,7 +94,7 @@ async function playRadio(){
  catch(err){if(token!==epoch)return;setStatus('Stopped');report(err);}
 }
 async function loadEpisode(item,autoplay=false){
- const token=stopAll();current=item;error();state.selected[state.show+':'+state.podcastType]=item.id;render();queueSave();
+ const token=stopAll(autoplay);current=item;error();state.selected[state.show+':'+state.podcastType]=item.id;render();queueSave();
  if(item.type==='youtube'){
   setStatus('Loading video');
   try{const player=await ensureYoutube();if(token!==epoch||!isVideo())return;ytLoadedId=item.id;const start=state.positions[positionKey()]||0;const request={videoId:item.id,startSeconds:start};autoplay?player.loadVideoById(request):player.cueVideoById(request);player.setVolume(state.volume);player.setPlaybackRate(state.speed);if(muted)player.mute();else player.unMute();}
@@ -115,7 +119,7 @@ async function loadEpisodes(autoplay=false,refresh=false){
  finally{episodeBusy=false;$('episode').disabled=!items.length;$('refresh').disabled=false;resize();}
 }
 async function switchSource(source){if(source===state.source)return;const continuePlaying=playing;stopAll();current=null;state.source=source;error();render();queueSave();if(source==='podcast')await loadEpisodes(continuePlaying);else if(continuePlaying)await playRadio();}
-async function play(){error();if(playing){pause();return;}if(state.source==='radio'){if(audio.src&&radioServers.length){try{await audio.play();}catch{await playRadio();}}else await playRadio();return;}if(!current){await loadEpisodes(true);return;}if(isVideo()){try{await ensureYoutube();yt.playVideo();}catch(err){report(err);}}else try{await audio.play();}catch{error('Audio could not start. Try another episode.');}}
+async function play(){stopStartup();error();if(playing){pause();return;}if(state.source==='radio'){if(audio.src&&radioServers.length){try{await audio.play();}catch{await playRadio();}}else await playRadio();return;}if(!current){await loadEpisodes(true);return;}if(isVideo()){try{await ensureYoutube();yt.playVideo();}catch(err){report(err);}}else try{await audio.play();}catch{error('Audio could not start. Try another episode.');}}
 function seekBy(delta){if(state.source!=='podcast'||!current)return;error();if(isVideo()&&yt){yt.seekTo(Math.max(0,(yt.getCurrentTime()||0)+delta),true);}else if(Number.isFinite(audio.duration)){audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+delta));}snapshot();queueSave();}
 function setMode(next){if(next==='bug'){restoreMode=mode;if(isVideo())pause();settings=false;}mode=next;render();}
 function setMeter(element,value,detail){const track=element.querySelector('.track');element.querySelector('b').textContent=pct(value);track.firstElementChild.style.width=Number.isFinite(value)?Math.min(100,Math.max(0,value))+'%':'0%';if(Number.isFinite(value))track.setAttribute('aria-valuenow',String(Math.round(value)));else track.removeAttribute('aria-valuenow');track.setAttribute('aria-valuetext',Number.isFinite(value)?pct(value):'Unavailable');element.querySelector('small').textContent=detail||'Unavailable';}
@@ -139,8 +143,8 @@ async function init(){
  for(const station of stations){const button=document.createElement('button');button.dataset.station=station.id;const thumb=document.createElement('img');thumb.alt='';thumb.hidden=true;thumb.decoding='async';thumb.onerror=()=>{thumb.dataset.failed=thumb.src;thumb.hidden=true;};const label=document.createElement('span');label.textContent=station.name;button.append(thumb,label);button.addEventListener('click',()=>{stopAll();state.station=station.id;state.source='radio';current=null;render();queueSave();void playRadio();});$('stations').append(button);}
  for(const show of shows){const button=document.createElement('button');button.dataset.show=show.id;const name=document.createElement('span');name.textContent=show.name;button.append(name);button.addEventListener('click',()=>{stopAll();state.source='podcast';state.show=show.id;current=null;render();queueSave();void loadEpisodes(false);});$('shows').append(button);}
  $('source-radio').onclick=()=>void switchSource('radio');$('source-podcast').onclick=()=>void switchSource('podcast');$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
- $('volume').oninput=e=>{state.volume=Number(e.target.value);muted=false;audio.volume=state.volume/100;audio.muted=false;if(yt){yt.setVolume(state.volume);yt.unMute();}render();queueSave();};
- $('mute').onclick=()=>{muted=!muted;audio.muted=muted;if(yt)muted?yt.mute():yt.unMute();render();};
+ $('volume').oninput=e=>{state.volume=Number(e.target.value);muted=false;startupAudio.volume=state.volume/100;startupAudio.muted=false;audio.volume=state.volume/100;audio.muted=false;if(yt){yt.setVolume(state.volume);yt.unMute();}render();queueSave();};
+ $('mute').onclick=()=>{muted=!muted;startupAudio.muted=muted;audio.muted=muted;if(yt)muted?yt.mute():yt.unMute();render();};
  $('rewind').onclick=()=>seekBy(-15);$('forward').onclick=()=>seekBy(30);$('speed').onchange=e=>{state.speed=Number(e.target.value);audio.playbackRate=state.speed;yt?.setPlaybackRate(state.speed);queueSave();};
  $('seek').oninput=e=>{if(Number.isFinite(audio.duration))audio.currentTime=Number(e.target.value);snapshot();queueSave();};
  $('episode').onchange=e=>{const item=items.find(i=>i.id===e.target.value);if(item){$('episode').title=item.title;void loadEpisode(item,true);}};
@@ -165,7 +169,7 @@ async function init(){
  $('hide').onclick=()=>{if(isVideo())pause();void window.deck.hide();};$('quit-top').onclick=$('quit').onclick=()=>{stopAll();void persist().then(()=>window.deck.quit());};
  window.deck.onPause(pause);window.deck.onHidden(()=>{if(isVideo())pause();});window.deck.onQuit(()=>{stopAll();void persist();});
  window.addEventListener('beforeunload',()=>{snapshot();void persist();});
- audio.onplaying=()=>{if(isVideo()){audio.pause();return;}setStatus('Playing',true);error();};
+ audio.onplaying=()=>{stopStartup();if(isVideo()){audio.pause();return;}setStatus('Playing',true);error();};
  audio.onpause=()=>{if(!isVideo()&&playing)setStatus('Paused');};
  audio.onwaiting=()=>{if(!isVideo())setStatus('Buffering');};
  audio.onended=()=>{if(!isVideo()){setStatus('Ended');snapshot();queueSave();}};
@@ -180,7 +184,9 @@ async function init(){
  new ResizeObserver(resize).observe(document.querySelector('.full'));new ResizeObserver(resize).observe($('settings'));
  $('station-art').onerror=()=>{$('station-art').dataset.failed=$('station-art').src;$('station-art').hidden=true;};
  void unwrap(window.deck.artwork()).then(result=>{artwork=result;applyArtwork();resize();}).catch(()=>{});
- render();setStatus('Stopped');if(state.source==='podcast')void loadEpisodes(false);
+ render();setStatus('Stopped');
+ if(boot.playStartup){startupAudio.volume=state.volume/100;void startupAudio.play().catch(()=>console.warn('Startup sound unavailable.'));}
+ if(state.source==='podcast')void loadEpisodes(false);
 }
 window.deck.onMetrics(renderMetrics);
 init().catch(err=>{error(err.message);});

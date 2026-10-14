@@ -11,7 +11,7 @@ app.setDesktopName('ai.fshbwl.deck.desktop');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
-let win,tray,server,origin,timer,fullBounds,mode='full',busy=false,secret='',quitting=false;
+let win,tray,server,origin,timer,fullBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
 let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
@@ -54,11 +54,11 @@ function resize(view,height){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/style.css':'style.css','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  server=http.createServer((req,res)=>{
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
   const file=routes[req.url?.split('?')[0]];if(!file||req.method!=='GET'){res.writeHead(404);res.end();return;}
-  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':'text/javascript');
+  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':'text/javascript');
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https: blob:; connect-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
   fs.createReadStream(path.resolve(__dirname,file)).on('error',()=>res.end()).pipe(res);
@@ -84,7 +84,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win.on('minimize',()=>send('deck:hidden'));
  win.on('hide',()=>send('deck:hidden'));
  handle('deck:artwork',stationArtwork);
- handle('deck:init',()=>({state:publicState(),stations:STATIONS,shows:SHOWS,origin}));
+ handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:SHOWS,origin,playStartup};});
  handle('deck:save',patch=>{update(patch);return publicState();});
  handle('deck:resize',(view,height)=>resize(view,height));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));

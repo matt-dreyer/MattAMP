@@ -29,7 +29,7 @@ Favorites: Last Week in AI, AI for Humans, All-In, Dwarkesh Podcast, The a16z Sh
 
 The YouTube player uses a responsive 16:9 viewport and native controls. Four shows use their dedicated full-episode playlists; AI for Humans matches non-Short uploads to its podcast RSS titles to exclude standalone videos and clips. Feed failures do not fall back to unfiltered uploads. The default playback speed is 1×; a speed you choose manually is remembered. Click its Play button when the browser requires a user gesture. Individual uploads may disallow embeds or require a YouTube login; use **YouTube** to open the episode externally, or select **Audio feed**. YouTube and RSS editions are separate feeds, so their episode selection and resume positions are separate too. No YouTube account is required by MattAMP itself.
 
-Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30-second forward, and playback speed. Positions and preferences save locally. Nothing autoplays at launch. A custom YouTube URL can be loaded from Settings.
+Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30-second forward, and playback speed. Positions and preferences save locally. Radio and podcasts wait for Play. The classic Winamp intro plays once per app launch at your saved volume; starting playback or pressing Stop/Pause cuts it short. Restoring the window or launching a second instance does not replay it. A custom YouTube URL can be loaded from Settings.
 
 ## Local data and monitoring
 
@@ -58,6 +58,10 @@ npm start
 The launcher uses this checkout and its pinned Electron installation. Keep this directory in place. There is no auto-updater or login autostart. To upgrade dependencies, update the lockfile deliberately and rerun checks.
 
 To remove the launcher, delete only `~/.local/bin/mattamp`, `~/.local/bin/workstation-deck`, `~/.local/share/applications/ai.fshbwl.deck.desktop`, and `~/.local/share/icons/hicolor/128x128/apps/ai.fshbwl.deck.png`. Preferences can be retained for reinstall; deleting the app’s config directory removes those too. Other desktop monitors are independent.
+
+## Startup sound
+
+`assets/startup.mp3` is the original DJ Mike Llama “Llama Whippin’ Intro” (Winamp 2.91), preserved in [Webamp’s example](https://github.com/captbaritone/webamp/blob/master/examples/minimal/index.html). Source: [pinned audio asset](https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82cfe0e37286dbbe0666072dc3190a83bc/mp3/llama-2.91.mp3). Winamp and the sample audio belong to their respective rights holders; the clip is not covered by Webamp’s code license. Bundled for this personal desktop app so startup works offline.
 
 ## Provider references
 
