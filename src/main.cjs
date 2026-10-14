@@ -23,7 +23,7 @@ function publicState(){const {diKeyCipher,...visible}=state;return {...visible,h
 function update(patch){
  if(!patch||typeof patch!=='object')return;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
- if(['off','flow','waves','stars'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(['off','flow','waves','stars','mandelbrot'].includes(patch.ambient))state.ambient=patch.ambient;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
  if(['radio','podcast'].includes(patch.source))state.source=patch.source;
