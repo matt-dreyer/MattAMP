@@ -38,7 +38,7 @@
     <button type="submit" class="primary" id="game-start">Start battle</button>
    </form>
    <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
-   <div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
+   <div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
    <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
    <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
    <fieldset id="game-controls" disabled><legend class="sr-only">Aim and fire</legend>

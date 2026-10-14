@@ -3,6 +3,8 @@ class MattArcade{
  constructor(panel,onResize){
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
   this.visible=false;this.paused=false;this.sound=true;this.battle=null;this.preview=new MattArtillery.Battle({bots:4});this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
+  this.bubbleTimer=0;this.lastQuip='';this.volley=null;
+  this.quipResize=new ResizeObserver(()=>this.positionQuip());this.quipResize.observe(this.canvas);
   this.$('setup').onsubmit=e=>{e.preventDefault();this.start();};
   this.$('fire').onclick=()=>this.fire();
   for(const key of ['angle','power'])this.$(key).oninput=()=>{this.updateAim();this.draw();};
@@ -53,19 +55,43 @@ class MattArcade{
  }
  async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
  start(){
+  this.clearQuip();this.volley=null;
   this.battle=new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value)});this.initials=this.$('initials').value.toUpperCase()||'MAT';this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
   this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
   this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon').value='shell';this.updateAim();this.sync();this.$('angle').focus();
  }
- reset(){this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
+ reset(){this.clearQuip();this.volley=null;this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
  updateAim(){
   const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power;
   if(this.battle?.phase==='aim'&&this.battle.active.id===0){this.battle.active.angle=angle;this.battle.active.power=power;}
  }
  adjustPower(delta){const power=this.$('power');power.value=Math.max(Number(power.min),Math.min(Number(power.max),Number(power.value)+delta));this.updateAim();this.draw();}
- fire(){if(this.paused||!this.visible)return;if(this.battle?.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),this.$('weapon').value)){this.playSound('fire');this.sync();}}
+ captureVolley(){return {owner:this.battle.active.id,tanks:this.battle.tanks.map(({id,x,y,hp})=>({id,x,y,hp}))};}
+ fire(){if(this.paused||!this.visible||!this.battle)return;const volley=this.captureVolley();if(this.battle.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),this.$('weapon').value)){this.volley=volley;this.playSound('fire');this.sync();}}
+ clearQuip(){clearTimeout(this.bubbleTimer);this.$('quip').hidden=true;}
+ positionQuip(){const bubble=this.$('quip');if(bubble.hidden||!this.quipSpeaker)return;const x=this.quipSpeaker.x/1000*this.canvas.clientWidth-bubble.offsetLeft;bubble.style.setProperty('--tail-x',Math.max(14,Math.min(bubble.clientWidth-14,x))+'px');}
+ reactToVolley(){
+  const shot=this.volley;this.volley=null;if(!shot)return;
+  const b=this.battle,shooter=b.tanks.find(t=>t.id===shot.owner),others=b.tanks.filter(t=>t.id!==shot.owner&&t.hp>0);
+  const hits=shot.tanks.filter(t=>t.id!==shot.owner&&t.hp>0).map(t=>({tank:b.tanks.find(now=>now.id===t.id),damage:t.hp-b.tanks.find(now=>now.id===t.id).hp}));
+  const damage=hits.reduce((n,h)=>n+h.damage,0),kills=hits.filter(h=>h.tank.hp===0).length,self=shot.tanks.find(t=>t.id===shot.owner).hp-shooter.hp;
+  const nearest=Math.min(...b.lastTrails.flatMap(trail=>{const end=trail.at(-1);return end?shot.tanks.filter(t=>t.id!==shot.owner&&t.hp>0).map(t=>Math.hypot(end.x-t.x,end.y-t.y)):[];}));
+  let speaker,lines;
+  if(self>damage&&self>=15){speaker=others[Math.floor(Math.random()*others.length)];lines=['The enemy is over HERE.','Friendly fire. Very friendly.','You know that tank was yours?','Task failed successfully.'];}
+  else if(kills||damage>=45){
+   const victim=hits.filter(h=>h.damage>0&&h.tank.hp>0).sort((a,z)=>z.damage-a.damage)[0]?.tank;
+   if(victim&&Math.random()<.5){speaker=victim;lines=['That was my GOOD armor!','Okay. That one counted.','Rude. Accurate, but rude.','I felt that in my floppy drive.'];}
+   else{speaker=shooter.hp>0?shooter:null;lines=kills?['One less problem.','That will buff right out.','Return to desktop.','Thanks for playing!']:['Calculated. Mostly.','Special delivery!','Right in the motherboard.','Put THAT on the high-score board.'];}
+  }else if(damage===0&&self===0&&nearest>100){speaker=others[Math.floor(Math.random()*others.length)];lines=['You scared the dirt.','Try aiming at a tank.','Somewhere, a hill is furious.','Was that a warning shot?','Nice shot. Wrong postcode.','The moon sends its regards.','Your aim is still buffering.','Did you mean to do that?'];}
+  if(!speaker||!lines)return;
+  const choices=lines.filter(line=>line!==this.lastQuip),text=choices[Math.floor(Math.random()*choices.length)];this.lastQuip=text;this.clearQuip();
+  this.$('quip-name').textContent=speaker.name;this.$('quip-text').textContent=text;
+  const bubble=this.$('quip');this.quipSpeaker=speaker;bubble.style.setProperty('--speaker-x',speaker.x/10+'%');bubble.style.setProperty('--speaker-y',speaker.y/540*100+'%');
+  bubble.hidden=false;this.positionQuip();this.bubbleTimer=setTimeout(()=>this.clearQuip(),3200);
+ }
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
+  if(!this.visible||this.paused)this.clearQuip();
   cancelAnimationFrame(this.raf);this.raf=0;this.last=0;this.render();this.draw();
   if(this.visible&&!this.paused&&this.battle&&this.battle.phase!=='over')this.raf=requestAnimationFrame(t=>this.tick(t));
   if(this.paused)this.silence();this.onResize();
@@ -73,8 +99,9 @@ class MattArcade{
  tick(time){
   const b=this.battle;if(!this.visible||this.paused||!b)return;
   const dt=this.last?Math.min(.05,(time-this.last)/1000):0;this.last=time;
-  const phase=b.phase,blasts=b.blasts.length,children=b.projectiles.length;b.step(dt);
-  if(phase==='aim'&&b.phase==='flight')this.playSound('fire');
+  const phase=b.phase,blasts=b.blasts.length,children=b.projectiles.length,volley=phase==='aim'?this.captureVolley():null;b.step(dt);
+  if(phase==='aim'&&b.phase==='flight'){this.volley=volley;this.playSound('fire');}
+  if(phase==='flight'&&b.phase==='settle')this.reactToVolley();
   if(b.blasts.length>blasts)this.playSound('blast');
   if(children===1&&b.projectiles.length===5)this.playSound('split');
   const key=[b.phase,b.turn,b.round,b.score,b.tanks.map(t=>t.hp).join(',')].join(':');
