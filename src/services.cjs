@@ -1,4 +1,5 @@
 const os = require('node:os');
+const {parsePlaylistPage}=require('./youtube-playlist.cjs');
 const fs = require('node:fs/promises');
 const {execFile} = require('node:child_process');
 const {promisify} = require('node:util');
@@ -45,11 +46,12 @@ async function fetchText(url,maxBytes=12*1024*1024) {
 // non-Short uploads against the actual podcast feed, excluding standalone videos.
 function matchPodcastEpisodes(videos,audioEpisodes){
  const words=title=>new Set(title.toLowerCase().replace(/open\s*ai/g,'openai').match(/[a-z0-9]+/g)||[]);
- return videos.filter(video=>{
+ return videos.flatMap(video=>{
   const a=words(video.title);
-  return audioEpisodes.some(episode=>{const b=words(episode.title),common=[...a].filter(word=>b.has(word)).length;
+  const match=audioEpisodes.find(episode=>{const b=words(episode.title),common=[...a].filter(word=>b.has(word)).length;
    return common>=5&&2*common/(a.size+b.size)>=0.8;
   });
+  return match?[{...video,date:video.date||match.date||''}]:[];
  });
 }
 function youtubeEpisodeFeed(show){return 'https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(show.playlist);}
@@ -59,12 +61,15 @@ async function episodes(showId,type,refresh=false) {
  const key=showId+':'+type, previous=feedCache.get(key);
  if(!refresh&&previous&&Date.now()-previous.updated<900000)return previous;
  try{
-  const url=type==='youtube'?youtubeEpisodeFeed(show):show.feed;
-  let items=parseFeed(await fetchText(url),type);
+  let items;
+  if(type==='youtube'){
+   try{items=parseFeed(await fetchText(youtubeEpisodeFeed(show)),type);if(!items.length)throw new Error('Empty YouTube feed');}
+   catch{items=parsePlaylistPage(await fetchText('https://www.youtube.com/playlist?list='+encodeURIComponent(show.playlist)),show.playlist);}
+  }else items=parseFeed(await fetchText(show.feed),type);
   if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh);items=matchPodcastEpisodes(items,audio.items);}
   items.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
   if(!items.length)throw new Error('No full episodes available in this feed. Try Audio feed.');
-  const result={items,updated:Date.now(),stale:false};feedCache.set(key,result);return result;
+  const result={items:type==='youtube'?items.slice(0,25):items,updated:Date.now(),stale:false};feedCache.set(key,result);return result;
  }catch(error){if(previous)return {...previous,stale:true};throw error;}
 }
 function parseArtwork(channels){
