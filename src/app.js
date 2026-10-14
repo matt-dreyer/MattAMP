@@ -15,8 +15,6 @@ async function xAction(action,lane=xLane){try{await unwrap(window.deck.xAction(a
 function renderX(){
  const visible=readingX&&mode==='full';
  $('x-panel').hidden=!visible;document.querySelector('.media').hidden=visible;
- $('x-toggle').setAttribute('aria-pressed',String(visible));
- $('x-toggle').setAttribute('aria-label',visible?'Return to player':'Open X feed');
  $('x-ai').setAttribute('aria-pressed',String(xLane==='ai'));$('x-giggles').setAttribute('aria-pressed',String(xLane==='giggles'));
  $('x-summary').textContent=xLane==='giggles'?'@elonmusk · a little chaos on the side':state.xAccounts.map(name=>'@'+name).join(' · ')+(state.xAiOnly?' · AI topics':' · all topics');
 }
@@ -158,7 +156,7 @@ async function init(){
  const boot=await unwrap(window.deck.init());state={...boot.state,origin:boot.origin};stations=boot.stations;shows=boot.shows;
  for(const station of stations){const button=document.createElement('button');button.dataset.station=station.id;const thumb=document.createElement('img');thumb.alt='';thumb.hidden=true;thumb.decoding='async';thumb.onerror=()=>{thumb.dataset.failed=thumb.src;thumb.hidden=true;};const label=document.createElement('span');label.textContent=station.name;button.append(thumb,label);button.addEventListener('click',()=>{stopAll();state.station=station.id;state.source='radio';current=null;render();queueSave();void playRadio();});$('stations').append(button);}
  for(const show of shows){const button=document.createElement('button');button.dataset.show=show.id;const name=document.createElement('span');name.textContent=show.name;button.append(name);button.addEventListener('click',()=>{stopAll();state.source='podcast';state.show=show.id;current=null;render();queueSave();void loadEpisodes(false);});$('shows').append(button);}
- $('x-toggle').onclick=()=>toggleX(!readingX);$('x-back').onclick=()=>toggleX(false);
+ $('x-back').onclick=()=>toggleX(false);
  for(const lane of ['ai','giggles'])$('x-'+lane).onclick=()=>{xLane=lane;renderX();void xAction('feed');};
  $('x-refresh').onclick=()=>void xAction('refresh');$('x-login').onclick=()=>void xAction('login');$('x-browser').onclick=()=>void xAction('browser');
  $('x-filters').onclick=()=>{settings=true;render();$('x-accounts').focus();};

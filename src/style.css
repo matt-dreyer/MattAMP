@@ -22,6 +22,6 @@
 
 /* X is a reading pane alongside the existing monitor; media keeps its own state. */
 #x-panel{min-width:0;padding:12px;display:flex;flex-direction:column;gap:8px}
-.x-heading,.x-lanes,.x-actions{display:flex;align-items:center;gap:8px}.x-heading{justify-content:space-between}.x-heading h2{margin:0;font-size:16px}.x-lanes button{font-size:12px}.x-lanes button[aria-pressed=true],#x-toggle[aria-pressed=true]{background:#35483f;color:#dcece2}.x-lanes #x-refresh{margin-left:auto;padding:6px}
+.x-heading,.x-lanes,.x-actions{display:flex;align-items:center;gap:8px}.x-heading{justify-content:space-between}.x-heading h2{margin:0;font-size:16px}.x-lanes button{font-size:12px}.x-lanes button[aria-pressed=true]{background:#35483f;color:#dcece2}.x-lanes #x-refresh{margin-left:auto;padding:6px}
 #x-summary,#x-status,#x-settings-status{font-size:11px;line-height:1.5;color:var(--muted);margin:0;overflow-wrap:anywhere}#x-summary{min-height:33px}#x-viewport{height:440px;min-height:240px;background:#15202b;border:1px solid #445360;overflow:hidden}#x-viewport>p{padding:20px;color:var(--muted);font-size:12px}.x-actions{justify-content:space-between;flex-wrap:wrap}#x-status{min-height:32px}#x-settings-status{color:var(--amber)}
 #x-accounts{width:100%;resize:vertical;min-height:64px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:8px;color:var(--text);font:inherit;line-height:1.5;caret-color:var(--mint)}#x-accounts:focus-visible{outline:2px solid #a2c4d6;outline-offset:2px}#x-form .check{margin-top:8px}
