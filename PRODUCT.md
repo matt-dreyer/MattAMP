@@ -1,4 +1,4 @@
-# DECK
+# MattAMP
 
 Personal Linux desktop utility for Matt. Consolidate DI.FM, podcasts and workstation monitoring into one small desktop app. One media source at a time. The user approved the Sidecar/stacked UI and 56-pixel bug mode in this conversation.
 

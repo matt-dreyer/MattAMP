@@ -2,7 +2,7 @@
   "name": "workstation-deck",
   "version": "0.1.0",
   "private": true,
-  "description": "DECK \u2014 workstation radio, podcasts and system monitor",
+  "description": "MattAMP \u2014 workstation radio, podcasts and system monitor",
   "main": "src/main.cjs",
   "scripts": {
     "start": "electron .",
@@ -17,5 +17,6 @@
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"
-  }
+  },
+  "productName": "MattAMP"
 }

@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DECK</title><link rel="stylesheet" href="/style.css"><script defer src="/lucide.js"></script><script defer src="/app.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><script defer src="/lucide.js"></script><script defer src="/app.js"></script></head>
 <body>
 <main id="deck" class="sidecar">
- <header class="titlebar"><span class="brand">DECK / FM</span><div class="window-actions">
+ <header class="titlebar"><span class="brand">MattAMP / FM</span><div class="window-actions">
   <button id="layout" aria-label="Switch to stacked layout" title="Switch layout"><i data-lucide="columns-2"></i></button>
   <button id="settings-open" aria-label="Settings" title="Settings"><i data-lucide="settings-2"></i></button>
   <button id="compact" aria-label="Toggle compact view" title="Compact view"><i data-lucide="panel-top-close"></i></button>
   <button id="bug-toggle" aria-label="Minimize to desktop bug" title="Bug mode"><i data-lucide="audio-lines"></i></button>
   <button id="hide" aria-label="Hide to system tray" title="Hide to tray"><i data-lucide="minus"></i></button>
-  <button id="quit-top" aria-label="Quit DECK" title="Quit DECK"><i data-lucide="x"></i></button>
+  <button id="quit-top" aria-label="Quit MattAMP" title="Quit MattAMP"><i data-lucide="x"></i></button>
  </div></header>
- <button id="bug" aria-label="Open DECK" title="Open DECK"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
+ <button id="bug" aria-label="Open MattAMP" title="Open MattAMP"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
  <div class="full">
   <section class="media" aria-label="Player">
    <div class="sourcebar" role="group" aria-label="Playback source"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i>DI.FM</button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i>Podcasts</button><span id="play-status" role="status">Stopped</span></div>
@@ -36,13 +36,13 @@
   </section>
   <div id="compact-status" aria-live="off">Waiting for readings…</div>
  </div>
- <section id="settings" hidden aria-label="DECK settings">
+ <section id="settings" hidden aria-label="MattAMP settings">
   <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
   <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p></form>
-  <label class="check"><input id="always-top" type="checkbox">Keep DECK above other windows</label>
+  <label class="check"><input id="always-top" type="checkbox">Keep MattAMP above other windows</label>
   <form id="video-form"><label for="video-url">Play a YouTube video</label><div class="settings-row"><input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=…" required><button type="submit">Load</button></div></form>
-  <p class="hint">Drag the title bar to move DECK. Drag the bug to park it anywhere; click it to reopen. YouTube pauses in Bug mode. Radio and audio podcasts keep playing.</p>
-  <p id="settings-message" role="status"></p><button id="quit" class="text-button">Quit DECK</button>
+  <p class="hint">Drag the title bar to move MattAMP. Drag the bug to park it anywhere; click it to reopen. YouTube pauses in Bug mode. Radio and audio podcasts keep playing.</p>
+  <p id="settings-message" role="status"></p><button id="quit" class="text-button">Quit MattAMP</button>
  </section>
 </main>
 <audio id="audio" preload="none"></audio>

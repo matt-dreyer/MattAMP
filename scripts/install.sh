@@ -8,18 +8,19 @@ cd '$deck_root'
 exec '$deck_root/node_modules/.bin/electron' '$deck_root' "\$@"
 EOF
 chmod +x "$HOME/.local/bin/workstation-deck"
+ln -sfn workstation-deck "$HOME/.local/bin/mattamp"
 cp "$deck_root/assets/icon.png" "$HOME/.local/share/icons/hicolor/128x128/apps/ai.fshbwl.deck.png"
 cat > "$HOME/.local/share/applications/ai.fshbwl.deck.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=DECK
+Name=MattAMP
 Comment=Radio, podcasts and workstation monitor
-Exec=$HOME/.local/bin/workstation-deck
+Exec=$HOME/.local/bin/mattamp
 Icon=$HOME/.local/share/icons/hicolor/128x128/apps/ai.fshbwl.deck.png
 Terminal=false
 Categories=AudioVideo;Audio;System;Monitor;
 StartupWMClass=workstation-deck
 EOF
 command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" || true
-printf 'Installed DECK launcher. Run: %s/.local/bin/workstation-deck\n' "$HOME"
+printf 'Installed MattAMP launcher. Run: %s/.local/bin/mattamp\n' "$HOME"

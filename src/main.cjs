@@ -5,6 +5,7 @@ const http=require('node:http');
 const {STATIONS,SHOWS,Monitor,radioUrls,episodes,videoId,stationArtwork}=require('./services.cjs');
 const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
+// Keep the internal identity stable so existing settings, keyring and dock pins survive the rename.
 app.setName('workstation-deck');
 app.setDesktopName('ai.fshbwl.deck.desktop');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
@@ -105,7 +106,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:hide',()=>win.hide());handle('deck:quit',quit);
  handle('deck:move',(dx,dy)=>{if(mode!=='bug'||!Number.isFinite(dx)||!Number.isFinite(dy))return;const [x,y]=win.getPosition();const nx=x+Math.max(-100,Math.min(100,Math.round(dx))),ny=y+Math.max(-100,Math.min(100,Math.round(dy)));win.setPosition(nx,ny);if(fullBounds){fullBounds.x+=nx-x;fullBounds.y+=ny-y;}});
  const icon=nativeImage.createFromPath(path.join(__dirname,'../assets/icon.png'));
- tray=new Tray(icon.resize({width:22,height:22}));tray.setToolTip('DECK — workstation player');tray.setContextMenu(Menu.buildFromTemplate([{label:'Show DECK',click:()=>{win.show();win.focus();}},{label:'Pause playback',click:()=>send('deck:pause')},{type:'separator'},{label:'Quit DECK',click:quit}]));tray.on('click',()=>{win.show();win.focus();});
+ tray=new Tray(icon.resize({width:22,height:22}));tray.setToolTip('MattAMP — workstation player');tray.setContextMenu(Menu.buildFromTemplate([{label:'Show MattAMP',click:()=>{win.show();win.focus();}},{label:'Pause playback',click:()=>send('deck:pause')},{type:'separator'},{label:'Quit MattAMP',click:quit}]));tray.on('click',()=>{win.show();win.focus();});
  await win.loadURL(origin+'/');win.show();
  const monitor=new Monitor();const tick=async()=>{if(busy)return;busy=true;try{send('deck:metrics',await monitor.sample());}catch{send('deck:metrics',{error:'Metrics unavailable',time:Date.now()});}finally{busy=false;}};void tick();timer=setInterval(tick,2000);
 });

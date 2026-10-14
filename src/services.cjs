@@ -35,7 +35,7 @@ function parseFeed(text, type) {
  }).slice(0,30);
 }
 async function fetchText(url,maxBytes=12*1024*1024) {
- const response=await fetch(url,{signal:AbortSignal.timeout(16000),headers:{'User-Agent':'Workstation-DECK/0.1 (+https://fshbwl.ai)','Accept':'application/xml,text/xml,text/plain,*/*'}});
+ const response=await fetch(url,{signal:AbortSignal.timeout(16000),headers:{'User-Agent':'MattAMP/0.1 (+https://fshbwl.ai)','Accept':'application/xml,text/xml,text/plain,*/*'}});
  if(!response.ok)throw new Error('Feed returned HTTP '+response.status);
  let size=0;const chunks=[];
  for await(const chunk of response.body){size+=chunk.length;if(size>maxBytes)throw new Error('Response exceeded size limit');chunks.push(chunk);}
