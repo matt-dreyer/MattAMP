@@ -6,7 +6,7 @@ A local Linux desktop player and workstation monitor, built for Matt’s 49-inch
 
 Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The original `workstation-deck` command remains an alias-compatible entry point.
 
-- The **speech-bubbles button** opens the X feed; **Player** returns to music.
+- **X**, beside **Podcasts**, opens the X feed. The content buttons remain visible so you can return directly to DI.FM or Podcasts. The title-bar speech-bubbles button is also a shortcut.
 - **DI.FM / Podcasts** switches the one active playback source.
 - **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists full podcast episodes, excluding the general Shorts/upload feed; audio feeds list podcast episodes.
 - The column button switches **Sidecar / stacked** layouts. The panel button toggles **compact** view.
@@ -34,7 +34,7 @@ Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30
 
 ## X feed
 
-Open the speech-bubbles button in the title bar. **AI circle** uses X’s official Latest search, limited to `@bcherny`, `@steipete`, `@karpathy`, `@simonw`, and `@chamath`, plus AI-related keywords. Replies and reposts are excluded by the search query. **For giggles** is a separate Elon Musk lane, so high post volume cannot flood the AI circle. Filters edits the account list (up to 12 handles) and AI-topic restriction. Search matching and result availability are controlled by X; keyword filtering can miss relevant posts that do not mention those terms. This is a filtered X page, not a custom ranked feed, and navigating inside X can leave the filter; click AI circle to return.
+Click **X** beside **Podcasts** (or the speech-bubbles shortcut in the title bar). **AI circle** uses X’s official Latest search, limited to `@bcherny`, `@steipete`, `@karpathy`, `@simonw`, and `@chamath`, plus AI-related keywords. Replies and reposts are excluded by the search query. **For giggles** is a separate Elon Musk lane, so high post volume cannot flood the AI circle. Filters edits the account list (up to 12 handles) and AI-topic restriction. Search matching and result availability are controlled by X; keyword filtering can miss relevant posts that do not mention those terms. This is a filtered X page, not a custom ranked feed, and navigating inside X can leave the filter; click AI circle to return.
 
 Sign in directly on X’s own page with your usual account, then click AI circle. X’s login form may use its own light theme. The session is remembered only in MattAMP’s isolated `persist:mattamp-x` Chromium partition; the app does not import browser cookies, collect your password, or require an X API key. Settings → Forget X sign-in clears this local session. **Browser** opens the same filtered search in your default browser using that browser’s existing login (it does not transfer the session back into MattAMP). If Google/Apple sign-in cannot complete inside the embedded view, use direct X credentials or the browser option.
 

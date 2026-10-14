@@ -59,7 +59,7 @@ function render(){
  const podcast=state.source==='podcast',video=isVideo();
  renderX();
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
- $('source-radio').setAttribute('aria-pressed',String(!podcast));$('source-podcast').setAttribute('aria-pressed',String(podcast));
+ $('source-radio').setAttribute('aria-pressed',String(!readingX&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!readingX&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
  $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;
  $('provider').textContent=podcast?'PODCAST / AUDIO':'DI.FM / RADIO';
  $('now-title').textContent=podcast?activeShow()?.name:activeStation()?.name;
@@ -169,7 +169,7 @@ async function init(){
  window.deck.onShown(()=>requestAnimationFrame(syncXBounds));
  window.addEventListener('resize',syncXBounds);window.addEventListener('scroll',syncXBounds);
  document.addEventListener('visibilitychange',syncXBounds);
- $('source-radio').onclick=()=>void switchSource('radio');$('source-podcast').onclick=()=>void switchSource('podcast');$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
+ $('source-x').onclick=()=>toggleX(true);$('source-radio').onclick=()=>{toggleX(false);void switchSource('radio');};$('source-podcast').onclick=()=>{toggleX(false);void switchSource('podcast');};$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
  $('volume').oninput=e=>{state.volume=Number(e.target.value);muted=false;startupAudio.volume=state.volume/100;startupAudio.muted=false;audio.volume=state.volume/100;audio.muted=false;if(yt){yt.setVolume(state.volume);yt.unMute();}render();queueSave();};
  $('mute').onclick=()=>{muted=!muted;startupAudio.muted=muted;audio.muted=muted;if(yt)muted?yt.mute():yt.unMute();render();};
  $('rewind').onclick=()=>seekBy(-15);$('forward').onclick=()=>seekBy(30);$('speed').onchange=e=>{state.speed=Number(e.target.value);audio.playbackRate=state.speed;yt?.setPlaybackRate(state.speed);queueSave();};

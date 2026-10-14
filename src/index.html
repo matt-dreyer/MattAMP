@@ -13,8 +13,9 @@
  </div></header>
  <button id="bug" aria-label="Open MattAMP" title="Open MattAMP"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
  <div class="full">
+  <div class="content">
+   <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i>DI.FM</button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i>Podcasts</button><button id="source-x" aria-label="X feed" aria-pressed="false">X</button><span id="play-status" role="status">Stopped</span></div>
   <section class="media" aria-label="Player">
-   <div class="sourcebar" role="group" aria-label="Playback source"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i>DI.FM</button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i>Podcasts</button><span id="play-status" role="status">Stopped</span></div>
    <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p></div></div>
    <div id="youtube-box" hidden><div id="youtube-player"></div><div id="youtube-placeholder">Choose a show to load its full episodes.</div></div>
    <p id="error" role="alert" hidden></p>
@@ -36,6 +37,7 @@
    <p id="x-status" role="status">Sign in directly to X to see your filtered feed.</p>
    <div class="x-actions"><button id="x-login" class="text-button">Sign in to X</button><button id="x-filters" class="text-button"><i data-lucide="sliders-horizontal"></i>Filters</button><button id="x-browser" class="text-button" title="Open filtered feed in your browser"><i data-lucide="external-link"></i>Browser</button></div>
   </section>
+  </div>
   <section id="system" class="system" aria-label="System monitor">
    <div class="network"><button id="network-toggle" class="text-button" aria-expanded="false"><span class="led"></span><span id="network-status">Checking network</span><i data-lucide="chevron-down"></i></button><span id="network-latency">—</span></div>
    <div id="network-detail" hidden><div><span>Interface</span><b id="interface">—</b></div><div><span>Router</span><b id="router">—</b></div><div><span>Internet probe</span><b id="internet">—</b></div><div><span>Last checked</span><b id="checked">—</b></div></div>
