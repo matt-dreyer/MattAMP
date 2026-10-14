@@ -10,7 +10,7 @@ Launch **DECK** from the application menu, or run `~/.local/bin/workstation-deck
 - **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists recent uploads, including clips; audio feeds list podcast episodes.
 - The column button switches **Sidecar / stacked** layouts. The panel button toggles **compact** view.
 - The audio-lines button collapses DECK to a **56 × 56 bug**. Drag it to move; click to restore. Radio and audio podcasts continue. YouTube pauses when hidden, including Bug mode, Settings, and the tray.
-- Drag the title bar to move the full window. The minus button hides it to the tray. The tray menu restores, pauses, or quits it.
+- Drag the title bar to move the full window. The minus button hides it to the tray; **X quits DECK**. The tray menu restores, pauses, or quits it.
 - **Details** reveals memory/VRAM/temperature readings. The network status expands router and internet probe details.
 
 ## DI.FM Premium setup

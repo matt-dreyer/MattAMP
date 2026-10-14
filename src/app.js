@@ -162,7 +162,7 @@ async function init(){
  $('key-form').onsubmit=async e=>{e.preventDefault();try{const value=$('listen-key').value;if(!value.trim())throw new Error('Paste your Premium listen key first.');const result=await unwrap(window.deck.setKey(value));state.hasDiKey=result.hasDiKey;state.keyring=result.keyring;$('listen-key').value='';$('settings-message').textContent='Listen key saved. Choose a station to start.';render();}catch(err){$('settings-message').textContent=err.message;resize();}};
  $('clear-key').onclick=async()=>{stopAll();const result=await unwrap(window.deck.setKey(''));state.hasDiKey=result.hasDiKey;$('listen-key').value='';$('settings-message').textContent='Listen key removed.';render();};
  $('video-form').onsubmit=async e=>{e.preventDefault();try{const id=await unwrap(window.deck.videoId($('video-url').value));stopAll();state.source='podcast';state.podcastType='youtube';settings=false;render();await loadEpisode({id,title:'Custom YouTube video',type:'youtube',url:'https://www.youtube.com/watch?v='+id},true);$('video-url').value='';}catch(err){$('settings-message').textContent=err.message;resize();}};
- $('hide').onclick=()=>{if(isVideo())pause();void window.deck.hide();};$('quit').onclick=()=>{stopAll();void persist().then(()=>window.deck.quit());};
+ $('hide').onclick=()=>{if(isVideo())pause();void window.deck.hide();};$('quit-top').onclick=$('quit').onclick=()=>{stopAll();void persist().then(()=>window.deck.quit());};
  window.deck.onPause(pause);window.deck.onHidden(()=>{if(isVideo())pause();});window.deck.onQuit(()=>{stopAll();void persist();});
  window.addEventListener('beforeunload',()=>{snapshot();void persist();});
  audio.onplaying=()=>{if(isVideo()){audio.pause();return;}setStatus('Playing',true);error();};
