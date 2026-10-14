@@ -5,6 +5,7 @@ const http=require('node:http');
 const {STATIONS,SHOWS,Monitor,radioUrls,episodes,videoId,stationArtwork}=require('./services.cjs');
 const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
+const {createArcadeStore}=require('./arcade-store.cjs');
 const {DEFAULT_ACCOUNTS,accounts,createXFeed}=require('./x-feed.cjs');
 let xFeed;
 // Keep the internal identity stable so existing settings, keyring and dock pins survive the rename.
@@ -61,11 +62,12 @@ function resize(view,height){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg',...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  server=http.createServer((req,res)=>{
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
   const file=routes[req.url?.split('?')[0]];if(!file||req.method!=='GET'){res.writeHead(404);res.end();return;}
-  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':'text/javascript');
+  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':ext==='.ogg'?'audio/ogg':ext==='.png'?'image/png':'text/javascript');
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https: blob:; connect-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
   fs.createReadStream(path.resolve(__dirname,file)).on('error',()=>res.end()).pipe(res);
@@ -97,6 +99,9 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
  handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:SHOWS,origin,playStartup};});
+ const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
+ handle('deck:arcade-read',()=>arcade.read());
+ handle('deck:arcade-record',record=>arcade.record(record));
  handle('deck:save',patch=>{update(patch);return publicState();});
  handle('deck:resize',(view,height)=>resize(view,height));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));

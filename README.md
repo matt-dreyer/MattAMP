@@ -85,3 +85,13 @@ To remove the launcher, delete only `~/.local/bin/mattamp`, `~/.local/bin/workst
 - [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
 - [YouTube embedded-player identification requirements](https://developers.google.com/youtube/terms/required-minimum-functionality)
 - [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage)
+
+## AMP Artillery
+
+Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn; damage increases after round 12. Bots use imperfect aim and choose among all opponents.
+
+Radio/audio can keep playing. Switching away, opening Settings, hiding the app or entering Bug mode freezes the game. YouTube pauses when hidden. **Sound on/off** controls the game effects independently. Leaving an unfinished match earns no record; completed results save automatically with a retry button if disk access fails.
+
+Local records live in `arcade-scores.json` in Electron’s `workstation-deck` user-data directory (normally `~/.config/workstation-deck/` on Linux). It keeps the top ten, initials, skill, bot count, result and lifetime wins/completed battles. Scoring: 10 per enemy damage + 250 per knockout + a win bonus of 1,000 + 5 per remaining HP, multiplied by difficulty and bot count. Records use atomic writes and duplicate-save protection; they are personal scores, not an online anti-cheat system.
+
+Kenney CC0 assets and licenses are in `assets/arcade/`. `npm test` covers game physics, MIRVs, damage, turn order and records; `npm run test:arcade` runs the isolated Electron integration check without using the real radio key or X session.

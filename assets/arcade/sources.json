@@ -1,0 +1,91 @@
+{
+  "author": "Kenney",
+  "license": "CC0-1.0",
+  "packs": {
+    "tanks": "https://kenney.nl/assets/tanks",
+    "sci-fi-sounds": "https://kenney.nl/assets/sci-fi-sounds",
+    "digital-audio": "https://kenney.nl/assets/digital-audio"
+  },
+  "files": {
+    "tank.png": {
+      "original": "tanks/PNG/Retina/tanks_tankGrey_body2.png",
+      "sha256": "8c768bfe56f4d5484708f82d2bd2f7d7a1b2aca34932cdb69f0c75fb329dd651"
+    },
+    "tracks.png": {
+      "original": "tanks/PNG/Retina/tanks_tankTracks2.png",
+      "sha256": "b0c2017a50a280660ce376cef1ec60fd1723a6f82c269eeb5b135d0c4785072b"
+    },
+    "blast.png": {
+      "original": "tanks/PNG/Retina/tank_explosion6.png",
+      "sha256": "e00c1e32555b98a3f88e0281531211620506acf3bacee68680fd0bfe649abc14"
+    },
+    "fire.ogg": {
+      "original": "sci-fi-sounds/Audio/laserRetro_000.ogg",
+      "sha256": "2a203a007d24cc7e607eb8bec1d86bedba7f551911217ce2c4c1f31393aed32c"
+    },
+    "blast.ogg": {
+      "original": "sci-fi-sounds/Audio/explosionCrunch_000.ogg",
+      "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+    },
+    "split.ogg": {
+      "original": "digital-audio/Audio/phaseJump1.ogg",
+      "sha256": "c60069ed7108678dd6a1306404d168a93cc2575cda37b06add9dd6c4d46352a3"
+    },
+    "win.ogg": {
+      "original": "digital-audio/Audio/powerUp3.ogg",
+      "sha256": "59e7591f7a068882767bc1fd61edabf479b78787466d3a70bc49dfa0533777d2"
+    },
+    "loss.ogg": {
+      "original": "digital-audio/Audio/lowDown.ogg",
+      "sha256": "e0215fcfd8b9d7877f74d5c46b239a13d7db0d25998da97b80404931ef9eef5d"
+    },
+    "blast-1.png": {
+      "original": "tanks/PNG/Retina/tank_explosion1.png",
+      "sha256": "e4e706d5beca50625421867ef0eeb076ae1cc0f50af61e9654f742d83e45a53e"
+    },
+    "blast-2.png": {
+      "original": "tanks/PNG/Retina/tank_explosion2.png",
+      "sha256": "25fd09fa6fd6566f757704b1db5e1e81fb01dd346122bfdc29b386ca6fa9a9a6"
+    },
+    "blast-3.png": {
+      "original": "tanks/PNG/Retina/tank_explosion3.png",
+      "sha256": "bbc87ec947de7cdf68b80d22dadab72bd069452934cdee4b386456fb777b12a0"
+    },
+    "blast-4.png": {
+      "original": "tanks/PNG/Retina/tank_explosion4.png",
+      "sha256": "787ed49e2f0269838b3e18438659d890152e939cb1162a0a5f82414ed9a57717"
+    },
+    "blast-5.png": {
+      "original": "tanks/PNG/Retina/tank_explosion5.png",
+      "sha256": "03b43714329de16a6d4b52cd918668a7af8cfcbe92b8a5a4a1f11b71ebf1a2aa"
+    },
+    "blast-6.png": {
+      "original": "tanks/PNG/Retina/tank_explosion6.png",
+      "sha256": "e00c1e32555b98a3f88e0281531211620506acf3bacee68680fd0bfe649abc14"
+    },
+    "blast-7.png": {
+      "original": "tanks/PNG/Retina/tank_explosion7.png",
+      "sha256": "daef26533cd557a800a5b9eaef31239d8faad31d200b6dc2712d7174edd0269c"
+    },
+    "blast-8.png": {
+      "original": "tanks/PNG/Retina/tank_explosion8.png",
+      "sha256": "3b55cbea2dab3cf7a0cc5c8b11cf3a4b4a8743f4b66916451efeac6f057d66dd"
+    },
+    "blast-9.png": {
+      "original": "tanks/PNG/Retina/tank_explosion9.png",
+      "sha256": "ae8d71889d98ef87ff8f23871d572ee7e508db7e2899abc70b5535d670ba1997"
+    },
+    "blast-10.png": {
+      "original": "tanks/PNG/Retina/tank_explosion10.png",
+      "sha256": "d06ef08af574b44c7bcf944042c06d7e68e72c05b1c338914a44e3abad6da84f"
+    },
+    "blast-11.png": {
+      "original": "tanks/PNG/Retina/tank_explosion11.png",
+      "sha256": "02038a3134f8b626dcead1e7488244b2666790df1a1e79a80b88ae54b945a1d6"
+    },
+    "blast-12.png": {
+      "original": "tanks/PNG/Retina/tank_explosion12.png",
+      "sha256": "6dc33c1dd3784445f36ba869b3d4ea028d5133a587e88224a26d7b3c83918b94"
+    }
+  }
+}

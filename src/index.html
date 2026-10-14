@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/app.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/app.js"></script></head>
 <body>
 <main id="deck" class="sidecar">
  <canvas id="ambient" aria-hidden="true" hidden></canvas>
@@ -14,7 +14,7 @@
  <button id="bug" aria-label="Open MattAMP" title="Open MattAMP"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
  <div class="full">
   <div class="content">
-   <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i><span>DI.FM</span></button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i><span>Podcasts</span></button><button id="source-x" aria-label="X / Twitter feed" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.2-8.3L1 2h6.5l4.4 6.7L18.9 2Zm-1.1 18h1.7L6.6 3.9H4.8L17.8 20Z"/></svg><span>Twitter</span></button><span id="play-status" role="status">Stopped</span></div>
+   <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i><span>DI.FM</span></button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i><span>Podcasts</span></button><button id="source-x" aria-label="X / Twitter feed" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.2-8.3L1 2h6.5l4.4 6.7L18.9 2Zm-1.1 18h1.7L6.6 3.9H4.8L17.8 20Z"/></svg><span>Twitter</span></button><button id="source-game" aria-pressed="false"><i data-lucide="gamepad-2"></i><span>Game</span></button><span id="play-status" role="status">Stopped</span></div>
   <section class="media" aria-label="Player">
    <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p></div></div>
    <div id="youtube-box" hidden><div id="youtube-player"></div><div id="youtube-placeholder">Choose a show to load its full episodes.</div></div>
@@ -28,6 +28,30 @@
    </div>
    <div id="stations" class="presets" aria-label="DI.FM stations"></div>
    <div id="shows" class="shows" aria-label="Favorite podcasts" hidden></div>
+  </section>
+  <section id="game-panel" aria-label="AMP Artillery" hidden>
+   <div class="game-heading"><div><span class="game-eyebrow">MATTAMP ARCADE / 01</span><h2>AMP Artillery</h2></div><button id="game-sound" aria-pressed="true" title="Toggle game sound">Sound on</button></div>
+   <form id="game-setup" class="game-setup">
+    <label>Initials<input id="game-initials" aria-label="Arcade initials" maxlength="3" pattern="[A-Za-z0-9]{1,3}" value="MAT" required autocomplete="off" spellcheck="false"></label>
+    <label>Bots<select id="game-bots"><option value="3">3 bots</option><option value="4" selected>4 bots</option><option value="5">5 bots</option></select></label>
+    <label>Skill<select id="game-skill"><option value="0">Very dumb</option><option value="1" selected>Casual</option><option value="2">Sharp</option><option value="3">Human-ish</option></select></label>
+    <button type="submit" class="primary" id="game-start">Start battle</button>
+   </form>
+   <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
+   <div class="game-field"><canvas id="game-canvas" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
+   <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
+   <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
+   <fieldset id="game-controls" disabled><legend class="sr-only">Aim and fire</legend>
+    <label>Angle <output id="game-angle-value" for="game-angle">55°</output><input id="game-angle" type="range" min="5" max="175" value="55"><small>← 175° · 90° up · 5° →</small></label>
+    <label>Power <output id="game-power-value" for="game-power">55</output><input id="game-power" type="range" min="10" max="100" value="55"><small>10 gentle · 100 full send</small></label>
+    <label>Ammo<select id="game-weapon"><option value="shell">Shell · unlimited</option><option value="mirv">MIRV · 3 left</option></select></label><button id="game-fire" class="primary">Fire!</button>
+   </fieldset>
+   <p class="game-hint">Click the sky to aim. Adjust power, then Fire. Last shot leaves a trail. Switching tabs pauses the battle; radio keeps playing.</p>
+   <div id="game-end" hidden><p id="game-result"></p><p id="game-save-status" role="status"></p><button id="game-save-retry" hidden>Retry saving score</button><button id="game-again">New skirmish</button></div>
+   <div id="game-abandon" hidden><p>Leave this battle? Unfinished battles don’t score.</p><button id="game-abandon-yes">Leave battle</button><button id="game-abandon-no">Keep playing</button></div>
+   <button id="game-new" class="text-button" hidden>New skirmish…</button>
+   <details id="game-records"><summary>High scores <span id="game-record-summary">Local arcade records</span></summary><p id="game-totals"></p><div class="game-score-scroll"><table><caption class="sr-only">Your ten highest battle scores</caption><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Rivals</th><th>Result</th></tr></thead><tbody id="game-score-rows"></tbody></table></div><p id="game-score-empty">No scores yet. Make the first crater.</p><p class="game-hint">10 points per damage + 250 per knockout. Win: 1,000 + 5 per remaining HP. Skill and bot count multiply the total. Saved on this workstation.</p></details>
+   <details class="game-credits"><summary>How to play &amp; credits</summary><p>No turn timer. Wind changes each turn. MIRVs split at their peak into five smaller warheads. Craters and falls damage tanks—including your own. After round 12, blast damage increases to break stalemates.</p><p>Original MattAMP game. Tank art and sound effects: Kenney, CC0. Inspired by the classic artillery games we grew up with.</p></details>
   </section>
   <section id="x-panel" aria-label="Filtered X feed" hidden>
    <div class="x-heading"><h2>X feed</h2><button id="x-back" class="text-button"><i data-lucide="music-2"></i>Player</button></div>

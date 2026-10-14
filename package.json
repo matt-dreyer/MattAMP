@@ -7,8 +7,9 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js",
-    "test:smoke": "node scripts/smoke.cjs"
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/arcade-store.cjs",
+    "test:smoke": "node scripts/smoke.cjs",
+    "test:arcade": "node scripts/arcade-smoke.cjs"
   },
   "dependencies": {
     "electron": "44.7.2",

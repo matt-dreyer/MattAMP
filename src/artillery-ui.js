@@ -1,0 +1,118 @@
+/* The arcade owns no media state; hiding it freezes simulation and sound. */
+class MattArcade{
+ constructor(panel,onResize){
+  this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
+  this.visible=false;this.paused=false;this.sound=true;this.battle=null;this.preview=new MattArtillery.Battle({bots:4});this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
+  this.$('setup').onsubmit=e=>{e.preventDefault();this.start();};
+  this.$('fire').onclick=()=>this.fire();
+  for(const key of ['angle','power'])this.$(key).oninput=()=>{this.updateAim();this.draw();};
+  this.$('pause').onclick=()=>{this.paused=!this.paused;this.sync();};
+  this.$('sound').onclick=()=>{this.sound=!this.sound;this.$('sound').textContent=this.sound?'Sound on':'Sound off';this.$('sound').setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.silence();};
+  this.$('new').onclick=()=>{this.paused=true;this.$('abandon').hidden=false;this.sync();};
+  this.$('abandon-no').onclick=()=>{this.$('abandon').hidden=true;this.paused=false;this.sync();};
+  this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>this.reset();
+  this.$('save-retry').onclick=()=>void this.saveScore();
+  this.$('initials').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);};
+  for(const details of panel.querySelectorAll('details'))details.addEventListener('toggle',onResize);
+  this.canvas.onpointerdown=e=>{
+   const b=this.battle;if(!b||b.phase!=='aim'||b.active.id!==0||this.paused)return;
+   const r=this.canvas.getBoundingClientRect(),x=(e.clientX-r.left)*1000/r.width,y=(e.clientY-r.top)*540/r.height,t=b.active;
+   this.$('angle').value=Math.round(Math.max(5,Math.min(175,Math.atan2(Math.max(0,t.y-y),x-t.x)*180/Math.PI)));this.updateAim();this.draw();
+  };
+  // Load optional artwork without making a missing asset a game-breaking error.
+  for(const name of ['tank','tracks','blast',...Array.from({length:12},(_,i)=>'blast-'+(i+1))]){const img=new Image();img.onload=()=>{this.assets[name]=img;this.draw();};img.src='/arcade/'+name+'.png';}
+  void this.loadScores();this.draw();
+ }
+ async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
+ start(){
+  this.battle=new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value)});this.initials=this.$('initials').value.toUpperCase()||'MAT';this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
+  this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
+  this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon').value='shell';this.updateAim();this.sync();this.$('angle').focus();
+ }
+ reset(){this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
+ updateAim(){
+  const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power;
+  if(this.battle?.phase==='aim'&&this.battle.active.id===0){this.battle.active.angle=angle;this.battle.active.power=power;}
+ }
+ fire(){if(this.paused||!this.visible)return;if(this.battle?.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),this.$('weapon').value)){this.playSound('fire');this.sync();}}
+ setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
+ sync(){
+  cancelAnimationFrame(this.raf);this.raf=0;this.last=0;this.render();this.draw();
+  if(this.visible&&!this.paused&&this.battle&&this.battle.phase!=='over')this.raf=requestAnimationFrame(t=>this.tick(t));
+  if(this.paused)this.silence();this.onResize();
+ }
+ tick(time){
+  const b=this.battle;if(!this.visible||this.paused||!b)return;
+  const dt=this.last?Math.min(.05,(time-this.last)/1000):0;this.last=time;
+  const phase=b.phase,blasts=b.blasts.length,children=b.projectiles.length;b.step(dt);
+  if(phase==='aim'&&b.phase==='flight')this.playSound('fire');
+  if(b.blasts.length>blasts)this.playSound('blast');
+  if(children===1&&b.projectiles.length===5)this.playSound('split');
+  const key=[b.phase,b.turn,b.round,b.score,b.tanks.map(t=>t.hp).join(',')].join(':');
+  if(key!==this.lastState){this.lastState=key;this.render();}
+  this.draw();
+  if(b.phase==='over'){
+   b.blasts=[];this.draw();
+   if(!this.record){this.record=b.record(this.initials,this.id);this.playSound(b.result==='win'?'win':'loss');void this.saveScore();}
+   this.onResize();return;
+  }
+  this.raf=requestAnimationFrame(t=>this.tick(t));
+ }
+ async saveScore(){
+  if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('save-status').textContent='Saving your score…';
+  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id);this.$('save-status').textContent=rank>=0?'Saved. #'+(rank+1)+' on your high-score table!':'Score saved. Your top ten are still standing.';}
+  catch(e){this.$('save-status').textContent='Score not saved: '+e.message;this.$('save-retry').hidden=false;}
+  finally{this.saving=false;this.$('again').disabled=false;this.onResize();}
+ }
+ renderScores(){
+  const data=this.scores;if(!data)return;
+  this.$('record-summary').textContent=data.scores.length?'Best '+data.scores[0].score.toLocaleString():'Local arcade records';
+  this.$('totals').textContent=data.wins+' wins / '+data.played+' completed battles';this.$('score-empty').hidden=!!data.scores.length;this.$('score-rows').replaceChildren();
+  data.scores.forEach((s,i)=>{const tr=document.createElement('tr');for(const text of [i+1,s.initials,s.score.toLocaleString(),s.bots+' · '+MattArtillery.SKILLS[s.skill].name,s.win?'WIN':s.result==='draw'?'DRAW':'OUT']){const td=document.createElement('td');td.textContent=text;tr.append(td);}if(s.id===this.id)tr.className='game-record-current';this.$('score-rows').append(tr);});
+ }
+ render(){
+  const b=this.battle,over=b?.phase==='over',mine=b?.active.id===0&&b.phase==='aim'&&!this.paused;
+  this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over;this.panel.querySelector('.game-hint').hidden=!b||over;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
+  this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name+' · '+b.multiplier.toFixed(2)+'×':'Last tank standing';
+  this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+Math.abs(b.wind):'Wind —';
+  this.$('score').textContent=String(b?.score||0).padStart(6,'0');
+  this.$('status').textContent=this.paused?'Paused. Take your time.':b?.message||'Choose your rivals, then start a battle.';
+  this.$('overlay').hidden=!!b&&!this.paused&&!over;
+  this.$('overlay-title').textContent=this.paused?'Taking five.':over?(b.result==='win'?'RIDGE CHAMPION':b.result==='draw'?'EVERYBODY LOSES':'ONE MORE ROUND?'):'A little scorched nostalgia.';
+  this.$('overlay-detail').textContent=this.paused?'Resume when you’re ready.':over?this.initials+' / '+b.score.toLocaleString()+' POINTS':'One ridge. You and 3–5 bots. Three MIRVs each.';
+  this.$('end').hidden=!over;this.$('new').hidden=!b||over;
+  if(!b)return;
+  this.$('result').textContent=over?b.message+' '+b.kills+' knockouts · '+b.shots+(b.shots===1?' shot.':' shots.'):'';
+  const remaining=b.tanks[0].mirvs,option=this.$('weapon').options[1];option.textContent='MIRV · '+remaining+' left';option.disabled=remaining===0;if(!remaining)this.$('weapon').value='shell';
+  this.$('roster').replaceChildren();
+  for(const tank of b.tanks){const el=document.createElement('span');el.className='game-tank-stat'+(tank.hp<=0?' eliminated':'')+(b.active===tank&&!over?' active':'');el.style.setProperty('--tank-color',tank.color);el.textContent=tank.name+' '+(tank.hp?Math.ceil(tank.hp)+' HP':'OUT');this.$('roster').append(el);}
+  this.canvas.setAttribute('aria-label','Battlefield. '+this.$('status').textContent+' '+this.$('wind').textContent+'. '+b.tanks.map(t=>t.name+' '+t.hp+' health').join(', '));
+ }
+ playSound(name){
+  if(!this.sound||!this.visible||this.paused)return;
+  this.audio=this.audio.filter(a=>!a.ended&&!a.paused);if(this.audio.length>=4)return;
+  const a=new Audio('/arcade/'+name+'.ogg');a.volume=name==='blast'?.16:.2;this.audio.push(a);void a.play().catch(()=>{});
+ }
+ silence(){for(const a of this.audio)a.pause();this.audio=[];}
+ draw(){
+  const c=this.ctx,b=this.battle||this.preview;if(!c)return;
+  c.clearRect(0,0,1000,540);c.fillStyle='#101c2a';c.fillRect(0,0,1000,540);
+  // Quiet stars and distant foothills keep the battlefield legible on OLED.
+  c.fillStyle='#496174';for(let i=0;i<48;i++)c.fillRect((i*137+31)%1000,(i*61+12)%260,i%4===0?2:1,2);
+  c.fillStyle='#233442';c.beginPath();c.moveTo(0,540);for(let x=0;x<=1000;x+=8)c.lineTo(x,250+60*Math.sin(x/160)+25*Math.cos(x/51));c.lineTo(1000,540);c.fill();
+  c.fillStyle='#344b50';c.strokeStyle='#76968c';c.lineWidth=2;c.beginPath();c.moveTo(0,540);for(let x=0;x<=1000;x++)c.lineTo(x,b.terrain[x]);c.lineTo(1000,540);c.fill();c.stroke();
+  c.save();c.globalAlpha=.3;c.strokeStyle='#8aaba7';c.setLineDash([2,8]);for(const trail of [...b.lastTrails,...b.projectiles.map(p=>p.trail)]){c.beginPath();trail.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();}c.restore();
+  for(const t of b.tanks){
+   c.save();c.translate(t.x,t.y);c.globalAlpha=t.hp>0?1:.3;
+   if(t.hp>0&&b.active===t&&this.battle&&b.phase!=='over'){c.strokeStyle=t.color;c.lineWidth=2;c.beginPath();c.ellipse(0,9,29,8,0,0,Math.PI*2);c.stroke();}
+   // Kenney side-view hull, with an independently aimed barrel.
+   if(this.assets.tracks)c.drawImage(this.assets.tracks,-20,-2,40,14);else{c.fillStyle='#101820';c.fillRect(-18,0,36,12);}
+   if(this.assets.tank)c.drawImage(this.assets.tank,-18,-17,36,25);else{c.fillStyle=t.color;c.fillRect(-15,-10,30,15);}
+   c.strokeStyle=t.color;c.lineWidth=5;c.lineCap='round';const r=t.angle*Math.PI/180;c.beginPath();c.moveTo(0,-4);c.lineTo(Math.cos(r)*27,-4-Math.sin(r)*27);c.stroke();
+   c.fillStyle=t.color;c.fillRect(-7,-4,14,5);c.font='bold 22px ui-monospace,monospace';c.textAlign='center';c.fillText(t.name,0,-42);
+   c.fillStyle='#13212b';c.fillRect(-20,20,40,5);c.fillStyle=t.color;c.fillRect(-20,20,40*t.hp/100,5);c.restore();
+  }
+  for(const p of b.projectiles){c.fillStyle=p.weapon==='mirv'?'#c4add8':'#e0c993';if(p.y<4){c.font='24px monospace';c.textAlign='center';c.fillText('↑',p.x,27);}else{c.beginPath();c.arc(p.x,p.y,p.weapon==='mirv'?5:3.5,0,Math.PI*2);c.fill();}}
+  for(const blast of b.blasts){const fade=Math.max(0,1-blast.age/.65);c.save();c.globalAlpha=fade*.7;const size=blast.radius*(.6+blast.age);const frame=this.assets['blast-'+Math.min(12,1+Math.floor(blast.age/.65*12))]||this.assets.blast;if(frame)c.drawImage(frame,blast.x-size,blast.y-size,size*2,size*2);else{c.fillStyle='#d3b282';c.beginPath();c.arc(blast.x,blast.y,size,0,Math.PI*2);c.fill();}c.restore();}
+ }
+}
