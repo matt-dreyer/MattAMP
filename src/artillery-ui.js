@@ -4,6 +4,7 @@ class MattArcade{
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
   this.visible=false;this.paused=false;this.sound=true;this.battle=null;this.preview=new MattArtillery.Battle({bots:4});this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
   this.bubbleTimer=0;this.lastQuip='';this.volley=null;
+  this.victory=new MattVictory(this.$('victory'),()=>{if(this.visible)(this.$('again').disabled?this.canvas:this.$('again')).focus({preventScroll:true});});
   this.quipResize=new ResizeObserver(()=>this.positionQuip());this.quipResize.observe(this.canvas);
   this.$('setup').onsubmit=e=>{e.preventDefault();this.start();};
   this.$('fire').onclick=()=>this.fire();
@@ -55,12 +56,12 @@ class MattArcade{
  }
  async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
  start(){
-  this.clearQuip();this.volley=null;
+  this.victory.stop();this.clearQuip();this.volley=null;
   this.battle=new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value)});this.initials=this.$('initials').value.toUpperCase()||'MAT';this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
   this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
   this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon-shell').checked=true;this.updateAim();this.sync();this.$('angle').focus();
  }
- reset(){this.clearQuip();this.volley=null;this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
+ reset(){this.victory.stop();this.clearQuip();this.volley=null;this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
  updateAim(){
   const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power;
   if(this.battle?.phase==='aim'&&this.battle.active.id===0){this.battle.active.angle=angle;this.battle.active.power=power;}
@@ -77,12 +78,12 @@ class MattArcade{
   const damage=hits.reduce((n,h)=>n+h.damage,0),kills=hits.filter(h=>h.tank.hp===0).length,self=shot.tanks.find(t=>t.id===shot.owner).hp-shooter.hp;
   const nearest=Math.min(...b.lastTrails.flatMap(trail=>{const end=trail.at(-1);return end?shot.tanks.filter(t=>t.id!==shot.owner&&t.hp>0).map(t=>Math.hypot(end.x-t.x,end.y-t.y)):[];}));
   let speaker,lines;
-  if(self>damage&&self>=15){speaker=others[Math.floor(Math.random()*others.length)];lines=['The enemy is over HERE.','Friendly fire. Very friendly.','You know that tank was yours?','Task failed successfully.'];}
+  if(self>damage&&self>=15){speaker=others[Math.floor(Math.random()*others.length)];lines=['Wrong fucking tank, genius.','Self-care. With explosives.','You absolute tactical disaster.','Enemy of the month: yourself.','Darwin called. Huge fan.','Your ass has friendly-fire damage.'];}
   else if(kills||damage>=45){
    const victim=hits.filter(h=>h.damage>0&&h.tank.hp>0).sort((a,z)=>z.damage-a.damage)[0]?.tank;
-   if(victim&&Math.random()<.5){speaker=victim;lines=['That was my GOOD armor!','Okay. That one counted.','Rude. Accurate, but rude.','I felt that in my floppy drive.'];}
-   else{speaker=shooter.hp>0?shooter:null;lines=kills?['One less problem.','That will buff right out.','Return to desktop.','Thanks for playing!']:['Calculated. Mostly.','Special delivery!','Right in the motherboard.','Put THAT on the high-score board.'];}
-  }else if(damage===0&&self===0&&nearest>100){speaker=others[Math.floor(Math.random()*others.length)];lines=['You scared the dirt.','Try aiming at a tank.','Somewhere, a hill is furious.','Was that a warning shot?','Nice shot. Wrong postcode.','The moon sends its regards.','Your aim is still buffering.','Did you mean to do that?'];}
+   if(victim&&Math.random()<.5){speaker=victim;lines=['Well, fuck my armor, I guess.','Oh, NOW you learn to aim.','Eat shit. Respectfully.','My warranty is so fucked.','Right in the goddamn deductible.'];}
+   else{speaker=shooter.hp>0?shooter:null;lines=kills?['Get absolutely fucked.','Your refund is in the crater.','Skill issue. Terminal one.','Talk shit. Become scrap.','Alt-F4, motherfucker.','That’ll buff out. In hell.']:['Calculated as fuck. Mostly.','Express delivery, asshole.','Right in the motherboard.','That’s some premium bullshit.','I’m as surprised as you are.'];}
+  }else if(damage===0&&self===0&&nearest>100){speaker=others[Math.floor(Math.random()*others.length)];lines=['Great shot, dipshit. Wrong planet.','The dirt had it coming, I guess.','Aim assist just fucking quit.','Did you aim with your ass?','That hill owes you money?','Somewhere, a cow is pissed.','All that power. Fuck-all aim.','Your barrel needs glasses.','You missed the whole damn war.','Bold strategy: hit fuck-all.'];}
   if(!speaker||!lines)return;
   const choices=lines.filter(line=>line!==this.lastQuip),text=choices[Math.floor(Math.random()*choices.length)];this.lastQuip=text;this.clearQuip();
   this.$('quip-name').textContent=speaker.name;this.$('quip-text').textContent=text;
@@ -91,7 +92,7 @@ class MattArcade{
  }
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
-  if(!this.visible||this.paused)this.clearQuip();
+  if(!this.visible||this.paused){this.clearQuip();this.victory.stop();}
   cancelAnimationFrame(this.raf);this.raf=0;this.last=0;this.render();this.draw();
   if(this.visible&&!this.paused&&this.battle&&this.battle.phase!=='over')this.raf=requestAnimationFrame(t=>this.tick(t));
   if(this.paused)this.silence();this.onResize();
@@ -109,7 +110,7 @@ class MattArcade{
   this.draw();
   if(b.phase==='over'){
    b.blasts=[];this.draw();
-   if(!this.record){this.record=b.record(this.initials,this.id);this.playSound(b.result==='win'?'win':'loss');void this.saveScore();}
+   if(!this.record){this.record=b.record(this.initials,this.id);if(b.result==='win'){this.clearQuip();this.silence();void this.victory.start(this.record,this.sound);}else this.playSound('loss');void this.saveScore();}
    this.onResize();return;
   }
   this.raf=requestAnimationFrame(t=>this.tick(t));
@@ -150,7 +151,7 @@ class MattArcade{
   const clip=name==='blast'?'worms-blast-'+(1+Math.floor(Math.random()*3)):name==='fire'?'worms-fire':name==='split'?'worms-split':name;
   const a=new Audio('/arcade/'+clip+'.ogg');a.volume=name==='blast'?.16:.2;this.audio.push(a);void a.play().catch(()=>{});
  }
- silence(){for(const a of this.audio)a.pause();this.audio=[];}
+ silence(){this.victory.mute();for(const a of this.audio)a.pause();this.audio=[];}
  draw(){
   const c=this.ctx,b=this.battle||this.preview;if(!c)return;
   c.clearRect(0,0,1000,540);c.fillStyle='#101c2a';c.fillRect(0,0,1000,540);

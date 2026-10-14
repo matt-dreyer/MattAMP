@@ -142,6 +142,12 @@
       "original": "Ricochet.wav; Paul999 / PS999",
       "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
       "sha256": "65eec98a4aa3305b507d152b7ac0275e15917d70cbab921f736334941e1e8411"
+    },
+    "victory-font.ttf": {
+      "original": "https://github.com/google/fonts/blob/main/ofl/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf",
+      "author": "The Cormorant Project Authors",
+      "license": "SIL Open Font License 1.1; see victory-font-LICENSE.txt",
+      "sha256": "b20b7d9626dd956b2c5e558692ad328b1f19e3275e2782db4fa07670d83f35e0"
     }
   }
 }

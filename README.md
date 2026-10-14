@@ -95,3 +95,9 @@ Radio/audio can keep playing. Switching away, opening Settings, hiding the app o
 Local records live in `arcade-scores.json` in Electron’s `workstation-deck` user-data directory (normally `~/.config/workstation-deck/` on Linux). It keeps the top ten, initials, skill, bot count, result and lifetime wins/completed battles. Scoring: 10 per enemy damage + 250 per knockout + a win bonus of 1,000 + 5 per remaining HP, multiplied by difficulty and bot count. Records use atomic writes and duplicate-save protection; they are personal scores, not an online anti-cheat system.
 
 Metal Slug sprites, Worms 2 effects, and Kenney fallbacks are in `assets/arcade/` with per-source provenance. The retro game assets retain their original copyrights; the Kenney CC0 license does not cover them. `npm test` covers game physics, MIRVs, damage, turn order and records; `npm run test:arcade` runs the isolated Electron integration check without using the real radio key or X session.
+
+### Artillery victory lap
+
+Wins trigger a nine-second GPU-rendered gold tank ceremony with 2,400 tumbling confetti pieces, a moving camera, lights and a synthesized fanfare. **Back to scores** or **Escape** skips it. Game Sound off mutes the fanfare; radio keeps playing. Leaving the game stops and releases the scene. Reduced motion freezes the 3D scene, and WebGL failure leaves a static victory message. Score saving runs independently. Tank heckles include sarcastic profanity for kills, awful misses and self damage.
+
+`npm run test:victory` exercises real WebGL rendering, wide/narrow layouts, win-only activation, dismissal, timed cleanup, reduced motion, context loss, sound cleanup and radio/score continuity in an isolated Electron profile.

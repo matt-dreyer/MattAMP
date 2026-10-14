@@ -13,3 +13,5 @@ Kenney CC0 fallback hull/tracks/explosion frames and victory/defeat cues are ret
 - [Digital Audio](https://kenney.nl/assets/digital-audio)
 
 Pixel art uses nearest-neighbor sampling. Effects play quietly with at most four simultaneous sounds and stop when the game is hidden or paused. No remote asset fetches are needed during play.
+
+Victory uses original procedural 3D geometry and a Web Audio fanfare authored in `src/victory.js`. The bundled Cormorant Garamond variable display font comes from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/cormorantgaramond), under the SIL Open Font License 1.1 (`victory-font-LICENSE.txt`). Three.js is pinned in package.json under its MIT license. No runtime network requests are needed for the ceremony.

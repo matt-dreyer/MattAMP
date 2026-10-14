@@ -27,3 +27,18 @@
 #game-controls #game-ammo label:has(:checked){background:var(--glass-selected);border-color:rgba(156,202,176,.65);color:#c4e5d2}
 #game-controls #game-ammo label:has(input:enabled):hover{background:var(--glass-hover)}#game-controls #game-ammo label:has(input:disabled){cursor:default}#game-controls:enabled #game-ammo label:has(input:disabled){opacity:.45}
 @media(prefers-reduced-transparency:reduce){#game-controls #game-ammo label{background:#293b46}#game-controls #game-ammo label:has(:checked){background:#315144}}
+
+/* A nine-second detour from 1991 into an absurdly expensive awards show. */
+@font-face{font-family:Victory;src:url('/victory-font.ttf') format('truetype');font-weight:300 700;font-display:swap}
+#game-panel{position:relative}
+#game-victory{position:absolute;inset:0;z-index:5;overflow:hidden;background:#080e18;min-height:360px;color:#edcf8e}
+#game-victory canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
+.victory-copy{position:absolute;inset:20px 16px auto;text-align:center;pointer-events:none}
+#game-panel .victory-copy h2{font:600 clamp(44px,10cqw,72px)/.83 Victory,serif;letter-spacing:-.035em;margin:0 0 16px;color:#edcf8e;text-shadow:0 3px 18px #080e18}
+.victory-copy p{margin:8px 0;font-size:12px;color:#cfbf9e}.victory-copy .victory-score{font:12px ui-monospace,monospace;letter-spacing:.08em;color:#f1d99f}
+#game-victory .victory-dismiss{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);min-height:38px;white-space:nowrap;background:rgba(15,24,37,.9);color:#f1d99f;border-color:#6c5d41;padding:8px 16px}
+.victory-dismiss span{font-size:10px;margin-left:14px;color:#b9ad93}
+#game-victory .victory-dismiss:hover{background:#35404b}#game-victory .victory-dismiss:focus-visible{outline:2px solid #edcf8e;outline-offset:3px}
+#game-victory[data-renderer=fallback] canvas{visibility:hidden}
+#game-victory[data-renderer=fallback] .victory-copy{top:25%}
+@container(max-width:450px){.victory-copy{top:24px}.victory-copy .victory-caption{font-size:11px}}

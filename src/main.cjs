@@ -62,12 +62,12 @@ function resize(view,height){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg','metal-slug-tank.png','metal-slug-blasts.png','worms-fire.ogg','worms-split.ogg',...Array.from({length:3},(_,i)=>'worms-blast-'+(i+1)+'.ogg'),...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  server=http.createServer((req,res)=>{
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
   const file=routes[req.url?.split('?')[0]];if(!file||req.method!=='GET'){res.writeHead(404);res.end();return;}
-  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':ext==='.ogg'?'audio/ogg':ext==='.png'?'image/png':'text/javascript');
+  const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':ext==='.ogg'?'audio/ogg':ext==='.png'?'image/png':ext==='.ttf'?'font/ttf':'text/javascript');
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https: blob:; connect-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
   fs.createReadStream(path.resolve(__dirname,file)).on('error',()=>res.end()).pipe(res);
