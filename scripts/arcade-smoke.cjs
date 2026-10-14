@@ -6,7 +6,7 @@ const captures=path.join(profile,'captures');fs.mkdirSync(captures);
 let app;const errors=[];
 async function launch(){app=await _electron.launch({ignoreDefaultArgs:['--no-sandbox'],args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});const p=await app.firstWindow();p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();return p;}
 (async()=>{try{
- let p=await launch();await p.locator('#source-game').click();await p.locator('#game-sound').click();await p.waitForFunction(()=>arcade.assets.tank&&arcade.assets.tracks&&arcade.assets.blast);await p.screenshot({path:path.join(captures,'mattamp-game-setup.png')});
+ let p=await launch();await p.locator('#source-game').click();await p.locator('#game-sound').click();await p.waitForFunction(()=>arcade.assets['metal-slug-tank']&&arcade.assets['metal-slug-blasts']);await p.screenshot({path:path.join(captures,'mattamp-game-setup.png')});
  await p.locator('#game-initials').fill('TST');await p.locator('#game-bots').selectOption('5');await p.locator('#game-skill').selectOption('2');await p.locator('#game-start').click();assert.equal(await p.locator('.game-tank-stat').count(),6);assert.equal(await p.locator('#game-controls').isDisabled(),false);
  await p.evaluate(()=>{audio.src='/startup.mp3';audio.loop=true;audio.muted=true;return audio.play();});
  await p.locator('#game-weapon').selectOption('mirv');await p.locator('#game-fire').click();await p.waitForFunction(()=>arcade.battle.projectiles.length>0);await p.screenshot({path:path.join(captures,'mattamp-game-battle-wide.png')});
@@ -21,7 +21,7 @@ async function launch(){app=await _electron.launch({ignoreDefaultArgs:['--no-san
  await p.evaluate(()=>{for(const t of arcade.battle.tanks.slice(1)){while(t.hp>0)arcade.battle.explode({x:t.x,y:t.y,owner:0,weapon:'shell'});}arcade.battle.projectiles=[];arcade.battle.phase='settle';arcade.battle.delay=0;});
  await p.waitForFunction(()=>document.querySelector('#game-save-status').textContent.startsWith('Saved.'));await p.locator('#game-records summary').click();await p.screenshot({path:path.join(captures,'mattamp-game-scores.png')});
  assert.equal(await p.locator('#game-score-rows tr').count(),1);assert.equal(await p.evaluate(()=>arcade.scores.wins),1);
- const sound=await p.evaluate(async()=>{const a=new Audio('/arcade/blast.ogg');a.muted=true;await a.play();a.pause();return a.duration;});assert.ok(sound>0);
+ for(const clip of ['worms-fire','worms-blast-1','worms-blast-2','worms-blast-3','worms-split']){const duration=await p.evaluate(async clip=>{const a=new Audio('/arcade/'+clip+'.ogg');a.muted=true;await a.play();a.pause();return a.duration;},clip);assert.ok(duration>0);}
  await app.close();app=null;p=await launch();await p.locator('#source-game').click();await p.waitForFunction(()=>arcade.scores?.played===1);assert.equal(await p.locator('#game-initials').inputValue(),'TST');assert.equal(await p.evaluate(()=>arcade.scores.wins),1);
  await p.locator('#source-radio').click();await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===710);await p.waitForTimeout(400);await p.screenshot({path:path.join(captures,'mattamp-game-radio-regression.png')});
  assert.deepEqual(errors,[]);console.log('PASS: sprites, six tanks, MIRV, pause/tab switch, radio continuity, Settings, Bug mode, layouts, sound decode, saved scores across restart.');

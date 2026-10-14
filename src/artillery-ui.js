@@ -28,6 +28,16 @@ class MattArcade{
   for(const target of [this.canvas,this.$('power')])target.addEventListener('wheel',wheelPower,{passive:false});
   // Load optional artwork without making a missing asset a game-breaking error.
   for(const name of ['tank','tracks','blast',...Array.from({length:12},(_,i)=>'blast-'+(i+1))]){const img=new Image();img.onload=()=>{this.assets[name]=img;this.draw();};img.src='/arcade/'+name+'.png';}
+  // Preserve the original sheets; remove their flat key colors once on load.
+  for(const [name,key] of [['metal-slug-tank',[255,255,255]],['metal-slug-blasts',[0,248,0]]]){
+   const img=new Image();img.onload=()=>{
+    const sheet=document.createElement('canvas');sheet.width=img.width;sheet.height=img.height;
+    const ctx=sheet.getContext('2d');ctx.drawImage(img,0,0);const pixels=ctx.getImageData(0,0,img.width,img.height),d=pixels.data;
+    for(let i=0;i<d.length;i+=4)if(d[i]===key[0]&&d[i+1]===key[1]&&d[i+2]===key[2])d[i+3]=0;
+    ctx.putImageData(pixels,0,0);this.assets[name]=sheet;this.draw();
+   };img.src='/arcade/'+name+'.png';
+  }
+  this.blastFrames=[...Array.from({length:10},(_,i)=>[104+i*48,84,48,64]),...[[2,47],[49,47],[96,47],[143,45],[188,44],[232,44],[276,42],[318,41],[359,38],[397,38],[435,36],[471,34],[505,35],[540,36]].map(([x,w])=>[x,148,w,64])];
   void this.loadScores();this.draw();
  }
  async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
@@ -98,7 +108,8 @@ class MattArcade{
  playSound(name){
   if(!this.sound||!this.visible||this.paused)return;
   this.audio=this.audio.filter(a=>!a.ended&&!a.paused);if(this.audio.length>=4)return;
-  const a=new Audio('/arcade/'+name+'.ogg');a.volume=name==='blast'?.16:.2;this.audio.push(a);void a.play().catch(()=>{});
+  const clip=name==='blast'?'worms-blast-'+(1+Math.floor(Math.random()*3)):name==='fire'?'worms-fire':name==='split'?'worms-split':name;
+  const a=new Audio('/arcade/'+clip+'.ogg');a.volume=name==='blast'?.16:.2;this.audio.push(a);void a.play().catch(()=>{});
  }
  silence(){for(const a of this.audio)a.pause();this.audio=[];}
  draw(){
@@ -112,14 +123,31 @@ class MattArcade{
   for(const t of b.tanks){
    c.save();c.translate(t.x,t.y);c.globalAlpha=t.hp>0?1:.3;
    if(t.hp>0&&b.active===t&&this.battle&&b.phase!=='over'){c.strokeStyle=t.color;c.lineWidth=2;c.beginPath();c.ellipse(0,9,29,8,0,0,Math.PI*2);c.stroke();}
-   // Kenney side-view hull, with an independently aimed barrel.
-   if(this.assets.tracks)c.drawImage(this.assets.tracks,-20,-2,40,14);else{c.fillStyle='#101820';c.fillRect(-18,0,36,12);}
-   if(this.assets.tank)c.drawImage(this.assets.tank,-18,-17,36,25);else{c.fillStyle=t.color;c.fillRect(-15,-10,30,15);}
-   c.strokeStyle=t.color;c.lineWidth=5;c.lineCap='round';const r=t.angle*Math.PI/180;c.beginPath();c.moveTo(0,-4);c.lineTo(Math.cos(r)*27,-4-Math.sin(r)*27);c.stroke();
-   c.fillStyle=t.color;c.fillRect(-7,-4,14,5);c.font='bold 22px ui-monospace,monospace';c.textAlign='center';c.fillText(t.name,0,-42);
+   const r=t.angle*Math.PI/180;
+   if(this.assets['metal-slug-tank']){
+    c.save();c.imageSmoothingEnabled=false;if(t.angle>90)c.scale(-1,1);
+    c.drawImage(this.assets['metal-slug-tank'],4,4,60,58,-30,-50,60,58);c.restore();
+    // The artwork keeps its original gun; a team-colored sight shows the exact shot angle.
+    if(t.hp>0&&b.active===t){c.save();c.strokeStyle=t.color;c.lineWidth=2;c.setLineDash([3,4]);c.beginPath();c.moveTo(Math.cos(r)*28,-5-Math.sin(r)*28);c.lineTo(Math.cos(r)*55,-5-Math.sin(r)*55);c.stroke();c.restore();}
+   }else{
+    if(this.assets.tracks)c.drawImage(this.assets.tracks,-20,-2,40,14);else{c.fillStyle='#101820';c.fillRect(-18,0,36,12);}
+    if(this.assets.tank)c.drawImage(this.assets.tank,-18,-17,36,25);else{c.fillStyle=t.color;c.fillRect(-15,-10,30,15);}
+    c.strokeStyle=t.color;c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(0,-4);c.lineTo(Math.cos(r)*27,-4-Math.sin(r)*27);c.stroke();
+   }
+   c.fillStyle=t.color;c.font='bold 22px ui-monospace,monospace';c.textAlign='center';c.fillText(t.name,0,-63);
    c.fillStyle='#13212b';c.fillRect(-20,20,40,5);c.fillStyle=t.color;c.fillRect(-20,20,40*t.hp/100,5);c.restore();
   }
   for(const p of b.projectiles){c.fillStyle=p.weapon==='mirv'?'#c4add8':'#e0c993';if(p.y<4){c.font='24px monospace';c.textAlign='center';c.fillText('↑',p.x,27);}else{c.beginPath();c.arc(p.x,p.y,p.weapon==='mirv'?5:3.5,0,Math.PI*2);c.fill();}}
-  for(const blast of b.blasts){const fade=Math.max(0,1-blast.age/.65);c.save();c.globalAlpha=fade*.7;const size=blast.radius*(.6+blast.age);const frame=this.assets['blast-'+Math.min(12,1+Math.floor(blast.age/.65*12))]||this.assets.blast;if(frame)c.drawImage(frame,blast.x-size,blast.y-size,size*2,size*2);else{c.fillStyle='#d3b282';c.beginPath();c.arc(blast.x,blast.y,size,0,Math.PI*2);c.fill();}c.restore();}
+  for(const blast of b.blasts){
+   c.save();const progress=Math.min(1,blast.age/.65);
+   if(this.assets['metal-slug-blasts']){
+    const [sx,sy,w,h]=this.blastFrames[Math.min(23,Math.floor(progress*24))],scale=blast.radius*2/48;
+    c.imageSmoothingEnabled=false;c.globalAlpha=.9*Math.min(1,(1-progress)*4);
+    c.drawImage(this.assets['metal-slug-blasts'],sx,sy,w,h,blast.x-w*scale/2,blast.y-32*scale,w*scale,h*scale);
+   }else{
+    c.globalAlpha=(1-progress)*.7;const size=blast.radius*(.6+blast.age),frame=this.assets['blast-'+Math.min(12,1+Math.floor(progress*12))]||this.assets.blast;
+    if(frame)c.drawImage(frame,blast.x-size,blast.y-size,size*2,size*2);else{c.fillStyle='#d3b282';c.beginPath();c.arc(blast.x,blast.y,size,0,Math.PI*2);c.fill();}
+   }c.restore();
+  }
  }
 }

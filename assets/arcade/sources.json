@@ -1,6 +1,6 @@
 {
-  "author": "Kenney",
-  "license": "CC0-1.0",
+  "author": "Kenney; SNK; Team17",
+  "license": "Mixed: Kenney CC0-1.0; Metal Slug and Worms assets remain copyrighted by their respective owners (not CC0).",
   "packs": {
     "tanks": "https://kenney.nl/assets/tanks",
     "sci-fi-sounds": "https://kenney.nl/assets/sci-fi-sounds",
@@ -86,6 +86,62 @@
     "blast-12.png": {
       "original": "tanks/PNG/Retina/tank_explosion12.png",
       "sha256": "6dc33c1dd3784445f36ba869b3d4ea028d5133a587e88224a26d7b3c83918b94"
+    },
+    "metal-slug-tank.png": {
+      "game": "Metal Slug 4",
+      "copyright": "SNK",
+      "source": "https://www.spriters-resource.com/neo_geo_ngcd/ms4/asset/11240/",
+      "original": "11240.png; Gussprint",
+      "processing": "Original sheet; color key and frame selection at runtime",
+      "sha256": "e88879df842f283ab23d25b90eef95595aba7463df0640b31e8cf7c8d8395b05"
+    },
+    "metal-slug-blasts.png": {
+      "game": "Metal Slug",
+      "copyright": "SNK",
+      "source": "https://www.spriters-resource.com/neo_geo_ngcd/ms/asset/11301/",
+      "original": "11301.png; Gussprint",
+      "processing": "Original sheet; color key and frame selection at runtime",
+      "sha256": "5f7f660af21b2dda2d347d2f8efb6726477b4d3386be94898688f5d328a9c943"
+    },
+    "worms-fire.ogg": {
+      "game": "Worms 2",
+      "copyright": "Team17",
+      "source": "https://sounds.spriters-resource.com/pc_computer/worms2/asset/416671/",
+      "original": "RocketRelease.wav; Paul999 / PS999",
+      "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
+      "sha256": "e0850c1f1ee5487b6108fc8eb884895c2628233f1dd79fb07ad0c8c999f663e8"
+    },
+    "worms-blast-1.ogg": {
+      "game": "Worms 2",
+      "copyright": "Team17",
+      "source": "https://sounds.spriters-resource.com/pc_computer/worms2/asset/416671/",
+      "original": "Explosion1.wav; Paul999 / PS999",
+      "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
+      "sha256": "9c02a2fb951b6d7dc873972750ce8203c5d90fa995fd984f1f376418495ecb9f"
+    },
+    "worms-blast-2.ogg": {
+      "game": "Worms 2",
+      "copyright": "Team17",
+      "source": "https://sounds.spriters-resource.com/pc_computer/worms2/asset/416671/",
+      "original": "Explosion2.wav; Paul999 / PS999",
+      "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
+      "sha256": "f33b36e53246bed2932ba247e00b2a8e97a8ce3e4a2716d6508145522a930cbc"
+    },
+    "worms-blast-3.ogg": {
+      "game": "Worms 2",
+      "copyright": "Team17",
+      "source": "https://sounds.spriters-resource.com/pc_computer/worms2/asset/416671/",
+      "original": "Explosion3.wav; Paul999 / PS999",
+      "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
+      "sha256": "82ef5ac8a53c9a92f770bd875c1d297b82f9287f0dfa4938067679161d6eb3dd"
+    },
+    "worms-split.ogg": {
+      "game": "Worms 2",
+      "copyright": "Team17",
+      "source": "https://sounds.spriters-resource.com/pc_computer/worms2/asset/416671/",
+      "original": "Ricochet.wav; Paul999 / PS999",
+      "processing": "WAV converted to Ogg Vorbis quality 5 using ffmpeg",
+      "sha256": "65eec98a4aa3305b507d152b7ac0275e15917d70cbab921f736334941e1e8411"
     }
   }
 }
