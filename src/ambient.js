@@ -1,7 +1,24 @@
-/* Low-contrast local canvas: no network, input handling, or media coupling. */
+/* Low-contrast local canvas: passive pointer response, no network or media coupling. */
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
+  this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
+  const host=canvas.parentElement;
+  host.addEventListener('pointermove',event=>{
+   if(event.pointerType==='touch'||this.canvas.hidden)return;
+   if(event.target.closest?.('iframe,#x-viewport')){this.pointer.inside=false;return;}
+   const bounds=host.getBoundingClientRect(),p=this.pointer;
+   if(!bounds.width||!bounds.height)return;
+   p.targetX=Math.max(0,Math.min(1,(event.clientX-bounds.left)/bounds.width));
+   p.targetY=Math.max(0,Math.min(1,(event.clientY-bounds.top)/bounds.height));
+   if(!p.inside){p.x=p.targetX;p.y=p.targetY;}p.inside=true;
+  },{passive:true,capture:true});
+  const leave=()=>{this.pointer.inside=false;};
+  host.addEventListener('pointerleave',leave,{passive:true});
+  host.addEventListener('pointercancel',leave,{passive:true});
+  // Provider frames own their input; never intercept clicks or inject listeners there.
+  host.addEventListener('pointerover',event=>{if(event.target.closest?.('iframe,#x-viewport'))leave();},{passive:true,capture:true});
+  window.addEventListener('blur',leave);
   this.motion=matchMedia('(prefers-reduced-motion: reduce)');
   this.motion.addEventListener('change',()=>this.sync());
   document.addEventListener('visibilitychange',()=>this.sync());
@@ -28,7 +45,7 @@ class MattAmbient {
   clearTimeout(this.timer);cancelAnimationFrame(this.frame);this.timer=0;this.frame=0;this.last=0;
   const active=this.ctx&&this.mode!=='off'&&!this.paused&&!document.hidden&&!this.motion.matches;
   this.canvas.hidden=!active;
-  if(!active){this.ctx?.clearRect(0,0,this.width,this.height);return;}
+  if(!active){this.pointer.inside=false;this.pointer.strength=0;this.ctx?.clearRect(0,0,this.width,this.height);return;}
   this.resize();this.draw(0);this.schedule();
  }
  fps(){return this.mode==='mandelbrot'?18:24;}
@@ -36,11 +53,15 @@ class MattAmbient {
  draw(dt){
   const c=this.ctx,w=this.width,h=this.height;if(!c||!w||!h)return;c.clearRect(0,0,w,h);
   if(this.mode==='off'||this.paused||this.motion.matches||document.hidden)return;
+  const pointer=this.pointer,ease=1-Math.exp(-dt*5);
+  pointer.x+=(pointer.targetX-pointer.x)*ease;pointer.y+=(pointer.targetY-pointer.y)*ease;
+  pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
+  const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
   if(this.mode==='mandelbrot'){this.drawFractal();}
   else if(this.mode==='waves'){
    const rows=Math.max(18,Math.min(32,Math.round(h/25)));
    for(let row=0;row<rows;row++){
-    c.beginPath();for(let x=-20;x<=w+20;x+=12){const y=h*(row+.5)/rows+Math.sin(x/w*5+this.time*.22+row*.45)*17+Math.sin(x/w*9-this.time*.12+row*.7)*8;x===-20?c.moveTo(x,y):c.lineTo(x,y);}
+    c.beginPath();for(let x=-20;x<=w+20;x+=12){const base=h*(row+.5)/rows+Math.sin(x/w*5+this.time*.22+row*.45)*17+Math.sin(x/w*9-this.time*.12+row*.7)*8;const distance=Math.hypot(x-mx,base-my),ripple=Math.sin(distance/19-this.time*2)*14*Math.exp(-distance*distance/(radius*radius))*power,y=base+ripple;x===-20?c.moveTo(x,y):c.lineTo(x,y);}
     c.strokeStyle=row%3===0?'rgba(130,181,164,.18)':'rgba(120,171,198,.22)';c.lineWidth=row%3===0?1.2:.8;c.stroke();
    }
   }else if(this.mode==='stars'){
@@ -50,13 +71,19 @@ class MattAmbient {
     star.x=(star.x+dt*speed)%w;star.y=(star.y+dt*speed*.15)%h;
     const shimmer=.88+Math.sin(this.time*.35+star.phase)*.12;
     c.fillStyle=`rgba(151,184,207,${(.13+star.depth*.22)*shimmer})`;
-    c.beginPath();c.arc(star.x,star.y,.45+star.depth*.7,0,Math.PI*2);c.fill();
+    c.beginPath();c.arc((star.x+(pointer.x-.5)*28*star.depth*power+w)%w,(star.y+(pointer.y-.5)*28*star.depth*power+h)%h,.45+star.depth*.7,0,Math.PI*2);c.fill();
    }
   }else{
    for(const p of this.particles){
     const angle=Math.sin(p.y/h*5+this.time*.08)*.65+Math.cos(p.x/w*4-this.time*.06)*.35;
-    p.x+=Math.cos(angle)*dt*15;p.y+=Math.sin(angle)*dt*15;
-    if(p.x>w+12||p.y>h+12||p.y< -12){p.x=-10;p.y=((p.y%h)+h)%h;p.trail=[];}
+    const dx=p.x-mx,dy=p.y-my,distance=Math.hypot(dx,dy),falloff=Math.max(0,1-distance/radius);
+    const force=power*falloff*falloff*42/Math.max(12,distance);
+    p.x+=(Math.cos(angle)*15+(dx-dy*.55)*force)*dt;
+    p.y+=(Math.sin(angle)*15+(dy+dx*.55)*force)*dt;
+    if(p.x>w+12||p.x< -12||p.y>h+12||p.y< -12){
+     if(p.x>w+12)p.x=-10;else if(p.x< -12)p.x=w+10;
+     if(p.y>h+12)p.y=-10;else if(p.y< -12)p.y=h+10;p.trail=[];
+    }
     if(dt)p.trail.push({x:p.x,y:p.y});if(p.trail.length>22)p.trail.shift();
     c.strokeStyle=p.mint?'rgba(145,190,171,.25)':'rgba(123,177,204,.28)';c.lineWidth=1;c.beginPath();p.trail.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.stroke();
     c.fillStyle=p.mint?'rgba(160,202,180,.36)':'rgba(139,187,207,.38)';c.beginPath();c.arc(p.x,p.y,p.mint?1.2:.9,0,Math.PI*2);c.fill();
@@ -75,11 +102,11 @@ class MattAmbient {
    gl.attachShader(program,compile(gl.VERTEX_SHADER,'attribute vec2 point; varying vec2 uv; void main(){uv=point*.5+.5;gl_Position=vec4(point,0.,1.);}'));
    gl.attachShader(program,compile(gl.FRAGMENT_SHADER,`
     precision highp float;
-    varying vec2 uv; uniform vec2 aspect; uniform float span;
+    varying vec2 uv; uniform vec2 aspect; uniform vec2 pointerShift; uniform float span;
     void main(){
      vec2 target=vec2(-.743643887,.131825904);
      vec2 center=mix(target,vec2(-.5,0.),span/3.2);
-     vec2 c=center+(uv-.5)*aspect*span;
+     vec2 c=center+(uv-.5+pointerShift)*aspect*span;
      vec2 z=vec2(0.); float n=0.; bool escaped=false;
      for(int i=0;i<360;i++){
       z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)+c;
@@ -93,7 +120,7 @@ class MattAmbient {
    gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error('Shader unavailable');
    buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
    gl.useProgram(program);const point=gl.getAttribLocation(program,'point');gl.enableVertexAttribArray(point);gl.vertexAttribPointer(point,2,gl.FLOAT,false,0,0);
-   this.fractal={surface,gl,program,span:gl.getUniformLocation(program,'span'),aspect:gl.getUniformLocation(program,'aspect')};
+   this.fractal={surface,gl,program,span:gl.getUniformLocation(program,'span'),aspect:gl.getUniformLocation(program,'aspect'),pointerShift:gl.getUniformLocation(program,'pointerShift')};
    surface.addEventListener('webglcontextlost',event=>{event.preventDefault();this.fractal=null;this.fractalFailed=true;});
    surface.addEventListener('webglcontextrestored',()=>{this.fractalFailed=false;});
   }catch{if(buffer)gl.deleteBuffer(buffer);if(program)gl.deleteProgram(program);this.fractalFailed=true;}
@@ -114,7 +141,7 @@ class MattAmbient {
     }
     c.putImageData(image,0,0);this.fractalStill=surface;
    }
-   const size=Math.max(this.width,this.height);this.ctx.drawImage(this.fractalStill,(this.width-size)/2,(this.height-size)/2,size,size);return;
+   const size=Math.max(this.width,this.height)+24,p=this.pointer;this.ctx.drawImage(this.fractalStill,(this.width-size)/2+(p.x-.5)*16*p.strength,(this.height-size)/2+(p.y-.5)*16*p.strength,size,size);return;
   }
   const scale=Math.min(1,640/Math.max(this.width,this.height));
   const w=Math.max(1,Math.round(this.width*scale)),h=Math.max(1,Math.round(this.height*scale));
@@ -123,6 +150,7 @@ class MattAmbient {
   // A three-minute in/out cycle, with soft turns and a bounded precision range.
   const depth=(1-Math.cos(this.time*Math.PI/90))*.5;
   gl.uniform1f(f.span,3.2*Math.exp(-9.5*depth));gl.uniform2f(f.aspect,w/Math.min(w,h),h/Math.min(w,h));
+  const p=this.pointer;gl.uniform2f(f.pointerShift,(p.x-.5)*.07*p.strength,(.5-p.y)*.07*p.strength);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);this.ctx.drawImage(f.surface,0,0,this.width,this.height);
  }
 
