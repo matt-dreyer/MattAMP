@@ -10,11 +10,11 @@ const STATIONS = [
  ['liquiddnb','Liquid DnB'], ['chillout','Chillout'], ['psychill','PsyChill']
 ].map(([id,name])=>({id,name}));
 const SHOWS = [
- {id:'lastweek',name:'Last Week in AI',channel:'UCKARTq-t5SPMzwtft8FWwnA',feed:'https://rss.art19.com/last-week-in-ai'},
- {id:'humans',name:'AI for Humans',channel:'UCghJTNTO9kcDeUFXMuSDGLQ',feed:'https://feeds.libsyn.com/469701/rss'},
- {id:'allin',name:'All-In',channel:'UCESLZhusAkFfsNsApnjF_Cg',feed:'https://allinchamathjason.libsyn.com/rss'},
- {id:'dwarkesh',name:'Dwarkesh Podcast',channel:'UCXl4i9dYBrFOabk0xGmbkRA',feed:'https://apple.dwarkesh-podcast.workers.dev/feed.rss'},
- {id:'a16z',name:'The a16z Show',channel:'UC9cn0TuPq4dnbTY-CBsm8XA',feed:'https://feeds.simplecast.com/JGE3yC0V'}
+ {id:'lastweek',playlist:'PLM-oLAM5uh0nDfcweJYejeAdGzPCuh8KP',name:'Last Week in AI',channel:'UCKARTq-t5SPMzwtft8FWwnA',feed:'https://rss.art19.com/last-week-in-ai'},
+ {id:'humans',playlist:'UULFghJTNTO9kcDeUFXMuSDGLQ',matchAudioTitles:true,name:'AI for Humans',channel:'UCghJTNTO9kcDeUFXMuSDGLQ',feed:'https://feeds.libsyn.com/469701/rss'},
+ {id:'allin',playlist:'PLn5MTSAqaf8peDZQ57QkJBzewJU1aUokl',name:'All-In',channel:'UCESLZhusAkFfsNsApnjF_Cg',feed:'https://allinchamathjason.libsyn.com/rss'},
+ {id:'dwarkesh',playlist:'PLd7-bHaQwnthaNDpZ32TtYONGVk95-fhF',name:'Dwarkesh Podcast',channel:'UCXl4i9dYBrFOabk0xGmbkRA',feed:'https://apple.dwarkesh-podcast.workers.dev/feed.rss'},
+ {id:'a16z',playlist:'PLM4u6XbiXf5rnUvH5NLdV_It2QLgbHBDZ',name:'The a16z Show',channel:'UC9cn0TuPq4dnbTY-CBsm8XA',feed:'https://feeds.simplecast.com/JGE3yC0V'}
 ];
 const list = value => value ? (Array.isArray(value)?value:[value]):[];
 const string = value => typeof value==='object' ? String(value?.['#text']||'') : String(value||'');
@@ -41,15 +41,29 @@ async function fetchText(url,maxBytes=12*1024*1024) {
  for await(const chunk of response.body){size+=chunk.length;if(size>maxBytes)throw new Error('Response exceeded size limit');chunks.push(chunk);}
  return Buffer.concat(chunks).toString('utf8');
 }
+// AI for Humans' full-show playlist is ordered oldest first. Match its
+// non-Short uploads against the actual podcast feed, excluding standalone videos.
+function matchPodcastEpisodes(videos,audioEpisodes){
+ const words=title=>new Set(title.toLowerCase().replace(/open\s*ai/g,'openai').match(/[a-z0-9]+/g)||[]);
+ return videos.filter(video=>{
+  const a=words(video.title);
+  return audioEpisodes.some(episode=>{const b=words(episode.title),common=[...a].filter(word=>b.has(word)).length;
+   return common>=5&&2*common/(a.size+b.size)>=0.8;
+  });
+ });
+}
+function youtubeEpisodeFeed(show){return 'https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(show.playlist);}
 const feedCache=new Map();
 async function episodes(showId,type,refresh=false) {
  const show=SHOWS.find(s=>s.id===showId);if(!show||!['youtube','audio'].includes(type))throw new Error('Unknown podcast source');
  const key=showId+':'+type, previous=feedCache.get(key);
  if(!refresh&&previous&&Date.now()-previous.updated<900000)return previous;
  try{
-  const url=type==='youtube'?'https://www.youtube.com/feeds/videos.xml?channel_id='+show.channel:show.feed;
-  const items=parseFeed(await fetchText(url),type);
-  if(!items.length)throw new Error('No playable episodes in this feed');
+  const url=type==='youtube'?youtubeEpisodeFeed(show):show.feed;
+  let items=parseFeed(await fetchText(url),type);
+  if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh);items=matchPodcastEpisodes(items,audio.items);}
+  items.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
+  if(!items.length)throw new Error('No full episodes available in this feed. Try Audio feed.');
   const result={items,updated:Date.now(),stale:false};feedCache.set(key,result);return result;
  }catch(error){if(previous)return {...previous,stale:true};throw error;}
 }
@@ -142,4 +156,4 @@ class Monitor {
  }
 }
 function videoId(value){try{const u=new URL(value);if(!['youtube.com','www.youtube.com','youtu.be','m.youtube.com'].includes(u.hostname))return null;const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null;}catch{return /^[\w-]{11}$/.test(value||'')?value:null;}}
-module.exports={STATIONS,SHOWS,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};
+module.exports={STATIONS,SHOWS,matchPodcastEpisodes,youtubeEpisodeFeed,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};

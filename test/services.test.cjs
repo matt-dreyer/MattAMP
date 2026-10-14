@@ -15,3 +15,18 @@ test('channel art accepts only the provider CDN and removes URL templates',()=>{
   {key:'classictrance',asset_url:'javascript:alert(1)'}
  ]);assert.equal(Object.keys(art).length,1);const u=new URL(art.futuresynthpop);assert.equal(u.protocol,'https:');assert.equal(u.pathname,'/cover.png');assert.equal(u.searchParams.get('width'),'256');
 });
+test('podcast feeds use full-episode playlists instead of general uploads',()=>{
+ const {SHOWS,youtubeEpisodeFeed}=require('../src/services.cjs');
+ for(const show of SHOWS){const u=new URL(youtubeEpisodeFeed(show));assert.ok(u.searchParams.get('playlist_id'));assert.equal(u.searchParams.has('channel_id'),false);}
+ assert.equal(SHOWS.find(s=>s.id==='humans').matchAudioTitles,true);
+});
+test('podcast title matching excludes standalone videos and shortened clip titles',()=>{
+ const {matchPodcastEpisodes}=require('../src/services.cjs');const videos=[
+  {id:'full',title:'AI Is Breaking Software & Games. What Happens Next?'},
+  {id:'punctuation',title:'ai put minecraft in skyrim (and open ai had a dev day)'},
+  {id:'clip',title:'AI Is Breaking Software'},
+  {id:'standalone',title:'An AI Made This Entire Documentary to Find Out If It Can Feel'}
+ ];const audio=[{title:'AI Is Breaking Software & Games. What Happens Next?'},{title:'AI put Minecraft in Skyrim (and OpenAI had a Dev Day)'}];
+ assert.deepEqual(matchPodcastEpisodes(videos,audio).map(v=>v.id),['full','punctuation']);
+ assert.deepEqual(matchPodcastEpisodes(videos,[]),[]);
+});

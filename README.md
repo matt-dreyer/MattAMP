@@ -7,7 +7,7 @@ A local Linux desktop player and workstation monitor, built for Matt’s 49-inch
 Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The original `workstation-deck` command remains an alias-compatible entry point.
 
 - **DI.FM / Podcasts** switches the one active playback source.
-- **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists recent uploads, including clips; audio feeds list podcast episodes.
+- **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists full podcast episodes, excluding the general Shorts/upload feed; audio feeds list podcast episodes.
 - The column button switches **Sidecar / stacked** layouts. The panel button toggles **compact** view.
 - The audio-lines button collapses MattAMP to a **56 × 56 bug**. Drag it to move; click to restore. Radio and audio podcasts continue. YouTube pauses when hidden, including Bug mode, Settings, and the tray.
 - Drag the title bar to move the full window. The minus button hides it to the tray; **X quits MattAMP**. The tray menu restores, pauses, or quits it.
@@ -27,7 +27,7 @@ Station presets: Future Synthpop, Classic Trance, Deep House, Synthwave, Progres
 
 Favorites: Last Week in AI, AI for Humans, All-In, Dwarkesh Podcast, The a16z Show.
 
-The YouTube player uses native controls. Click its Play button when the browser requires a user gesture. Individual uploads may disallow embeds or require a YouTube login; use **YouTube** to open the episode externally, or select **Audio feed**. YouTube and RSS editions are separate feeds, so their episode selection and resume positions are separate too. No YouTube account is required by MattAMP itself.
+The YouTube player uses a responsive 16:9 viewport and native controls. Four shows use their dedicated full-episode playlists; AI for Humans matches non-Short uploads to its podcast RSS titles to exclude standalone videos and clips. Feed failures do not fall back to unfiltered uploads. The default playback speed is 1×; a speed you choose manually is remembered. Click its Play button when the browser requires a user gesture. Individual uploads may disallow embeds or require a YouTube login; use **YouTube** to open the episode externally, or select **Audio feed**. YouTube and RSS editions are separate feeds, so their episode selection and resume positions are separate too. No YouTube account is required by MattAMP itself.
 
 Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30-second forward, and playback speed. Positions and preferences save locally. Nothing autoplays at launch. A custom YouTube URL can be loaded from Settings.
 

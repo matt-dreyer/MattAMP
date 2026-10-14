@@ -109,7 +109,7 @@ async function loadEpisodes(autoplay=false,refresh=false){
   catalogs.set(key,result);items=result.items;
   $('episode').replaceChildren(...items.map(item=>{const option=document.createElement('option');option.value=item.id;const date=new Date(item.date);option.textContent=(Number.isNaN(+date)?'':date.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · ')+item.title;return option;}));
   const chosen=items.find(e=>e.id===state.selected[key])||items[0];$('episode').value=chosen.id;$('episode').title=chosen.title;
-  $('feed-status').textContent=result.stale?'Cached · refresh failed':type==='youtube'?'Latest uploads':'Latest episodes';
+  $('feed-status').textContent=result.stale?'Cached · refresh failed':type==='youtube'?'Full episodes':'Latest episodes';
   await loadEpisode(chosen,autoplay);
  }catch(err){if(requestEpoch===epoch){items=[];$('episode').replaceChildren(new Option('Feed unavailable — try Refresh',''));$('feed-status').textContent='Unavailable';setStatus('Stopped');report(err);}}
  finally{episodeBusy=false;$('episode').disabled=!items.length;$('refresh').disabled=false;resize();}
