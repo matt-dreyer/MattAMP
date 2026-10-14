@@ -38,7 +38,7 @@
     <button type="submit" class="primary" id="game-start">Start battle</button>
    </form>
    <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
-   <div class="game-field"><canvas id="game-canvas" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
+   <div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
    <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
    <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
    <fieldset id="game-controls" disabled><legend class="sr-only">Aim and fire</legend>
@@ -46,7 +46,7 @@
     <label>Power <output id="game-power-value" for="game-power">55</output><input id="game-power" type="range" min="10" max="100" value="55"><small>10 gentle · 100 full send</small></label>
     <label>Ammo<select id="game-weapon"><option value="shell">Shell · unlimited</option><option value="mirv">MIRV · 3 left</option></select></label><button id="game-fire" class="primary">Fire!</button>
    </fieldset>
-   <p class="game-hint">Click the sky to aim. Scroll over the battlefield to adjust power: up increases, down decreases. Then Fire. Last shot leaves a trail. Switching tabs pauses the battle; radio keeps playing.</p>
+   <p class="game-hint">Click the sky to aim. Up/Down arrows or mouse wheel adjust power. Enter fires. Last shot leaves a trail. Switching tabs pauses the battle; radio keeps playing.</p>
    <div id="game-end" hidden><p id="game-result"></p><p id="game-save-status" role="status"></p><button id="game-save-retry" hidden>Retry saving score</button><button id="game-again">New skirmish</button></div>
    <div id="game-abandon" hidden><p>Leave this battle? Unfinished battles don’t score.</p><button id="game-abandon-yes">Leave battle</button><button id="game-abandon-no">Keep playing</button></div>
    <button id="game-new" class="text-button" hidden>New skirmish…</button>

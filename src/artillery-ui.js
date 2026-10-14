@@ -16,16 +16,27 @@ class MattArcade{
   for(const details of panel.querySelectorAll('details'))details.addEventListener('toggle',onResize);
   this.canvas.onpointerdown=e=>{
    const b=this.battle;if(!b||b.phase!=='aim'||b.active.id!==0||this.paused)return;
+   this.canvas.focus({preventScroll:true});
    const r=this.canvas.getBoundingClientRect(),x=(e.clientX-r.left)*1000/r.width,y=(e.clientY-r.top)*540/r.height,t=b.active;
    this.$('angle').value=Math.round(Math.max(5,Math.min(175,Math.atan2(Math.max(0,t.y-y),x-t.x)*180/Math.PI)));this.updateAim();this.draw();
   };
   const wheelPower=e=>{
    const b=this.battle;if(!this.visible||this.paused||!b||b.phase!=='aim'||b.active.id!==0||e.ctrlKey||!e.deltaY)return;
    e.preventDefault();
-   const power=this.$('power');power.value=Math.max(Number(power.min),Math.min(Number(power.max),Number(power.value)-Math.sign(e.deltaY)));
-   this.updateAim();this.draw();
+   this.adjustPower(-Math.sign(e.deltaY));
   };
   for(const target of [this.canvas,this.$('power')])target.addEventListener('wheel',wheelPower,{passive:false});
+  document.addEventListener('keydown',e=>{
+   const b=this.battle;if(e.defaultPrevented||e.isComposing||e.ctrlKey||e.metaKey||e.altKey||!this.visible||this.paused||!b||b.phase!=='aim'||b.active.id!==0)return;
+   if(!['ArrowUp','ArrowDown','Enter'].includes(e.key))return;
+   const target=e.target;
+   if(target.isContentEditable||target.closest('select,textarea')||(target.closest('input')&&!['game-angle','game-power'].includes(target.id)))return;
+   if(!this.panel.contains(target)&&target!==document.body&&target.id!=='source-game')return;
+   // Keep Enter's normal activation for focused navigation and other buttons.
+   if(e.key==='Enter'&&target.closest('button,a,summary')&&target.id!=='game-fire')return;
+   e.preventDefault();
+   if(e.key==='Enter'){if(!e.repeat)this.fire();}else this.adjustPower(e.key==='ArrowUp'?1:-1);
+  });
   // Load optional artwork without making a missing asset a game-breaking error.
   for(const name of ['tank','tracks','blast',...Array.from({length:12},(_,i)=>'blast-'+(i+1))]){const img=new Image();img.onload=()=>{this.assets[name]=img;this.draw();};img.src='/arcade/'+name+'.png';}
   // Preserve the original sheets; remove their flat key colors once on load.
@@ -51,6 +62,7 @@ class MattArcade{
   const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power;
   if(this.battle?.phase==='aim'&&this.battle.active.id===0){this.battle.active.angle=angle;this.battle.active.power=power;}
  }
+ adjustPower(delta){const power=this.$('power');power.value=Math.max(Number(power.min),Math.min(Number(power.max),Number(power.value)+delta));this.updateAim();this.draw();}
  fire(){if(this.paused||!this.visible)return;if(this.battle?.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),this.$('weapon').value)){this.playSound('fire');this.sync();}}
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
