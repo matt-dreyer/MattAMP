@@ -61,7 +61,7 @@ function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame
 function render(){
  const podcast=state.source==='podcast',video=isVideo();
  renderX();syncAmbient();syncGame();
- root.classList.toggle('game-mode',playingGame&&mode==='full');$('game-panel').hidden=!playingGame||mode!=='full';$('source-game').setAttribute('aria-pressed',String(playingGame));
+ root.classList.toggle('game-mode',playingGame&&!settings&&mode==='full');$('game-panel').hidden=!playingGame||settings||mode!=='full';$('source-game').setAttribute('aria-pressed',String(playingGame));
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
  $('source-radio').setAttribute('aria-pressed',String(!readingX&&!playingGame&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!readingX&&!playingGame&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
  $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;

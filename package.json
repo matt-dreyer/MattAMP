@@ -11,7 +11,8 @@
     "test:smoke": "node scripts/smoke.cjs",
     "test:arcade": "node scripts/arcade-smoke.cjs",
     "test:heckles": "node scripts/heckles-smoke.cjs",
-    "test:victory": "node scripts/victory-smoke.cjs"
+    "test:victory": "node scripts/victory-smoke.cjs",
+    "test:settings-game": "node scripts/settings-game-smoke.cjs"
   },
   "dependencies": {
     "electron": "44.7.2",
