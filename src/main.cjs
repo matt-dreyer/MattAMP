@@ -16,13 +16,14 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 function keyring(){return safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend()!=='basic_text';}
 function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring()};}
 function update(patch){
  if(!patch||typeof patch!=='object')return;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
+ if(['off','flow','waves'].includes(patch.ambient))state.ambient=patch.ambient;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
  if(['radio','podcast'].includes(patch.source))state.source=patch.source;
@@ -60,7 +61,7 @@ function resize(view,height){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  server=http.createServer((req,res)=>{
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
   const file=routes[req.url?.split('?')[0]];if(!file||req.method!=='GET'){res.writeHead(404);res.end();return;}

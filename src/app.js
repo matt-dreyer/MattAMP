@@ -1,6 +1,9 @@
 /* MattAMP renderer: all privileged work goes through the narrow preload API. */
 const $=id=>document.getElementById(id);
 const root=$('deck'),audio=$('audio');
+const ambient=new MattAmbient($('ambient'));
+let appHidden=false;
+function syncAmbient(){if(state)ambient.configure(state.ambient,appHidden||mode==='bug');}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
 function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
@@ -48,14 +51,14 @@ function snapshot(){
  const n=isVideo()&&yt?yt.getCurrentTime?.():audio.currentTime;
  if(Number.isFinite(n)&&n>=0)state.positions[key]=n;
 }
-async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,details:state.details,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
+async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,details:state.details,ambient:state.ambient,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
 function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+2);const key=[mode,state.layout,h,settings].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h).then(syncXBounds);});}
 function render(){
  const podcast=state.source==='podcast',video=isVideo();
- renderX();
+ renderX();syncAmbient();
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
  $('source-radio').setAttribute('aria-pressed',String(!readingX&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!readingX&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
  $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;
@@ -64,7 +67,7 @@ function render(){
  $('now-detail').textContent=podcast?(current?.title||'Select an episode.'):state.hasDiKey?'Live radio · Premium':'Add your Premium listen key in Settings.';
  $('volume').value=state.volume;$('volume-value').textContent=muted?'0':state.volume;$('mute').setAttribute('aria-pressed',String(muted));$('mute').setAttribute('aria-label',muted?'Unmute':'Mute');$('mute').innerHTML=icon(muted?'volume-x':'volume-2');
  $('speed').value=String(state.speed);$('podcast-type').value=state.podcastType;$('audio-timeline').hidden=video;$('open-video').hidden=!video;
- $('always-top').checked=state.alwaysOnTop;$('details').setAttribute('aria-expanded',String(state.details));$('details').innerHTML=(state.details?'Less':'Details')+icon(state.details?'chevron-up':'chevron-down');
+ $('ambient-mode').value=state.ambient;$('always-top').checked=state.alwaysOnTop;$('details').setAttribute('aria-expanded',String(state.details));$('details').innerHTML=(state.details?'Less':'Details')+icon(state.details?'chevron-up':'chevron-down');
  $('layout').setAttribute('aria-label',state.layout==='sidecar'?'Switch to stacked layout':'Switch to Sidecar layout');
  document.querySelectorAll('[data-station]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.station===state.station)));
  document.querySelectorAll('[data-show]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.show===state.show)));
@@ -164,7 +167,7 @@ async function init(){
  $('x-form').onsubmit=async e=>{e.preventDefault();try{const result=await unwrap(window.deck.save({xAccounts:$('x-accounts').value,xAiOnly:$('x-ai-only').checked}));state.xAccounts=result.xAccounts;state.xAiOnly=result.xAiOnly;$('x-accounts').value=state.xAccounts.join(', ');$('x-settings-status').textContent='Feed saved.';xLane='ai';toggleX(true);void xAction('feed');}catch(err){$('x-settings-status').textContent=err.message;resize();}};
  $('x-forget').onclick=async()=>{try{await unwrap(window.deck.xAction('forget'));$('x-settings-status').textContent='X sign-in removed from MattAMP.';}catch(err){$('x-settings-status').textContent=err.message;}resize();};
  window.deck.onXStatus(message=>{$('x-status').textContent=message;resize();});
- window.deck.onShown(()=>requestAnimationFrame(syncXBounds));
+ window.deck.onShown(()=>{appHidden=false;syncAmbient();requestAnimationFrame(syncXBounds);});
  window.addEventListener('resize',syncXBounds);window.addEventListener('scroll',syncXBounds);
  document.addEventListener('visibilitychange',syncXBounds);
  $('source-x').onclick=()=>toggleX(true);$('source-radio').onclick=()=>{toggleX(false);void switchSource('radio');};$('source-podcast').onclick=()=>{toggleX(false);void switchSource('podcast');};$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
@@ -186,13 +189,14 @@ async function init(){
  $('bug').onpointerup=()=>{const moved=drag?.moved;drag=null;if(!moved)setMode(restoreMode);};
  $('bug').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();setMode(restoreMode);}};
  $('settings-open').onclick=()=>{if(isVideo())pause();settings=!settings;render();};$('settings-close').onclick=()=>{settings=false;render();};
+ $('ambient-mode').onchange=e=>{state.ambient=e.target.value;syncAmbient();queueSave();};
  $('always-top').onchange=e=>{state.alwaysOnTop=e.target.checked;queueSave();};
  $('key-help').onclick=()=>void window.deck.external('di-settings');
  $('key-form').onsubmit=async e=>{e.preventDefault();try{const value=$('listen-key').value;if(!value.trim())throw new Error('Paste your Premium listen key first.');const result=await unwrap(window.deck.setKey(value));state.hasDiKey=result.hasDiKey;state.keyring=result.keyring;$('listen-key').value='';$('settings-message').textContent='Listen key saved. Choose a station to start.';render();}catch(err){$('settings-message').textContent=err.message;resize();}};
  $('clear-key').onclick=async()=>{stopAll();const result=await unwrap(window.deck.setKey(''));state.hasDiKey=result.hasDiKey;$('listen-key').value='';$('settings-message').textContent='Listen key removed.';render();};
  $('video-form').onsubmit=async e=>{e.preventDefault();try{const id=await unwrap(window.deck.videoId($('video-url').value));stopAll();state.source='podcast';state.podcastType='youtube';settings=false;render();await loadEpisode({id,title:'Custom YouTube video',type:'youtube',url:'https://www.youtube.com/watch?v='+id},true);$('video-url').value='';}catch(err){$('settings-message').textContent=err.message;resize();}};
  $('hide').onclick=()=>{if(isVideo())pause();void window.deck.hide();};$('quit-top').onclick=$('quit').onclick=()=>{stopAll();void persist().then(()=>window.deck.quit());};
- window.deck.onPause(pause);window.deck.onHidden(()=>{if(isVideo())pause();});window.deck.onQuit(()=>{stopAll();void persist();});
+ window.deck.onPause(pause);window.deck.onHidden(()=>{appHidden=true;syncAmbient();if(isVideo())pause();});window.deck.onQuit(()=>{stopAll();void persist();});
  window.addEventListener('beforeunload',()=>{snapshot();void persist();});
  audio.onplaying=()=>{stopStartup();if(isVideo()){audio.pause();return;}setStatus('Playing',true);error();};
  audio.onpause=()=>{if(!isVideo()&&playing)setStatus('Paused');};
