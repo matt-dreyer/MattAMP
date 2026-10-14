@@ -15,7 +15,7 @@ app.setDesktopName('ai.fshbwl.deck.desktop');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
-let win,tray,server,origin,timer,fullBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
+let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
 let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
@@ -44,9 +44,14 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
-function resize(view,height){
+function resize(view,height,expanded=false){
  if(!win||!['full','compact','bug'].includes(view))return;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
+ if(expanded===true&&view==='full'){
+  if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
+  mode='full';return;
+ }
+ if(gameBounds){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
  if(view!=='full')xFeed?.hide();
  if(view==='bug'){
   if(mode!=='bug')fullBounds=win.getBounds();
@@ -89,7 +94,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win=new BrowserWindow({x:Math.max(work.x,Math.min(initial.x,work.x+work.width-710)),y:Math.max(work.y,Math.min(initial.y,work.y+work.height-560)),width:710,height:560,minWidth:340,minHeight:260,frame:false,transparent:true,backgroundColor:'#00000000',show:false,alwaysOnTop:state.alwaysOnTop,icon:path.join(__dirname,'../assets/icon.png'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
  win.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/(www\.)?(youtube\.com|di\.fm)\//.test(url))shell.openExternal(url);return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
- win.on('close',()=>{if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
+ win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
  win.on('minimize',()=>{xFeed?.hide();send('deck:hidden');});
  win.on('hide',()=>{xFeed?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));
@@ -103,7 +108,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:arcade-read',()=>arcade.read());
  handle('deck:arcade-record',record=>arcade.record(record));
  handle('deck:save',patch=>{update(patch);return publicState();});
- handle('deck:resize',(view,height)=>resize(view,height));
+ handle('deck:resize',(view,height,expanded)=>resize(view,height,expanded));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));
  handle('deck:episodes',(show,type,refresh)=>episodes(show,type,!!refresh));
  handle('deck:key',value=>{

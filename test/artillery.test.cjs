@@ -53,3 +53,40 @@ test('high scores persist, rank, cap at ten, and deduplicate retried results',()
 test('damaged score files are preserved rather than silently overwritten',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-scores-'));try{const file=path.join(dir,'scores.json');fs.writeFileSync(file,'broken');const store=createArcadeStore(file);assert.throws(()=>store.read(),/kept/);assert.equal(fs.readFileSync(file,'utf8'),'broken');}finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+const memory=(winner=null)=>({winner,damage:Array.from({length:6},()=>Array(6).fill(0))});
+test('rivalries favor actual attackers and repeat winners, equally for humans and bots',()=>{
+ const recent=memory(3);recent.damage[2][1]=70;
+ const b=battle({history:[memory(3),recent]});b.turn=1;
+ const choices=b.targetChoices();assert.equal(choices.find(c=>c.tank.id===2).reason,'grudge');assert.equal(choices.find(c=>c.tank.id===3).reason,'leader');assert.equal(choices.find(c=>c.tank.id===0).weight,1);
+ b.random=rng(91);const counts=Array(6).fill(0);for(let i=0;i<3000;i++)counts[b.chooseTarget().id]++;
+ assert.ok(counts[2]>counts[0]*1.8);assert.ok(counts[3]>counts[0]*1.8);assert.ok(counts[0]>0&&counts[4]>0);
+ for(const target of [0,2]){const m=memory(target);m.damage[target][1]=70;const game=battle({history:[m,m]});game.turn=1;assert.equal(game.targetChoices().find(c=>c.tank.id===target).weight,5);}
+});
+test('grudges fade for three completed games and absent rivals never become targets',()=>{
+ const wound=memory();wound.damage[2][1]=70;
+ const weight=history=>{const b=battle({bots:3,history});b.turn=1;return b.targetChoices().find(c=>c.tank.id===2).weight;};
+ assert.ok(weight([wound])>weight([wound,memory()]));assert.ok(weight([wound,memory()])>weight([wound,memory(),memory()]));assert.equal(weight([wound,memory(),memory(),memory()]),1);
+ const b=battle({bots:3,history:[memory(5),memory(5)]});b.turn=1;assert.ok(b.targetChoices().every(c=>c.weight===1&&c.tank.id!==5));
+});
+test('rivalry ledger attributes blast and fall damage to bots and excludes self damage',()=>{
+ const b=battle(),target=b.tanks[1];b.explode({x:target.x,y:target.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][1],100-target.hp);
+ b.explode({x:target.x,y:target.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][1],100);
+ const self=b.tanks[2];b.explode({x:self.x,y:self.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][2],0);assert.equal(b.score,0);
+});
+test('surviving bots earn an offscreen winner without changing the visible result or score',async()=>{
+ const b=battle({bots:3,skill:3});b.tanks[0].hp=0;b.nextTurn();const before=JSON.stringify(b),result=await b.finishRivals();
+ assert.equal(JSON.stringify(b),before);assert.ok([1,2,3].includes(result.winner));assert.ok(result.damage.flat().some(n=>n>0));
+ const won=battle();won.tanks.slice(1).forEach(t=>t.hp=0);won.nextTurn();assert.equal((await won.finishRivals()).winner,0);
+});
+test('rivalry persists separately from high scores, expires and deduplicates with old saves intact',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-rivalry-'));try{
+  const file=path.join(dir,'scores.json'),store=createArcadeStore(file);
+  const row={id:'battle-memory-0001',initials:'MAT',score:0,win:false,result:'loss',bots:4,skill:1,kills:0,shots:1,memory:memory(2)};row.memory.damage[2][1]=60;
+  store.record(row);store.record(row);assert.equal(store.read().rivalry.length,1);
+  for(let i=2;i<=4;i++)store.record({...row,id:'battle-memory-000'+i,memory:memory(i)});
+  assert.deepEqual(createArcadeStore(file).read().rivalry.map(m=>m.winner),[2,3,4]);
+  const invalid=memory(1);invalid.damage[1][1]=1;assert.throws(()=>store.record({...row,id:'battle-memory-0005',memory:invalid}));
+  const legacy=JSON.parse(fs.readFileSync(file));delete legacy.rivalry;fs.writeFileSync(file,JSON.stringify(legacy));assert.deepEqual(store.read().rivalry,[]);assert.equal(store.read().played,4);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});

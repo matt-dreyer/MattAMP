@@ -101,3 +101,10 @@ Metal Slug sprites, Worms 2 effects, and Kenney fallbacks are in `assets/arcade/
 Wins trigger a nine-second GPU-rendered gold tank ceremony with 2,400 tumbling confetti pieces, a moving camera, lights and a synthesized fanfare. **Back to scores** or **Escape** skips it. Game Sound off mutes the fanfare; radio keeps playing. Leaving the game stops and releases the scene. Reduced motion freezes the 3D scene, and WebGL failure leaves a static victory message. Score saving runs independently. Tank heckles include sarcastic profanity for kills, awful misses and self damage.
 
 `npm run test:victory` exercises real WebGL rendering, wide/narrow layouts, win-only activation, dismissal, timed cleanup, reduced motion, context loss, sound cleanup and radio/score continuity in an isolated Electron profile.
+
+### Aim, rivalries and a bigger battlefield
+
+- **Left/Right** turns the barrel left/right; **Up/Down** changes power; **Enter** fires. Scroll over **Angle** or **Power** (including the labels) to change that value. Scrolling over the battlefield still adjusts power.
+- **Shell / MIRV** are compact radio choices alongside the sliders and Fire, with the remaining MIRV count. Very narrow windows wrap the controls.
+- **Expand** beside Sound opens a large game window. Drag its edges to resize; **Restore** or **Escape** returns to the widget. Leaving the game also restores the normal size. Escape dismisses a victory ceremony first.
+- Bots remember damage for the last **three completed battles**, fading older grudges. Anyone winning at least two of those battles draws extra fire, including bots. Revenge and leader-targeting taunts name their target. Rivalries persist with local scores; abandoned games do not count. If you lose early, the remaining bots finish offscreen to determine the actual winner, reported in the results.
