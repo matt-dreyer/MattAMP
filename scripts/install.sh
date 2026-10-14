@@ -20,7 +20,7 @@ Exec=$HOME/.local/bin/mattamp
 Icon=$HOME/.local/share/icons/hicolor/128x128/apps/ai.fshbwl.deck.png
 Terminal=false
 Categories=AudioVideo;Audio;System;Monitor;
-StartupWMClass=workstation-deck
+StartupWMClass=ai.fshbwl.deck
 EOF
 command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" || true
 printf 'Installed MattAMP launcher. Run: %s/.local/bin/mattamp\n' "$HOME"
