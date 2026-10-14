@@ -61,3 +61,27 @@ test('ordinary external links still open and failed browser launches are reporte
  await new Promise(resolve=>setImmediate(resolve));
  assert.match(messages.at(-1),/browser could not open/);
 });
+
+test('one provider handoff per login attempt even across duplicate popup and navigation events',async()=>{
+ const {feed,wc,opened}=mockFeed();
+ const google='https://accounts.google.com/gsi/select?state=first';
+ wc.popup({url:google});
+ wc.popup({url:'https://accounts.google.com/v3/signin/accountchooser?state=second'});
+ wc.emit('will-navigate',{preventDefault(){}},google);
+ wc.emit('will-redirect',{preventDefault(){}},google);
+ await new Promise(resolve=>setImmediate(resolve));
+ wc.popup({url:google});
+ assert.equal(opened.length,1);
+ // Explicit retries and the Browser button remain available.
+ await feed.action('browser');assert.equal(opened.length,2);
+ await feed.action('login');wc.popup({url:google});assert.equal(opened.length,3);
+});
+test('failed provider launch can be retried without restarting the feed',async()=>{
+ const {wc,shell}=mockFeed();let calls=0;
+ shell.openExternal=async()=>{calls++;if(calls===1)throw new Error('failed');};
+ const url='https://accounts.google.com/gsi/select';
+ wc.popup({url});await new Promise(resolve=>setImmediate(resolve));
+ wc.popup({url});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls,2);
+ wc.popup({url});assert.equal(calls,2);
+});

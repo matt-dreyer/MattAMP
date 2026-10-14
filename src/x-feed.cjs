@@ -21,16 +21,19 @@ function isSignInProvider(value){
 }
 function createXFeed({win,send,getConfig}){
  const {WebContentsView,session,shell}=require('electron');
- let view=null,lane='ai',loaded=false,failed=false,handoffMessage='';
+ let view=null,lane='ai',loaded=false,failed=false,handoffMessage='',providerHandoff=null;
  function status(message){send('deck:x-status',message);}
  async function openBrowser(url){
   const provider=isSignInProvider(url);
+  if(provider&&providerHandoff){status(handoffMessage);return;}
+  const attempt=provider?{}:null;
   if(provider){
+   providerHandoff=attempt;
    handoffMessage='Continue on X in your browser and choose Google or Apple there. Browser sign-in stays in your browser; it does not sign in this pane.';
    status(handoffMessage);
   }
   try{await shell.openExternal(provider?searchUrl(getConfig(),lane):url);}
-  catch{handoffMessage='The browser could not open. Try Browser again, or sign in directly to X in this pane.';status(handoffMessage);}
+  catch{if(provider){if(providerHandoff!==attempt)return;providerHandoff=null;}handoffMessage='The browser could not open. Try Browser again, or sign in directly to X in this pane.';status(handoffMessage);}
  }
  function ensure(){
   if(view)return view;
@@ -51,7 +54,7 @@ function createXFeed({win,send,getConfig}){
   win.once('closed',()=>{if(!wc.isDestroyed())wc.close();});
   return view;
  }
- function navigate(url){handoffMessage='';const v=ensure();loaded=true;void v.webContents.loadURL(url).catch(()=>status('X could not load. Retry or use Open in browser.'));}
+ function navigate(url){providerHandoff=null;handoffMessage='';const v=ensure();loaded=true;void v.webContents.loadURL(url).catch(()=>status('X could not load. Retry or use Open in browser.'));}
  function bounds(rect){
   const visible=!!rect?.visible;
   if(!visible){view?.setVisible(false);return;}
