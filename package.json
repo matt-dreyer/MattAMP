@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs",
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs",
     "test:smoke": "node scripts/smoke.cjs"
   },
   "dependencies": {

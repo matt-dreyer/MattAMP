@@ -6,6 +6,7 @@ A local Linux desktop player and workstation monitor, built for Matt’s 49-inch
 
 Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The original `workstation-deck` command remains an alias-compatible entry point.
 
+- The **speech-bubbles button** opens the X feed; **Player** returns to music.
 - **DI.FM / Podcasts** switches the one active playback source.
 - **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists full podcast episodes, excluding the general Shorts/upload feed; audio feeds list podcast episodes.
 - The column button switches **Sidecar / stacked** layouts. The panel button toggles **compact** view.
@@ -31,6 +32,14 @@ The YouTube player uses a responsive 16:9 viewport and native controls. Four sho
 
 Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30-second forward, and playback speed. Positions and preferences save locally. Radio and podcasts wait for Play. The classic Winamp intro plays once per app launch at your saved volume; starting playback or pressing Stop/Pause cuts it short. Restoring the window or launching a second instance does not replay it. A custom YouTube URL can be loaded from Settings.
 
+## X feed
+
+Open the speech-bubbles button in the title bar. **AI circle** uses X’s official Latest search, limited to `@bcherny`, `@steipete`, `@karpathy`, `@simonw`, and `@chamath`, plus AI-related keywords. Replies and reposts are excluded by the search query. **For giggles** is a separate Elon Musk lane, so high post volume cannot flood the AI circle. Filters edits the account list (up to 12 handles) and AI-topic restriction. Search matching and result availability are controlled by X; keyword filtering can miss relevant posts that do not mention those terms. This is a filtered X page, not a custom ranked feed, and navigating inside X can leave the filter; click AI circle to return.
+
+Sign in directly on X’s own page with your usual account, then click AI circle. X’s login form may use its own light theme. The session is remembered only in MattAMP’s isolated `persist:mattamp-x` Chromium partition; the app does not import browser cookies, collect your password, or require an X API key. Settings → Forget X sign-in clears this local session. **Browser** opens the same filtered search in your default browser using that browser’s existing login (it does not transfer the session back into MattAMP). If Google/Apple sign-in cannot complete inside the embedded view, use direct X credentials or the browser option.
+
+X runs in a sandboxed WebContentsView without Node or MattAMP’s preload bridge. Remote content cannot access app IPC or the DI.FM key; camera, microphone, notifications and downloads are denied. X media stays muted so radio/audio podcasts can continue; switching to X pauses YouTube. The X pane hides in compact/bug modes and while Settings is open. Loading X does not automatically follow anyone, publish posts, or create lists. Login and personalized results require the user to sign in; only the public login screen and app controls have been verified so far.
+
 ## Local data and monitoring
 
 MattAMP keeps its original internal app ID and storage paths so the rename preserves your dock pin, settings, and saved listen key.
@@ -54,6 +63,8 @@ npm start
 ```
 
 `node scripts/smoke.cjs` runs a live Electron smoke test against this workstation and public podcast services. It expects both RTX cards and internet access, plays muted test media, opens temporary windows, and writes screenshots under ignored `test-results/`. External provider availability can affect it.
+
+On Ubuntu with restricted unprivileged user namespaces, run `bash scripts/install-sandbox-profile.sh` once after installation. It uses the desktop administrator prompt to install `/etc/apparmor.d/mattamp`, scoped to this checkout’s Electron executable, with the `userns` permission Electron needs to build its sandbox. It does not disable sandboxing or change system-wide namespace restrictions. Rerun it if the install path changes. This fixes dock launches that abort with the “SUID sandbox helper … not configured correctly” error. The launcher invokes the bundled Electron executable directly, without relying on an interactive shell’s Node setup.
 
 The launcher uses this checkout and its pinned Electron installation. Keep this directory in place. There is no auto-updater or login autostart. To upgrade dependencies, update the lockfile deliberately and rerun checks.
 

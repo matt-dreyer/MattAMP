@@ -1,24 +1,29 @@
-const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen}=require('electron');
+const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs');
 const http=require('node:http');
 const {STATIONS,SHOWS,Monitor,radioUrls,episodes,videoId,stationArtwork}=require('./services.cjs');
 const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
+const {DEFAULT_ACCOUNTS,accounts,createXFeed}=require('./x-feed.cjs');
+let xFeed;
 // Keep the internal identity stable so existing settings, keyring and dock pins survive the rename.
 app.setName('workstation-deck');
+nativeTheme.themeSource='dark';
 app.setDesktopName('ai.fshbwl.deck.desktop');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,positions:{},selected:{}};
+let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 function keyring(){return safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend()!=='basic_text';}
 function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring()};}
 function update(patch){
  if(!patch||typeof patch!=='object')return;
+ if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
+ if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
  if(['radio','podcast'].includes(patch.source))state.source=patch.source;
  if(STATIONS.some(s=>s.id===patch.station))state.station=patch.station;
@@ -40,6 +45,7 @@ function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(
 function resize(view,height){
  if(!win||!['full','compact','bug'].includes(view))return;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
+ if(view!=='full')xFeed?.hide();
  if(view==='bug'){
   if(mode!=='bug')fullBounds=win.getBounds();
   mode=view;win.setMinimumSize(56,56);win.setResizable(false);
@@ -81,8 +87,13 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/(www\.)?(youtube\.com|di\.fm)\//.test(url))shell.openExternal(url);return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
  win.on('close',()=>{if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
- win.on('minimize',()=>send('deck:hidden'));
- win.on('hide',()=>send('deck:hidden'));
+ win.on('minimize',()=>{xFeed?.hide();send('deck:hidden');});
+ win.on('hide',()=>{xFeed?.hide();send('deck:hidden');});
+ win.on('show',()=>send('deck:shown'));
+ win.on('restore',()=>send('deck:shown'));
+ xFeed=createXFeed({win,send,getConfig:()=>({accounts:state.xAccounts,aiOnly:state.xAiOnly})});
+ handle('deck:x-bounds',rect=>xFeed.bounds(rect));
+ handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
  handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:SHOWS,origin,playStartup};});
  handle('deck:save',patch=>{update(patch);return publicState();});
