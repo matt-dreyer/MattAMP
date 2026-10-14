@@ -8,4 +8,4 @@ X reading uses the official Latest search with an editable AI circle, defaulting
 
 49-inch 5120×2160 OLED, dark blue-gray surfaces with muted green accents. Low brightness. Desktop app, not a hosted website. Bug mode keeps radio/audio running and pauses YouTube. Restore prior layout. Persist positions and preferences locally. Original system tools remain available until the replacement is demonstrated.
 
-The user approved an optional subtle live background inside MattAMP. Offer Particle flow by default, Water waves and Off, with the choice saved locally. Keep motion slow, dim and unobtrusive, with no interference with controls, playback or provider content. Stop and clear the effect when off, hidden, in bug mode or when reduced motion is requested.
+The user approved an optional subtle live background inside MattAMP. Offer Particle flow by default, Water waves, Starfield and Off, with the choice saved locally. Keep motion slow, dim and unobtrusive, with no interference with controls, playback or provider content. Stop and clear the effect when off, hidden, in bug mode or when reduced motion is requested.

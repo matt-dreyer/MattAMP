@@ -1,7 +1,7 @@
 /* Low-contrast local canvas: no network, input handling, or media coupling. */
 class MattAmbient {
  constructor(canvas){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];
+  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];
   this.motion=matchMedia('(prefers-reduced-motion: reduce)');
   this.motion.addEventListener('change',()=>this.sync());
   document.addEventListener('visibilitychange',()=>this.sync());
@@ -13,10 +13,14 @@ class MattAmbient {
   this.width=w;this.height=h;const scale=Math.min(devicePixelRatio||1,1.5);
   this.canvas.width=Math.round(w*scale);this.canvas.height=Math.round(h*scale);this.ctx?.setTransform(scale,0,0,scale,0,0);
   this.particles=Array.from({length:Math.min(90,Math.max(36,Math.round(w*h/6500)))},(_,i)=>({x:((i*.61803398875)%1)*w,y:((i*.41421356237)%1)*h,trail:[],mint:i%4===0}));
+  this.stars=Array.from({length:Math.min(120,Math.max(48,Math.round(w*h/4500)))},(_,i)=>({
+   x:((i*.61803398875+.17)%1)*w,y:((i*.41421356237+.31)%1)*h,
+   depth:.2+((i*.754877666)%1)*.8,phase:i*2.39996323
+  }));
   this.draw(0);
  }
  configure(mode,paused=false){
-  const next=['flow','waves'].includes(mode)?mode:'off';
+  const next=['flow','waves','stars'].includes(mode)?mode:'off';
   if(next===this.mode&&paused===this.paused)return;
   this.mode=next;this.paused=paused;this.sync();
  }
@@ -35,6 +39,15 @@ class MattAmbient {
    for(let row=0;row<10;row++){
     c.beginPath();for(let x=-20;x<=w+20;x+=12){const y=h*(row+.5)/10+Math.sin(x/w*5+this.time*.22+row*.45)*17+Math.sin(x/w*9-this.time*.12+row*.7)*8;x===-20?c.moveTo(x,y):c.lineTo(x,y);}
     c.strokeStyle=row%3===0?'rgba(130,181,164,.18)':'rgba(120,171,198,.22)';c.lineWidth=row%3===0?1.2:.8;c.stroke();
+   }
+  }else if(this.mode==='stars'){
+   // Three-dimensional feel through size and drift, without bright warp trails.
+   for(const star of this.stars){
+    const speed=.7+star.depth*2.2;
+    star.x=(star.x+dt*speed)%w;star.y=(star.y+dt*speed*.15)%h;
+    const shimmer=.88+Math.sin(this.time*.35+star.phase)*.12;
+    c.fillStyle=`rgba(151,184,207,${(.13+star.depth*.22)*shimmer})`;
+    c.beginPath();c.arc(star.x,star.y,.45+star.depth*.7,0,Math.PI*2);c.fill();
    }
   }else{
    for(const p of this.particles){

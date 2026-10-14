@@ -13,7 +13,7 @@ Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The
 - The audio-lines button collapses MattAMP to a **56 × 56 bug**. Drag it to move; click to restore. Radio and audio podcasts continue. YouTube pauses when hidden, including Bug mode, Settings, and the tray.
 - Drag the title bar to move the full window. The minus button hides it to the tray; **X quits MattAMP**. The tray menu restores, pauses, or quits it.
 - **Details** reveals memory/VRAM/temperature readings. The network status expands router and internet probe details.
-- **Settings → Live background** selects **Particle flow** (default), **Water waves**, or **Off**. The choice is remembered locally. Slow, dim blue-green motion appears inside MattAMP and leaves controls clickable. Animation stops and clears when Off, in Bug mode, hidden in the tray, or when reduced motion is enabled. X and video retain their own backgrounds.
+- **Settings → Live background** selects **Particle flow** (default), **Water waves**, **Starfield**, or **Off**. The choice is remembered locally. Slow, dim blue-green motion appears inside MattAMP and leaves controls clickable. Animation stops and clears when Off, in Bug mode, hidden in the tray, or when reduced motion is enabled. The radio station card is translucent so the selected effect shows through behind its text and artwork. Starfield uses sparse blue stars with slow depth-based drift and gentle shimmer. X and video retain their own backgrounds.
 
 ## DI.FM Premium setup
 
