@@ -1,7 +1,42 @@
 /* Low-contrast local canvas: passive pointer response, no network or media coupling. */
+/* Bounded, shuffled journeys: every route meets at the same wide view. */
+class MattFractalCamera {
+ constructor(random=Math.random){this.random=random;this.elapsed=0;this.previousSite=-1;this.previousRoute='';this.flight=this.nextFlight();}
+ nextFlight(){
+  // These detail windows are sampled at the renderer's 360-iteration budget.
+  const sites=[
+   [-.743643887,.131825904,.0008],[-.7453,.1127,.003],
+   [-.16,1.0405,.006],[-1.25066,.02012,.004],
+   [-1.768778833,.001738996,.0006],[-.088,.654,.004]
+  ];
+  const choices=sites.map((_,i)=>i).filter(i=>i!==this.previousSite);
+  const site=choices[Math.floor(this.random()*choices.length)];
+  const routes=['horizontal','vertical','arc','spiral'].filter(route=>route!==this.previousRoute);
+  const route=routes[Math.floor(this.random()*routes.length)];
+  const [x,y,span]=sites[site],direction=this.random()<.5?-1:1;
+  this.previousSite=site;this.previousRoute=route;
+  return {site,route,x,y:y*direction,span:span*(.85+this.random()*.3),duration:150+this.random()*60,
+   phase:this.random()*Math.PI*2,amplitude:.16+this.random()*.1,turns:.7+this.random()*.4,direction};
+ }
+ update(dt=0){
+  if(Number.isFinite(dt))this.elapsed+=Math.max(0,dt);
+  while(this.elapsed>=this.flight.duration){this.elapsed-=this.flight.duration;this.flight=this.nextFlight();}
+  const f=this.flight,u=this.elapsed/f.duration,depth=Math.sin(Math.PI*u)**2;
+  const span=3.2*Math.exp(Math.log(f.span/3.2)*depth),approach=1-(span/3.2)**1.2;
+  const phase=f.phase+u*Math.PI*2*f.turns*f.direction,drift=span*f.amplitude*depth;
+  let dx=0,dy=0,angle=0;
+  if(f.route==='horizontal')dx=Math.sin(phase)*drift;
+  else if(f.route==='vertical')dy=Math.sin(phase)*drift;
+  else if(f.route==='arc'){dx=Math.cos(phase)*drift;dy=Math.sin(phase*.7)*drift*.65;}
+  else{dx=Math.cos(phase)*drift;dy=Math.sin(phase)*drift;angle=f.direction*Math.PI*.75*depth;}
+  return {x:-.5+(f.x+.5)*approach+dx,y:f.y*approach+dy,span,angle};
+ }
+}
+
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
+  this.fractalCamera=new MattFractalCamera();
   this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
   const host=canvas.parentElement;
   host.addEventListener('pointermove',event=>{
@@ -57,7 +92,7 @@ class MattAmbient {
   pointer.x+=(pointer.targetX-pointer.x)*ease;pointer.y+=(pointer.targetY-pointer.y)*ease;
   pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
   const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
-  if(this.mode==='mandelbrot'){this.drawFractal();}
+  if(this.mode==='mandelbrot'){this.drawFractal(dt);}
   else if(this.mode==='waves'){
    const rows=Math.max(18,Math.min(32,Math.round(h/25)));
    for(let row=0;row<rows;row++){
@@ -102,11 +137,11 @@ class MattAmbient {
    gl.attachShader(program,compile(gl.VERTEX_SHADER,'attribute vec2 point; varying vec2 uv; void main(){uv=point*.5+.5;gl_Position=vec4(point,0.,1.);}'));
    gl.attachShader(program,compile(gl.FRAGMENT_SHADER,`
     precision highp float;
-    varying vec2 uv; uniform vec2 aspect; uniform vec2 pointerShift; uniform float span;
+    varying vec2 uv; uniform vec2 aspect; uniform vec2 pointerShift; uniform vec2 center; uniform float angle; uniform float span;
     void main(){
-     vec2 target=vec2(-.743643887,.131825904);
-     vec2 center=mix(target,vec2(-.5,0.),span/3.2);
-     vec2 c=center+(uv-.5+pointerShift)*aspect*span;
+     vec2 screen=(uv-.5+pointerShift)*aspect;
+     float ca=cos(angle),sa=sin(angle);
+     vec2 c=center+vec2(ca*screen.x-sa*screen.y,sa*screen.x+ca*screen.y)*span;
      vec2 z=vec2(0.); float n=0.; bool escaped=false;
      for(int i=0;i<360;i++){
       z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)+c;
@@ -120,13 +155,13 @@ class MattAmbient {
    gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error('Shader unavailable');
    buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
    gl.useProgram(program);const point=gl.getAttribLocation(program,'point');gl.enableVertexAttribArray(point);gl.vertexAttribPointer(point,2,gl.FLOAT,false,0,0);
-   this.fractal={surface,gl,program,span:gl.getUniformLocation(program,'span'),aspect:gl.getUniformLocation(program,'aspect'),pointerShift:gl.getUniformLocation(program,'pointerShift')};
+   this.fractal={surface,gl,program,span:gl.getUniformLocation(program,'span'),aspect:gl.getUniformLocation(program,'aspect'),pointerShift:gl.getUniformLocation(program,'pointerShift'),center:gl.getUniformLocation(program,'center'),angle:gl.getUniformLocation(program,'angle')};
    surface.addEventListener('webglcontextlost',event=>{event.preventDefault();this.fractal=null;this.fractalFailed=true;});
    surface.addEventListener('webglcontextrestored',()=>{this.fractalFailed=false;});
   }catch{if(buffer)gl.deleteBuffer(buffer);if(program)gl.deleteProgram(program);this.fractalFailed=true;}
   finally{for(const shader of shaders)gl.deleteShader(shader);}
  }
- drawFractal(){
+ drawFractal(dt=0){
   this.initFractal();const f=this.fractal;
   if(!f){
    // One quiet still if GPU rendering is unavailable; never spin a CPU fractal loop.
@@ -147,12 +182,13 @@ class MattAmbient {
   const w=Math.max(1,Math.round(this.width*scale)),h=Math.max(1,Math.round(this.height*scale));
   if(f.surface.width!==w||f.surface.height!==h){f.surface.width=w;f.surface.height=h;}
   const gl=f.gl;gl.viewport(0,0,w,h);gl.useProgram(f.program);
-  // A three-minute in/out cycle, with soft turns and a bounded precision range.
-  const depth=(1-Math.cos(this.time*Math.PI/90))*.5;
-  gl.uniform1f(f.span,3.2*Math.exp(-9.5*depth));gl.uniform2f(f.aspect,w/Math.min(w,h),h/Math.min(w,h));
+  const camera=this.fractalCamera.update(dt);
+  gl.uniform1f(f.span,camera.span);gl.uniform2f(f.center,camera.x,camera.y);gl.uniform1f(f.angle,camera.angle);
+  gl.uniform2f(f.aspect,w/Math.min(w,h),h/Math.min(w,h));
   const p=this.pointer;gl.uniform2f(f.pointerShift,(p.x-.5)*.07*p.strength,(.5-p.y)*.07*p.strength);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);this.ctx.drawImage(f.surface,0,0,this.width,this.height);
  }
 
 }
 window.MattAmbient=MattAmbient;
+window.MattFractalCamera=MattFractalCamera;
