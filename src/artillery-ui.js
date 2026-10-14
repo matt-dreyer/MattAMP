@@ -19,6 +19,13 @@ class MattArcade{
    const r=this.canvas.getBoundingClientRect(),x=(e.clientX-r.left)*1000/r.width,y=(e.clientY-r.top)*540/r.height,t=b.active;
    this.$('angle').value=Math.round(Math.max(5,Math.min(175,Math.atan2(Math.max(0,t.y-y),x-t.x)*180/Math.PI)));this.updateAim();this.draw();
   };
+  const wheelPower=e=>{
+   const b=this.battle;if(!this.visible||this.paused||!b||b.phase!=='aim'||b.active.id!==0||e.ctrlKey||!e.deltaY)return;
+   e.preventDefault();
+   const power=this.$('power');power.value=Math.max(Number(power.min),Math.min(Number(power.max),Number(power.value)-Math.sign(e.deltaY)));
+   this.updateAim();this.draw();
+  };
+  for(const target of [this.canvas,this.$('power')])target.addEventListener('wheel',wheelPower,{passive:false});
   // Load optional artwork without making a missing asset a game-breaking error.
   for(const name of ['tank','tracks','blast',...Array.from({length:12},(_,i)=>'blast-'+(i+1))]){const img=new Image();img.onload=()=>{this.assets[name]=img;this.draw();};img.src='/arcade/'+name+'.png';}
   void this.loadScores();this.draw();
