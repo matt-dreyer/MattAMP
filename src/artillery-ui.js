@@ -32,7 +32,7 @@ class MattArcade{
    const b=this.battle;if(e.defaultPrevented||e.isComposing||e.ctrlKey||e.metaKey||e.altKey||!this.visible||this.paused||!b||b.phase!=='aim'||b.active.id!==0)return;
    if(!['ArrowUp','ArrowDown','Enter'].includes(e.key))return;
    const target=e.target;
-   if(target.isContentEditable||target.closest('select,textarea')||(target.closest('input')&&!['game-angle','game-power'].includes(target.id)))return;
+   if(target.isContentEditable||target.closest('select,textarea')||(target.closest('input')&&!['game-angle','game-power','game-weapon-shell','game-weapon-mirv'].includes(target.id)))return;
    if(!this.panel.contains(target)&&target!==document.body&&target.id!=='source-game')return;
    // Keep Enter's normal activation for focused navigation and other buttons.
    if(e.key==='Enter'&&target.closest('button,a,summary')&&target.id!=='game-fire')return;
@@ -58,7 +58,7 @@ class MattArcade{
   this.clearQuip();this.volley=null;
   this.battle=new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value)});this.initials=this.$('initials').value.toUpperCase()||'MAT';this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
   this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
-  this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon').value='shell';this.updateAim();this.sync();this.$('angle').focus();
+  this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon-shell').checked=true;this.updateAim();this.sync();this.$('angle').focus();
  }
  reset(){this.clearQuip();this.volley=null;this.battle=null;this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
  updateAim(){
@@ -67,7 +67,7 @@ class MattArcade{
  }
  adjustPower(delta){const power=this.$('power');power.value=Math.max(Number(power.min),Math.min(Number(power.max),Number(power.value)+delta));this.updateAim();this.draw();}
  captureVolley(){return {owner:this.battle.active.id,tanks:this.battle.tanks.map(({id,x,y,hp})=>({id,x,y,hp}))};}
- fire(){if(this.paused||!this.visible||!this.battle)return;const volley=this.captureVolley();if(this.battle.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),this.$('weapon').value)){this.volley=volley;this.playSound('fire');this.sync();}}
+ fire(){if(this.paused||!this.visible||!this.battle)return;const volley=this.captureVolley();if(this.battle.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),(this.$('weapon-mirv').checked?'mirv':'shell'))){this.volley=volley;this.playSound('fire');this.sync();}}
  clearQuip(){clearTimeout(this.bubbleTimer);this.$('quip').hidden=true;}
  positionQuip(){const bubble=this.$('quip');if(bubble.hidden||!this.quipSpeaker)return;const x=this.quipSpeaker.x/1000*this.canvas.clientWidth-bubble.offsetLeft;bubble.style.setProperty('--tail-x',Math.max(14,Math.min(bubble.clientWidth-14,x))+'px');}
  reactToVolley(){
@@ -139,7 +139,7 @@ class MattArcade{
   this.$('end').hidden=!over;this.$('new').hidden=!b||over;
   if(!b)return;
   this.$('result').textContent=over?b.message+' '+b.kills+' knockouts · '+b.shots+(b.shots===1?' shot.':' shots.'):'';
-  const remaining=b.tanks[0].mirvs,option=this.$('weapon').options[1];option.textContent='MIRV · '+remaining+' left';option.disabled=remaining===0;if(!remaining)this.$('weapon').value='shell';
+  const remaining=b.tanks[0].mirvs;this.$('mirv-count').textContent=remaining+' left';this.$('weapon-mirv').disabled=remaining===0;if(!remaining)this.$('weapon-shell').checked=true;
   this.$('roster').replaceChildren();
   for(const tank of b.tanks){const el=document.createElement('span');el.className='game-tank-stat'+(tank.hp<=0?' eliminated':'')+(b.active===tank&&!over?' active':'');el.style.setProperty('--tank-color',tank.color);el.textContent=tank.name+' '+(tank.hp?Math.ceil(tank.hp)+' HP':'OUT');this.$('roster').append(el);}
   this.canvas.setAttribute('aria-label','Battlefield. '+this.$('status').textContent+' '+this.$('wind').textContent+'. '+b.tanks.map(t=>t.name+' '+t.hp+' health').join(', '));
