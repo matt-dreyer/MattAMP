@@ -143,7 +143,7 @@ class MattArcade{
  }
  render(){
   const b=this.battle,over=b?.phase==='over',mine=b?.active.id===0&&b.phase==='aim'&&!this.paused;
-  this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over;this.panel.querySelector('.game-hint').hidden=!b||over;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
+  this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
   this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name+' · '+b.multiplier.toFixed(2)+'×':'Last tank standing';
   this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+Math.abs(b.wind):'Wind —';
   this.$('score').textContent=String(b?.score||0).padStart(6,'0');
