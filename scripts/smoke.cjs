@@ -1,0 +1,43 @@
+const {_electron}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+(async()=>{
+ const errors=[],profile=fs.mkdtempSync(path.join(os.tmpdir(),'deck-test-'));
+ const app=await _electron.launch({args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile},timeout:30000});
+ try{
+ const p=await app.firstWindow();p.on('pageerror',e=>errors.push(e.message));
+ await p.waitForFunction(()=>document.querySelectorAll('[data-station]').length===8);
+ await p.waitForFunction(()=>document.querySelectorAll('#gpus .gpu').length===2);
+ await p.locator('#play').click();await p.locator('#error').waitFor({state:'visible'});
+ assert.match(await p.locator('#error').innerText(),/listen key/i);
+ await p.locator('#volume').fill('0');
+ await p.locator('#source-podcast').click();
+ await p.waitForFunction(()=>document.querySelector('#episode').options.length>1,{},{timeout:30000});
+ await p.waitForFunction(()=>typeof yt!=='undefined'&&yt?.getPlayerState?.()===5,{},{timeout:30000});
+ await p.waitForTimeout(2500);
+ const videoBox=await p.locator('#youtube-player').boundingBox();
+ await p.mouse.click(videoBox.x+videoBox.width/2,videoBox.y+videoBox.height/2);
+ await p.waitForFunction(()=>yt.getPlayerState()===1&&yt.getCurrentTime()>1,{},{timeout:20000});
+ console.log('YOUTUBE PLAY',await p.evaluate(()=>({position:yt.getCurrentTime(),state:yt.getPlayerState()})));
+ await p.screenshot({path:'test-results/desktop-youtube.png'});
+ await p.locator('#bug-toggle').click();await p.waitForTimeout(500);
+ assert.equal(await p.evaluate(()=>yt?.getPlayerState()===1),false);
+ const bug=await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getBounds());assert.equal(bug.width,56);assert.equal(bug.height,56);
+ await p.screenshot({path:'test-results/desktop-bug.png'});
+ await p.locator('#bug').click();await p.waitForTimeout(600);
+ assert.equal(await p.evaluate(()=>innerWidth),710);
+ await p.locator('#podcast-type').selectOption('audio');
+ await p.waitForFunction(()=>document.querySelector('#feed-status').textContent==='Latest episodes',{},{timeout:30000});
+ await p.locator('#play').click();await p.waitForFunction(()=>!document.querySelector('#audio').paused&&document.querySelector('#audio').currentTime>0,{},{timeout:30000});
+ console.log('AUDIO PLAY',await p.evaluate(()=>({time:audio.currentTime,volume:audio.volume})));
+ await p.locator('#bug-toggle').click();await p.waitForTimeout(1000);assert.equal(await p.evaluate(()=>audio.paused),false);
+ await p.locator('#bug').click();await p.waitForTimeout(600);
+ await p.locator('#layout').click();await p.waitForTimeout(800);assert.equal(await p.evaluate(()=>innerWidth),430);
+ await p.screenshot({path:'test-results/desktop-stacked.png'});
+ await p.locator('#source-radio').click();await p.waitForTimeout(700);assert.equal(await p.evaluate(()=>audio.paused),true);
+ await p.locator('#settings-open').click();await p.locator('#listen-key').fill('invalid key');await p.locator('#key-form button[type=submit]').click();assert.match(await p.locator('#settings-message').innerText(),/key only/);
+ assert.equal(await p.evaluate(async()=> (await window.deck.init()).data.state.hasDiKey),false);
+ console.log('KEYRING',await p.evaluate(async()=>(await window.deck.init()).data.state.keyring));
+ assert.deepEqual(errors,[]);console.log('PASS: metrics, presets, key validation, source arbitration, YouTube and audio playback, bug/restore, layout, renderer errors');
+ }finally{await app.close();fs.rmSync(profile,{recursive:true,force:true,maxRetries:3});}
+})().catch(e=>{console.error(e);process.exitCode=1;});

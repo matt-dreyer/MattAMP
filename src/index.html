@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DECK</title><link rel="stylesheet" href="/style.css"><script defer src="/lucide.js"></script><script defer src="/app.js"></script></head>
+<body>
+<main id="deck" class="sidecar">
+ <header class="titlebar"><span class="brand">DECK / FM</span><div class="window-actions">
+  <button id="layout" aria-label="Switch to stacked layout" title="Switch layout"><i data-lucide="columns-2"></i></button>
+  <button id="settings-open" aria-label="Settings" title="Settings"><i data-lucide="settings-2"></i></button>
+  <button id="compact" aria-label="Toggle compact view" title="Compact view"><i data-lucide="panel-top-close"></i></button>
+  <button id="bug-toggle" aria-label="Minimize to desktop bug" title="Bug mode"><i data-lucide="audio-lines"></i></button>
+  <button id="hide" aria-label="Hide to system tray" title="Hide to tray"><i data-lucide="minus"></i></button>
+ </div></header>
+ <button id="bug" aria-label="Open DECK" title="Open DECK"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
+ <div class="full">
+  <section class="media" aria-label="Player">
+   <div class="sourcebar" role="group" aria-label="Playback source"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i>DI.FM</button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i>Podcasts</button><span id="play-status" role="status">Stopped</span></div>
+   <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p></div></div>
+   <div id="youtube-box" hidden><div id="youtube-player"></div><div id="youtube-placeholder">Choose a show to load its latest videos.</div></div>
+   <p id="error" role="alert" hidden></p>
+   <div id="transport" class="transport"><button id="play" class="primary"><i data-lucide="play"></i><span>Play</span></button><button id="stop" aria-label="Stop playback"><i data-lucide="square"></i></button><div class="volume-wrap"><button id="mute" aria-label="Mute" aria-pressed="false"><i data-lucide="volume-2"></i></button><input id="volume" aria-label="Volume" type="range" min="0" max="100" value="35"><output id="volume-value">35</output></div></div>
+   <div id="podcast-tools" hidden>
+    <div class="podcast-mode"><label>Player<select id="podcast-type" aria-label="Podcast player"><option value="youtube">YouTube</option><option value="audio">Audio feed</option></select></label><button id="open-video" class="text-button" title="Open on YouTube"><i data-lucide="external-link"></i>YouTube</button></div>
+    <label class="episode-label" for="episode">Episode <span id="feed-status"></span></label><div class="episode-row"><select id="episode" aria-label="Episode"><option>Loading…</option></select><button id="refresh" aria-label="Refresh episodes"><i data-lucide="refresh-cw"></i></button></div>
+    <div id="audio-timeline"><input id="seek" type="range" min="0" max="1" value="0" step="1" aria-label="Episode position" disabled><div class="times"><span id="elapsed">0:00</span><span id="duration">—</span></div></div>
+    <div class="skip-row"><button id="rewind" aria-label="Rewind 15 seconds"><i data-lucide="rotate-ccw"></i>15s</button><button id="forward" aria-label="Forward 30 seconds">30s<i data-lucide="rotate-cw"></i></button><label>Speed<select id="speed"><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label></div>
+   </div>
+   <div id="stations" class="presets" aria-label="DI.FM stations"></div>
+   <div id="shows" class="shows" aria-label="Favorite podcasts" hidden></div>
+  </section>
+  <section id="system" class="system" aria-label="System monitor">
+   <div class="network"><button id="network-toggle" class="text-button" aria-expanded="false"><span class="led"></span><span id="network-status">Checking network</span><i data-lucide="chevron-down"></i></button><span id="network-latency">—</span></div>
+   <div id="network-detail" hidden><div><span>Interface</span><b id="interface">—</b></div><div><span>Router</span><b id="router">—</b></div><div><span>Internet probe</span><b id="internet">—</b></div><div><span>Last checked</span><b id="checked">—</b></div></div>
+   <div class="traffic"><span><i data-lucide="arrow-down"></i><b id="down">—</b> Mbps</span><span><i data-lucide="arrow-up"></i><b id="up">—</b> Mbps</span></div>
+   <div id="meters"><div class="meter" id="cpu-meter"><span>CPU</span><div class="track" role="meter" aria-label="CPU utilization" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div class="meter" id="memory-meter"><span>Memory</span><div class="track" role="meter" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div id="gpus"></div></div>
+   <footer><span id="sample-status">Waiting for readings</span><button id="details" class="text-button" aria-expanded="false">Details<i data-lucide="chevron-down"></i></button></footer>
+  </section>
+  <div id="compact-status" aria-live="off">Waiting for readings…</div>
+ </div>
+ <section id="settings" hidden aria-label="DECK settings">
+  <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
+  <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p></form>
+  <label class="check"><input id="always-top" type="checkbox">Keep DECK above other windows</label>
+  <form id="video-form"><label for="video-url">Play a YouTube video</label><div class="settings-row"><input id="video-url" type="url" placeholder="https://www.youtube.com/watch?v=…" required><button type="submit">Load</button></div></form>
+  <p class="hint">Drag the title bar to move DECK. Drag the bug to park it anywhere; click it to reopen. YouTube pauses in Bug mode. Radio and audio podcasts keep playing.</p>
+  <p id="settings-message" role="status"></p><button id="quit" class="text-button">Quit DECK</button>
+ </section>
+</main>
+<audio id="audio" preload="none"></audio>
+</body></html>

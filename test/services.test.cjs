@@ -1,0 +1,17 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');
+const {parseFeed,parsePlaylist,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl}=require('../src/services.cjs');
+test('memory reflects available memory, including reclaimable cache',()=>{assert.deepEqual(memoryFromProc('MemTotal: 1000 kB\nMemFree: 100 kB\nMemAvailable: 600 kB\n'),{total:1024000,used:409600,percent:40});assert.equal(memoryFromProc('MemTotal: 1000 kB'),null);});
+test('default route chooses lowest metric and decodes gateway correctly',()=>{assert.deepEqual(defaultRoute('Iface Destination Gateway Flags RefCnt Use Metric Mask\nwlp9s0 00000000 0101A8C0 0003 0 0 600 00000000\neno1 00000000 0100000A 0003 0 0 100 00000000'),{iface:'eno1',gateway:'10.0.0.1'});assert.equal(defaultRoute('Iface Destination Gateway Flags RefCnt Use Metric Mask'),null);});
+test('throughput counters are interface-specific, not VPN double counts',()=>{assert.deepEqual(netCounters('wlp9s0: 100 0 0 0 0 0 0 0 25 0 0 0\ntun0: 999 0 0 0 0 0 0 0 999 0 0 0','wlp9s0'),{rx:100,tx:25});});
+test('GPU missing sensor values remain unavailable rather than zero',()=>{const g=parseGpus('0, GPU-123, NVIDIA GeForce RTX 5070 Ti, 64, 1234, 16303, [N/A]')[0];assert.equal(g.temp,null);assert.equal(g.load,64);assert.equal(g.total,16303);});
+test('RSS audio enclosures are parsed without rendering untrusted descriptions',()=>{const items=parseFeed('<rss><channel><item><title>A &amp; B</title><guid>episode-1</guid><description>&lt;script&gt;bad&lt;/script&gt;</description><enclosure url="https://cdn.example.org/audio.mp3"/></item><item><title>Bad</title><enclosure url="file:///etc/passwd"/></item></channel></rss>','audio');assert.equal(items.length,1);assert.equal(items[0].title,'A & B');assert.equal(items[0].description,undefined);});
+test('YouTube atom feed exposes only valid video identifiers',()=>{const items=parseFeed('<feed><entry><yt:videoId>abcdefghijk</yt:videoId><title>Show</title></entry><entry><yt:videoId>bad</yt:videoId></entry></feed>','youtube');assert.equal(items.length,1);assert.equal(items[0].id,'abcdefghijk');});
+test('DI playlists preserve provider protocols and reject untrusted hosts',()=>{assert.deepEqual(parsePlaylist('[playlist]\nFile1=http://prem1.di.fm/trance_hi?secret\nFile2=https://evil.example/steal\nFile3=file:///etc/passwd'),['http://prem1.di.fm/trance_hi?secret']);});
+test('user pasted videos validate YouTube hosts and IDs',()=>{assert.equal(videoId('https://youtu.be/abcdefghijk?t=30'),'abcdefghijk');assert.equal(videoId('https://www.youtube.com/watch?v=abcdefghijk'),'abcdefghijk');assert.equal(videoId('https://youtube.com.evil.example/watch?v=abcdefghijk'),null);assert.equal(videoId('javascript:alert(1)'),null);assert.equal(publicUrl('https://127.0.0.1/foo'),null);});
+test('channel art accepts only the provider CDN and removes URL templates',()=>{
+ const {parseArtwork}=require('../src/services.cjs');const art=parseArtwork([
+  {key:'futuresynthpop',images:{square:'//cdn-images.audioaddict.com/cover.png{?size,height,width,quality,pad}'}},
+  {key:'liquiddnb',asset_url:'https://attacker.example/cover.png'},
+  {key:'classictrance',asset_url:'javascript:alert(1)'}
+ ]);assert.equal(Object.keys(art).length,1);const u=new URL(art.futuresynthpop);assert.equal(u.protocol,'https:');assert.equal(u.pathname,'/cover.png');assert.equal(u.searchParams.get('width'),'256');
+});

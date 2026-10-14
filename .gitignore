@@ -1,0 +1,8 @@
+node_modules/
+test-results/
+*.log
+.env
+.env.*
+state.json
+userData/
+coverage/

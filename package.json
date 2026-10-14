@@ -1,0 +1,21 @@
+{
+  "name": "workstation-deck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DECK \u2014 workstation radio, podcasts and system monitor",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs",
+    "test:smoke": "node scripts/smoke.cjs"
+  },
+  "dependencies": {
+    "electron": "44.7.2",
+    "fast-xml-parser": "5.11.2",
+    "lucide": "1.57.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
