@@ -25,9 +25,9 @@ test('sign-in provider detection matches only trusted HTTPS provider hosts',()=>
 });
 function mockFeed(){
  const {EventEmitter}=require('node:events'),vm=require('node:vm'),fs=require('node:fs');
- const opened=[],messages=[],views=[];
+ const opened=[],messages=[],views=[],navigations=[],styles=[];let currentUrl='https://x.com/i/flow/login';
  class View{
-  constructor(options){this.options=options;this.webContents=new EventEmitter();Object.assign(this.webContents,{setAudioMuted(){},setWindowOpenHandler(fn){this.popup=fn;},getURL:()=> 'https://x.com/i/flow/login',loadURL:async()=>{},isDestroyed:()=>false,close(){}});views.push(this);}
+  constructor(options){this.options=options;this.webContents=new EventEmitter();Object.assign(this.webContents,{setAudioMuted(){},setWindowOpenHandler(fn){this.popup=fn;},getURL:()=>currentUrl,loadURL:async url=>{navigations.push(url);currentUrl=url;},insertCSS:async css=>{styles.push(css);return 'style';},isDestroyed:()=>false,close(){}});views.push(this);}
   setBackgroundColor(){}setVisible(){}setBounds(){}
  }
  const ses={setPermissionRequestHandler(){},setPermissionCheckHandler(){},on(){}};
@@ -37,7 +37,7 @@ function mockFeed(){
  const win=new EventEmitter();win.contentView={addChildView(){},removeChildView(){}};win.getContentSize=()=>[710,800];
  const feed=mod.exports.createXFeed({win,send:(_channel,message)=>messages.push(message),getConfig:()=>({accounts:['chamath'],aiOnly:false})});
  feed.bounds({visible:true,x:0,y:0,width:400,height:500});
- return {feed,wc:views[0].webContents,opened,messages,shell};
+ return {feed,wc:views[0].webContents,opened,messages,shell,navigations,styles,setUrl:url=>{currentUrl=url;}};
 }
 test('provider popups, navigations and redirects restart from X instead of forwarding OAuth state',async()=>{
  for(const trigger of ['popup','will-navigate','will-redirect']){
@@ -84,4 +84,29 @@ test('failed provider launch can be retried without restarting the feed',async()
  wc.popup({url});await new Promise(resolve=>setImmediate(resolve));
  assert.equal(calls,2);
  wc.popup({url});assert.equal(calls,2);
+});
+
+test('direct sign-in restores selected filter for full and same-document navigation',async()=>{
+ for(const event of ['did-navigate','did-navigate-in-page']){
+  const {feed,wc,navigations,messages,setUrl}=mockFeed();
+  await feed.action('login','giggles');
+  wc.popup({url:'https://accounts.google.com/gsi/select'});
+  setUrl('https://x.com/home');wc.emit(event,{},'https://x.com/home',true);
+  assert.equal(navigations.at(-1),searchUrl({},'giggles'));
+  wc.emit('did-stop-loading');assert.ok(!messages.at(-1).includes('does not sign in this pane'));
+  const count=navigations.length;
+  wc.emit(event,{},searchUrl({},'giggles'),true);assert.equal(navigations.length,count);
+ }
+});
+test('automatic login redirects are tracked without navigating away from auth or subframes',()=>{
+ const {wc,navigations,setUrl}=mockFeed();const count=navigations.length;
+ wc.emit('did-navigate',{},'https://x.com/i/flow/login');
+ wc.emit('did-navigate-in-page',{},'https://x.com/home',false);assert.equal(navigations.length,count);
+ wc.emit('did-navigate',{},'https://x.com/i/flow/two-factor');assert.equal(navigations.length,count);
+ setUrl('https://x.com/home');wc.emit('did-navigate',{},'https://x.com/home');assert.equal(navigations.length,count+1);
+});
+test('timeline stylesheet is injected on X documents only',()=>{
+ const {wc,styles,setUrl}=mockFeed();
+ wc.emit('dom-ready');assert.equal(styles.length,1);
+ setUrl('https://example.com/');wc.emit('dom-ready');assert.equal(styles.length,1);
 });

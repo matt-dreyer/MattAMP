@@ -1,5 +1,22 @@
 const DEFAULT_ACCOUNTS=['bcherny','steipete','karpathy','simonw','chamath'];
 const AI_TERMS='(AI OR "artificial intelligence" OR LLM OR LLMs OR Claude OR Codex OR OpenAI OR Anthropic OR Gemini OR Grok OR "machine learning" OR "coding agent" OR agents OR inference)';
+// Keep X's own posts and controls, but fit its reading column to the widget.
+// Scope to the timeline shell: authentication dialogs retain provider layout.
+const FEED_CSS=`
+body:has(main [data-testid="primaryColumn"]) { overflow-x:hidden !important; }
+body:has(main [data-testid="primaryColumn"]) header[role="banner"],
+body:has(main [data-testid="primaryColumn"]) [data-testid="sidebarColumn"] { display:none !important; }
+body:has(main [data-testid="primaryColumn"]) main[role="main"],
+body:has(main [data-testid="primaryColumn"]) main[role="main"] > div,
+body:has(main [data-testid="primaryColumn"]) main div:has(> [data-testid="primaryColumn"]),
+main [data-testid="primaryColumn"] {
+ width:100% !important; min-width:0 !important; max-width:100% !important;
+ margin-left:0 !important; margin-right:0 !important; flex:1 1 auto !important;
+}
+main [data-testid="primaryColumn"] { border-left:0 !important; border-right:0 !important; }
+body:has(main [data-testid="primaryColumn"]) { scrollbar-color:#536271 #15202b; scrollbar-width:thin; }
+`;
+function isLoginUrl(value){if(!isXUrl(value))return false;return /^\/(login(?:\/|$)|i\/(flow|jf)\/)/.test(new URL(value).pathname);}
 function accounts(value){
  const names=(Array.isArray(value)?value:String(value||'').split(/[\s,]+/)).map(v=>String(v).trim().replace(/^@/,'')).filter(Boolean);
  if(!names.length||names.length>12||names.some(v=>!/^\w{1,15}$/.test(v)))throw new Error('Enter 1–12 X handles, separated by commas or spaces.');
@@ -21,7 +38,7 @@ function isSignInProvider(value){
 }
 function createXFeed({win,send,getConfig}){
  const {WebContentsView,session,shell}=require('electron');
- let view=null,lane='ai',loaded=false,failed=false,handoffMessage='',providerHandoff=null;
+ let view=null,lane='ai',loaded=false,failed=false,handoffMessage='',providerHandoff=null,awaitingLogin=false;
  function status(message){send('deck:x-status',message);}
  async function openBrowser(url){
   const provider=isSignInProvider(url);
@@ -43,18 +60,32 @@ function createXFeed({win,send,getConfig}){
   view=new WebContentsView({webPreferences:{session:ses,contextIsolation:true,nodeIntegration:false,sandbox:true,webSecurity:true,allowRunningInsecureContent:false}});
   view.setBackgroundColor('#15202b');view.setVisible(false);win.contentView.addChildView(view);
   const wc=view.webContents;wc.setAudioMuted(true);
+  wc.on('dom-ready',()=>{if(isXUrl(wc.getURL()))void wc.insertCSS(FEED_CSS).catch(()=>status('X layout could not adapt. Press Refresh to retry.'));});
+  function navigated(url){
+   if(!isXUrl(url))return;
+   if(isLoginUrl(url)){awaitingLogin=true;return;}
+   // X returns direct sign-in to Home, which is not the selected author filter.
+   if(awaitingLogin&&['/home','/search'].includes(new URL(url).pathname)){
+    awaitingLogin=false;handoffMessage='';providerHandoff=null;
+    const target=searchUrl(getConfig(),lane);
+    if(url!==target){navigate(target);return;}
+   }
+   if(!handoffMessage)status('X.com · videos muted · AI circle returns to your filter');
+  }
+  wc.on('did-navigate',(_event,url)=>navigated(url));
+  wc.on('did-navigate-in-page',(_event,url,isMainFrame)=>{if(isMainFrame)navigated(url);});
   wc.on('will-attach-webview',event=>event.preventDefault());
   wc.setWindowOpenHandler(({url})=>{if(safeExternal(url))void openBrowser(url);return {action:'deny'};});
   wc.on('will-navigate',(event,url)=>{if(!isXUrl(url)){event.preventDefault();if(safeExternal(url))void openBrowser(url);}});
   wc.on('will-redirect',(event,url)=>{if(!isXUrl(url)){event.preventDefault();if(isSignInProvider(url))void openBrowser(url);else status('This sign-in redirect cannot complete in MattAMP. Use Browser to sign in on X there.');}});
   wc.on('did-start-loading',()=>{failed=false;if(!handoffMessage)status('Loading X…');});
-  wc.on('did-stop-loading',()=>{if(handoffMessage){status(handoffMessage);return;}if(!failed)status(/\/(login|i\/(flow|jf)\/)/.test(wc.getURL())?'Sign in to X, then choose AI circle.':'X.com · videos muted · AI circle returns to your filter');});
+  wc.on('did-stop-loading',()=>{if(handoffMessage){status(handoffMessage);return;}if(!failed)status(isLoginUrl(wc.getURL())?'Sign in to X, then choose AI circle.':'X.com · videos muted · AI circle returns to your filter');});
   wc.on('did-fail-load',(_event,code,_description,_url,main)=>{if(main&&code!==-3){failed=true;status('X could not load. Retry or open the filtered feed in your browser.');}});
   wc.on('render-process-gone',()=>{loaded=false;status('X stopped responding. Press Refresh to reconnect.');});
   win.once('closed',()=>{if(!wc.isDestroyed())wc.close();});
   return view;
  }
- function navigate(url){providerHandoff=null;handoffMessage='';const v=ensure();loaded=true;void v.webContents.loadURL(url).catch(()=>status('X could not load. Retry or use Open in browser.'));}
+ function navigate(url){awaitingLogin=isLoginUrl(url);providerHandoff=null;handoffMessage='';const v=ensure();loaded=true;void v.webContents.loadURL(url).catch(()=>status('X could not load. Retry or use Open in browser.'));}
  function bounds(rect){
   const visible=!!rect?.visible;
   if(!visible){view?.setVisible(false);return;}
@@ -75,4 +106,4 @@ function createXFeed({win,send,getConfig}){
  }
  return {bounds,action,hide:()=>view?.setVisible(false)};
 }
-module.exports={DEFAULT_ACCOUNTS,accounts,searchUrl,isXUrl,safeExternal,isSignInProvider,createXFeed};
+module.exports={DEFAULT_ACCOUNTS,accounts,searchUrl,isXUrl,safeExternal,isSignInProvider,isLoginUrl,FEED_CSS,createXFeed};
