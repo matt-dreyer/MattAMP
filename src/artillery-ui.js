@@ -158,6 +158,8 @@ class MattArcade{
   c.fillStyle='#496174';for(let i=0;i<48;i++)c.fillRect((i*137+31)%1000,(i*61+12)%260,i%4===0?2:1,2);
   c.fillStyle='#233442';c.beginPath();c.moveTo(0,540);for(let x=0;x<=1000;x+=8)c.lineTo(x,250+60*Math.sin(x/160)+25*Math.cos(x/51));c.lineTo(1000,540);c.fill();
   c.fillStyle='#344b50';c.strokeStyle='#76968c';c.lineWidth=2;c.beginPath();c.moveTo(0,540);for(let x=0;x<=1000;x++)c.lineTo(x,b.terrain[x]);c.lineTo(1000,540);c.fill();c.stroke();
+  // Translucent scenery lets the ambient background through; gameplay stays opaque.
+  c.save();c.globalCompositeOperation='destination-in';c.globalAlpha=.82;c.fillRect(0,0,1000,540);c.restore();
   c.save();c.globalAlpha=.3;c.strokeStyle='#8aaba7';c.setLineDash([2,8]);for(const trail of [...b.lastTrails,...b.projectiles.map(p=>p.trail)]){c.beginPath();trail.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();}c.restore();
   for(const t of b.tanks){
    c.save();c.translate(t.x,t.y);c.globalAlpha=t.hp>0?1:.3;
