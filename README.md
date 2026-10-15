@@ -8,13 +8,13 @@
 
 Remember when your computer had a personality? Winamp was playing, Fractint was doing something hypnotic, and “one more round” of Scorched Earth was a perfectly reasonable use of the next three hours?
 
-MattAMP started with a much smaller ambition: replace a few desktop widgets and get some screen space back. Then came the radio presets. The podcasts. The glass buttons. The drifting fractals. Then somebody said “MIRVs,” and here we are.
+MattAMP started with a much smaller ambition: replace a few desktop widgets and get some screen space back. Then came the radio presets. The podcasts. The glass buttons. The drifting fractals. Then came mountain webcams—because checking the snow is also a desktop essential. Then somebody said “MIRVs,” and here we are.
 
-It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
+It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, SkiCams, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
-[Get running](#get-running) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
+[Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
-![MattAMP's dark glass radio widget, Mandelbrot background, and live workstation meters](docs/images/desktop.png)
+![MattAMP's current five-tab navigation, Synthwave radio art, glass controls, wave background, and live workstation meters](docs/images/desktop.png)
 
 ## What's in the little box?
 
@@ -22,7 +22,8 @@ It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **m
 | --- | --- |
 | Eight DI.FM presets with official channel art | Scorched Earth–inspired tank battles and MIRVs |
 | Your podcast lineup: YouTube episodes or audio | Sarcastic bots with three-match grudges |
-| A filtered X/Twitter pane and customizable SkiCams | Ricochet walls, wraparound shots, and occasional absurd wind |
+| SkiCams with your own favorites and automatic rotation | Optional “Send it!” and other silly tab greetings |
+| A filtered X/Twitter pane | Ricochet walls, wraparound shots, and occasional absurd wind |
 | Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, and Mandelbrot glides |
 | Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |
 
@@ -44,7 +45,10 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 
 Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.2.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
-### Earlier Linux bundle
+<details>
+<summary>Earlier Linux bundle (before SkiCams)</summary>
+
+This older build predates SkiCams and configurable favorites. Use **GitHub Releases above** for the current packaged app.
 
 **[Download the Linux x64 runtime ZIP](https://drive.google.com/file/d/1c_W4ALm0PoKuRQJ8SB-4nG0fc_SfvX7J/view)** — shared build `cb2d469`.
 
@@ -90,6 +94,8 @@ Compare with `sha256sum MattAMP-linux-x64-cb2d469.zip` before extracting. More h
 
 </details>
 
+</details>
+
 ### Run the current source
 
 The repository is public. With Git, Node.js, and npm installed:
@@ -103,13 +109,44 @@ npm start
 
 A GitHub **Download ZIP** contains source only; it still needs `npm ci`. The runtime download above already includes what it needs. See the [development guide](docs/development.md) for checks, packaging, and project layout.
 
+## SkiCams. Send it.
+
+A little window onto the mountain while your music keeps playing. Check the summit, watch the weather move in, or leave your favorite views rotating beside your work. The **SkiCams** tab lives right before **Game**—conditions first, questionable decisions second.
+
+![MattAMP SkiCams showing Heavenly Top of Tram, automatic camera rotation, and workstation meters](docs/images/skicams.png)
+
+The starting lineup:
+
+| Resort | Cameras |
+| --- | --- |
+| Sierra-at-Tahoe | Grandview · West Bowl |
+| Heavenly | Top of Tram |
+| Kirkwood | Cornice Cam |
+
+**Make it your mountains:** choose **Manage cams** (or **Settings → Your SkiCams**), then **Add camera**. Give it a name, optionally a resort, and paste a public HTTPS camera link. YouTube live links and direct camera players fit best; resort pages work too, with their own navigation. Edit, reorder, or remove favorites, with undo for removals.
+
+**Let it roam:** turn on **Auto-cycle** and choose **1, 5, 15, 30, or 60 minutes**. It starts off, with 15 minutes selected. Rotation follows your saved order while SkiCams is visible, pauses when you leave, and restarts the interval when you choose a camera manually.
+
+Cameras stay muted so DI.FM or an audio podcast can keep playing. Hidden YouTube podcasts pause. Streams, weather, daylight, and uptime belong to the resort; **Refresh** reconnects, and **Browser** opens the provider page if an embed won't cooperate.
+
+<details>
+<summary>Your camera lineup, in Settings</summary>
+
+![SkiCams settings with the four default cameras and controls to add, edit, reorder, or remove them](docs/images/skicams-settings.png)
+
+Your favorites and rotation preferences stay on your machine. No MattAMP account or API key is needed for the included public cameras.
+
+</details>
+
 ## Tiny tanks. Questionable decisions.
 
 **AMP Artillery** is an untimed, last-tank-standing skirmish against **3–5 bots**. Pick a skill from **Very dumb** to **Human-ish**, enter your three-letter arcade initials, and start rearranging the landscape.
 
-![Expanded AMP Artillery battlefield with five tanks, ricochet walls, and aiming controls](docs/images/artillery.png)
+![Expanded AMP Artillery battlefield with five tanks, wraparound walls, and aiming controls](docs/images/artillery.png)
 
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
+
+**New in the current source (after v0.2.0):** getting knocked out puts you in spectator mode. The bots finish their fight on-screen, and the survivor does a dumb little victory dance—occasionally a wheelie. Scores and grudges use the actual final result.
 
 The bots have opinions. They can return fire, remember who hurt them across three completed battles, and gang up on a repeat winner—including another bot. Good hits and spectacular misses earn sarcastic, sometimes profane cartoon heckles.
 
@@ -165,9 +202,11 @@ The key is encrypted when a protected system keyring is available. Otherwise it 
 
 **Last Week in AI · AI for Humans · All-In · Dwarkesh Podcast · The a16z Show**
 
+Those are the starting favorites. In **Settings → Your podcasts**, add your own YouTube channel/playlist or RSS feed links, then edit, reorder, or remove shows. A full-episode playlist gives the most control over what appears.
+
 Choose **YouTube** for full video episodes or **Audio feed** for RSS audio. The YouTube selection filters out Shorts and clips, and starts at **1×** unless you've saved another speed. Audio gets seek, skip, speed, and resume controls. Only one radio/podcast source plays at a time.
 
-Radio and audio can follow you into the game, X, or tiny bug mode. **YouTube pauses when its player is hidden.** Some uploads block embedding; the external **YouTube** button and **Audio feed** are your alternatives.
+Radio and audio can follow you into SkiCams, the game, X, or tiny bug mode. **YouTube pauses when its player is hidden.** Some uploads block embedding; the external **YouTube** button and **Audio feed** are your alternatives.
 
 ## A little signal from X
 
@@ -182,10 +221,12 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 | Layout button | Switch between sidecar and stacked layouts |
 | Compact button | Trim the player down |
 | Bug button | Collapse to a draggable **56 × 56** logo; click it to restore |
-| Settings | Radio setup, live background, and other preferences |
+| Settings | Your podcasts, SkiCams, radio setup, live background, and other preferences |
 | Minimize **−** | Hide to the tray |
 | Close **×** | Quit MattAMP |
 | **Details** under the meters | Show memory, VRAM, and GPU temperatures |
+
+**Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly tab sound effects** off in Settings whenever civilization requires it.
 
 **Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
 
