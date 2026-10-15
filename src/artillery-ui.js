@@ -160,7 +160,7 @@ class MattArcade{
  }
  async saveScore(){
   if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('replay-hint').textContent='Saving your score…';this.$('save-status').textContent='Saving your score…';
-  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id&&!s.tankId);this.$('save-status').textContent=rank>=0?'Saved. You’re #'+(rank+1)+' on the high-score table!':'Scores saved. Your score didn’t make the shared top ten.';}
+  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id&&!s.tankId);this.$('save-status').textContent=rank>=0?'Saved. You’re #'+(rank+1)+' on the leaderboard!':'Scores saved. Your score didn’t make the shared top ten.';}
   catch(e){this.$('save-status').textContent='Score not saved: '+e.message;this.$('save-retry').hidden=false;}
   finally{this.saving=false;this.$('again').disabled=false;this.$('replay-hint').textContent='Click the battlefield for a new skirmish.';this.onResize();}
  }
