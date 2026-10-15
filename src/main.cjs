@@ -17,7 +17,7 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 function keyring(){return safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend()!=='basic_text';}
 function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring()};}
@@ -25,6 +25,7 @@ function update(patch){
  if(!patch||typeof patch!=='object')return;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
  if(['off','flow','waves','stars','mandelbrot'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
  if(['radio','podcast'].includes(patch.source))state.source=patch.source;
@@ -81,6 +82,7 @@ async function startServer(){
 }
 if(primaryInstance)app.whenReady().then(async()=>{
  try{const loaded=JSON.parse(fs.readFileSync(stateFile(),'utf8'));if(loaded&&typeof loaded==='object')state={...state,...loaded};}catch{}
+ if(!['off','mixed','unhinged'].includes(state.chaos))state.chaos='mixed';
  state.positions ||= {};state.selected ||= {};
  if(state.diKeyCipher&&keyring()){try{secret=safeStorage.decryptString(Buffer.from(state.diKeyCipher,'base64'));}catch{}}
  await startServer();

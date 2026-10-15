@@ -53,7 +53,7 @@ function snapshot(){
  const n=isVideo()&&yt?yt.getCurrentTime?.():audio.currentTime;
  if(Number.isFinite(n)&&n>=0)state.positions[key]=n;
 }
-async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,details:state.details,ambient:state.ambient,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
+async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
@@ -160,6 +160,8 @@ function renderMetrics(data){
 }
 async function init(){
  const boot=await unwrap(window.deck.init());state={...boot.state,origin:boot.origin};stations=boot.stations;shows=boot.shows;
+ $('game-chaos').value=state.chaos;arcade.refreshPreview();
+ $('game-chaos').addEventListener('change',e=>{state.chaos=e.target.value;queueSave();});
  for(const station of stations){const button=document.createElement('button');button.dataset.station=station.id;const thumb=document.createElement('img');thumb.alt='';thumb.hidden=true;thumb.decoding='async';thumb.onerror=()=>{thumb.dataset.failed=thumb.src;thumb.hidden=true;};const label=document.createElement('span');label.textContent=station.name;button.append(thumb,label);button.addEventListener('click',()=>{stopAll();state.station=station.id;state.source='radio';current=null;render();queueSave();void playRadio();});$('stations').append(button);}
  for(const show of shows){const button=document.createElement('button');button.dataset.show=show.id;const name=document.createElement('span');name.textContent=show.name;button.append(name);button.addEventListener('click',()=>{stopAll();state.source='podcast';state.show=show.id;current=null;render();queueSave();void loadEpisodes(false);});$('shows').append(button);}
  $('x-back').onclick=()=>toggleX(false);

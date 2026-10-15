@@ -92,7 +92,7 @@ To remove the launcher, delete only `~/.local/bin/mattamp`, `~/.local/bin/workst
 
 ## AMP Artillery
 
-Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn and holds steady through the shot: 60% mild (0–30), 30% strong (31–75), and 10% wild gusts (76–150), with either direction equally likely. Wild gusts are highlighted in the wind readout; values are game-strength units, not mph. Damage increases after round 12. Bots use imperfect aim and choose among all opponents.
+Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, choose Chaos, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn and holds steady through the shot: 60% mild (0–30), 30% strong (31–75), and 10% wild gusts (76–150), with either direction equally likely. Wild gusts are highlighted in the wind readout; values are game-strength units, not mph. Damage increases after round 12. Bots use imperfect aim and choose among all opponents.
 
 Radio/audio can keep playing. Switching away, opening Settings, hiding the app or entering Bug mode freezes the game. YouTube pauses when hidden. **Sound on/off** controls the game effects independently. After a match, click anywhere on the battlefield to open the next skirmish setup (or Tab to it and press Enter/Space). Replay waits for score saving to finish. Leaving an unfinished match earns no record; completed results save automatically with a retry button if disk access fails.
 
@@ -116,3 +116,17 @@ Wins trigger a nine-second GPU-rendered gold tank ceremony with 2,400 tumbling c
 Bots also react immediately to damage during the current fight. Higher difficulties put more weight on returning fire to whoever hurt them; Very dumb remains more scatterbrained. Repeated hits strengthen that preference. It works bot-to-bot too, keeps alternative targets possible, and adds taunts such as “Floppy, you started this shit.”
 
 `npm run test:expanded` verifies the expanded layout at 2200×1200, 1000×820 and 640×480, including aspect ratio, visible controls, contained scrolling, restoration and uninterrupted radio.
+
+### Chaos arenas
+
+**Chaos** defaults to **Mixed**, and your selection persists across app launches. The setup preview shows the exact terrain and conditions used when you press Start; the next skirmish rolls a fresh arena.
+
+- **Off:** the original rolling hills, normal gravity and open side edges. The varied wind introduced earlier still applies.
+- **Mixed:** one of five terrain styles, plus either changed gravity or special side walls.
+- **Unhinged:** varied terrain, changed gravity and special side walls together.
+
+Terrain rotates between rolling hills, a deep valley, craggy peaks, plateaus and flatlands. Moonshot uses 0.64× normal gravity; Heavy uses 1.6×. Ricochet walls reflect shells and MIRV fragments without adding energy (solid amber sides); wraparound walls send them through the opposite edge (dashed lavender sides). The ceiling stays open. Wrapped trails break at the boundary instead of drawing a line across the map. A flight expires after 20 simulated seconds to prevent endless volleys.
+
+The conditions line stays visible during play. Conditions remain fixed for the whole match, while wind changes per turn. Bots use the same boundary/gravity calculations as live projectiles and consider indirect shots in special arenas. High scores include each match’s arena; old scores remain readable as Off / rolling hills / normal gravity / open edges. Scoring multipliers are unchanged; the local table mixes modes and labels their conditions.
+
+`npm run test:chaos` verifies the default and saved selection, preview/start consistency, all three modes, compact and expanded layouts, Settings/audio continuity, and arena records across restart. Unit tests cover terrain spawn pads, mode combinations, gravity, wall overshoot, portal collision/trails, prediction consistency, MIRVs, flight expiry and legacy score loading.

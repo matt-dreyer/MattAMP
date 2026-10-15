@@ -1,16 +1,45 @@
 /* Original pocket artillery simulation. Shared by the renderer and Node tests. */
 (function(root){
  'use strict';
- const W=1000,H=540,DT=1/120;
+ const W=1000,H=540,DT=1/120,FLIGHT_LIMIT=20;
  const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:8,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+ const TERRAINS={rolling:'Rolling hills',valley:'Valley',crags:'Craggy peaks',plateaus:'Plateaus',flat:'Flatlands'};
+ const GRAVITY={normal:125,moon:80,heavy:200};
+ const GRAVITY_NAMES={normal:'Normal gravity',moon:'Moonshot ×0.64',heavy:'Heavy gravity ×1.6'};
+ const WALLS={open:'Open edges',ricochet:'Ricochet walls',wrap:'Wraparound walls'};
+ const CHAOS={off:'Off',mixed:'Mixed',unhinged:'Unhinged'};
+ function validateConditions(value){
+  if(value===undefined)return {chaos:'off',terrain:'rolling',gravity:'normal',walls:'open'};
+  if(!value||![['chaos',CHAOS],['terrain',TERRAINS],['gravity',GRAVITY],['walls',WALLS]].every(([key,values])=>Object.hasOwn(values,value[key])))throw new Error('Invalid arena conditions');
+  return Object.fromEntries(['chaos','terrain','gravity','walls'].map(key=>[key,value[key]]));
+ }
+ function rollConditions(chaos,random){
+  if(!Object.hasOwn(CHAOS,chaos))chaos='mixed';
+  if(chaos==='off')return Object.freeze(validateConditions());
+  const pick=items=>items[Math.floor(random()*items.length)];
+  const terrain=pick(Object.keys(TERRAINS)),changeGravity=chaos==='unhinged'||random()<.5;
+  return Object.freeze({chaos,terrain,gravity:changeGravity?pick(['moon','heavy']):'normal',walls:chaos==='unhinged'||!changeGravity?pick(['ricochet','wrap']):'open'});
+ }
+ function describeConditions(value){const c=validateConditions(value);return CHAOS[c.chaos]+' · '+TERRAINS[c.terrain]+' · '+GRAVITY_NAMES[c.gravity]+' · '+WALLS[c.walls];}
  class Battle{
-  constructor({bots=4,skill=1,random=Math.random,history=[]}={}){
+  constructor({bots=4,skill=1,random=Math.random,history=[],chaos='mixed'}={}){
    this.history=history.slice(-3);this.damageLedger=Array.from({length:6},()=>Array(6).fill(0));this.lastTarget=null;
    this.random=random;this.bots=clamp(Math.round(bots)||4,3,5);this.skill=clamp(Math.round(skill)||0,0,3);
+   this.conditions=rollConditions(chaos,random);
    this.terrain=new Float64Array(W+1);const a=random()*7,b=random()*7;
-   for(let x=0;x<=W;x++)this.terrain[x]=325+55*Math.sin(x/190+a)+28*Math.sin(x/76+b);
+   for(let x=0;x<=W;x++){
+    let y;
+    switch(this.conditions.terrain){
+     case 'valley':y=220+190*Math.sin(Math.PI*x/W)+12*Math.sin(x/70+a);break;
+     case 'crags':y=320+75*Math.sin(x/100+a)+45*Math.sin(x/37+b);break;
+     case 'plateaus':y=315+80*Math.tanh(3*Math.sin(x/135+a))+8*Math.sin(x/40+b);break;
+     case 'flat':y=380+9*Math.sin(x/180+a)+4*Math.sin(x/55+b);break;
+     default:y=325+55*Math.sin(x/190+a)+28*Math.sin(x/76+b);
+    }
+    this.terrain[x]=clamp(y,170,450);
+   }
    const slots=Array.from({length:this.bots+1},(_,i)=>70+i*860/this.bots);
    const playerSlot=Math.floor(random()*slots.length);
    this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':['Byte','Floppy','Modem','Turbo','DOS'][i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,angle:x<W/2?55:125,power:55,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
@@ -38,12 +67,21 @@
    if(this.active.id===0)this.shots++;
    this.projectiles=[this.projectile(this.active,this.active.angle,this.active.power,weapon)];this.lastTrails=[];this.phase='flight';this.message=this.active.name+' fired '+(weapon==='mirv'?'a MIRV.':'a shell.');return true;
   }
-  move(p,dt){p.vx+=this.wind*dt;p.vy+=125*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.time+=dt;}
+  move(p,dt){
+   p.vx+=this.wind*dt;p.vy+=GRAVITY[this.conditions.gravity]*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.time+=dt;p.trailBreak=false;
+   if(p.x<0||p.x>W){
+    if(this.conditions.walls==='wrap'){p.x=((p.x%W)+W)%W;p.trailBreak=true;}
+    else if(this.conditions.walls==='ricochet'){
+     // Reflect overshoot as well as velocity; no energy gain and no sticky edge.
+     while(p.x<0||p.x>W){if(p.x<0){p.x=-p.x;p.vx=Math.abs(p.vx);}else{p.x=2*W-p.x;p.vx=-Math.abs(p.vx);}}
+    }
+   }
+  }
   contact(p){return this.tanks.find(t=>t.hp>0&&(p.time>.12||t.id!==p.owner)&&Math.hypot(p.x-t.x,p.y-t.y)<13);}
-  impact(p){return p.x<0||p.x>W||p.y>=this.ground(p.x)||p.time>16||!!this.contact(p);}
+  impact(p){return p.x<0||p.x>W||p.y>=this.ground(p.x)||p.time>FLIGHT_LIMIT||!!this.contact(p);}
   predict(tank,angle,power){
    const p=this.projectile(tank,angle,power,'shell');
-   for(let i=0;i<1920;i++){this.move(p,DT);if(this.impact(p))return p;}
+   for(let i=0;i<=Math.ceil(FLIGHT_LIMIT/DT);i++){this.move(p,DT);if(this.impact(p))return p;}
    return p;
   }
   targetChoices(){
@@ -74,7 +112,9 @@
    const targetX=clamp(target.x+(this.random()-.5)*2*skill.error,15,W-15);
    let best={angle:55,power:55,cost:Infinity};
    for(let i=0;i<skill.samples;i++){
-    const angle=targetX>tank.x?20+this.random()*65:95+this.random()*65,power=20+this.random()*80;
+    // Special boundaries make firing away from the target a valid bank/portal shot.
+    const right=(targetX>tank.x)!==(this.conditions.walls!=='open'&&i%3===0);
+    const angle=right?10+this.random()*75:95+this.random()*75,power=20+this.random()*80;
     const p=this.predict(tank,angle,power),cost=Math.hypot(p.x-targetX,p.y-target.y)+(Math.abs(p.x-tank.x)<55?180:0);
     if(cost<best.cost)best={angle,power,cost};
    }
@@ -119,8 +159,8 @@
     const next=[];
     for(const p of this.projectiles){
      this.move(p,Math.min(DT,left));
-     if(p.trail.length===0||Math.hypot(p.x-p.trail.at(-1).x,p.y-p.trail.at(-1).y)>6){p.trail.push({x:p.x,y:p.y});if(p.trail.length>160)p.trail.shift();}
-     if(this.impact(p)){this.lastTrails.push(p.trail);this.explode(p);continue;}
+     if(p.trailBreak||p.trail.length===0||Math.hypot(p.x-p.trail.at(-1).x,p.y-p.trail.at(-1).y)>6){p.trail.push({x:p.x,y:p.y,moveTo:p.trailBreak});if(p.trail.length>160)p.trail.shift();}
+     if(this.impact(p)){this.lastTrails.push(p.trail);if(p.time<=FLIGHT_LIMIT)this.explode(p);continue;}
      if(p.weapon==='mirv'&&p.vy>=0){this.lastTrails.push(p.trail);for(let j=-2;j<=2;j++)next.push({...p,weapon:'child',vx:p.vx+j*42,vy:15+Math.abs(j)*8,trail:[]});}
      else next.push(p);
     }
@@ -142,8 +182,8 @@
    // A pathological stalemate records no winner; no synthetic championship.
    return rest.memory();
   }
-  record(initials,id){if(this.phase!=='over')return null;return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,memory:this.memory()};}
+  record(initials,id){if(this.phase!=='over')return null;return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory()};}
  }
- const api={Battle,SKILLS,COLORS,W,H};
+ const api={Battle,SKILLS,COLORS,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.MattArtillery=api;
 })(typeof window==='object'?window:globalThis);

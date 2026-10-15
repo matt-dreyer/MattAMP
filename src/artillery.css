@@ -87,3 +87,8 @@
 #game-replay-hint{margin-top:8px;color:#b6ddbd;font-size:12px}
 
 #game-wind.wild-gust{color:#e2bb83;font-weight:600}
+
+.game-conditions{margin:0 0 8px;color:#c0d3ca;font-size:12px;line-height:1.45}
+.game-expanded .game-conditions{flex:none;width:min(100%,1200px);margin:0 auto}
+#game-panel td:last-child{min-width:160px;max-width:230px;font:11px/1.5 system-ui,sans-serif;color:#b7c8d1}
+@container(max-width:450px){.game-setup{display:grid;grid-template-columns:60px 1fr 1fr 1fr}.game-setup button{grid-column:1/-1}.game-setup select{min-width:0;width:100%;padding-inline:5px}.game-setup label{min-width:0}}

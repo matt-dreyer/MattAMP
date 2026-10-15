@@ -4,7 +4,7 @@ const {Battle}=require('../src/artillery.js');
 const {createArcadeStore}=require('../src/arcade-store.cjs');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 function rng(seed){return()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
-function battle(options={}){return new Battle({random:rng(123),...options});}
+function battle(options={}){return new Battle({random:rng(123),chaos:'off',...options});}
 function finishFlight(b){for(let i=0;i<2000&&!['aim','over'].includes(b.phase);i++)b.step(1/30);assert.ok(['aim','over'].includes(b.phase),'shot resolves');}
 test('three to five bots spawn on terrain, with equal health and ammunition',()=>{
  for(const bots of [3,4,5]){const b=battle({bots});assert.equal(b.tanks.length,bots+1);assert.equal(b.active.id,0);assert.equal(new Set(b.tanks.map(t=>t.x)).size,bots+1);for(const t of b.tanks){assert.equal(t.hp,100);assert.equal(t.mirvs,3);assert.equal(t.y,b.ground(t.x)-8);}}
