@@ -31,7 +31,7 @@ async function launch(){app=await _electron.launch({chromiumSandbox:true,args:[p
  await p.locator('#bug-toggle').click();await p.waitForFunction(()=>innerWidth===56);const bugSnap=await p.evaluate(()=>JSON.stringify(arcade.battle));await p.waitForTimeout(300);assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),bugSnap);await p.locator('#bug').click();await p.waitForFunction(()=>innerWidth===430);assert.equal(await p.locator('#game-panel').isVisible(),true);
  // Finish a deterministic fixture in this isolated profile to exercise results and disk persistence.
  await p.evaluate(()=>{for(const t of arcade.battle.tanks.slice(1)){while(t.hp>0)arcade.battle.explode({x:t.x,y:t.y,owner:0,weapon:'shell'});}arcade.battle.projectiles=[];arcade.battle.phase='settle';arcade.battle.delay=0;});
- await p.waitForFunction(()=>document.querySelector('#game-save-status').textContent.startsWith('Saved.'));await p.locator('.victory-dismiss').click();await p.locator('#game-records summary').click();await p.screenshot({path:path.join(captures,'mattamp-game-scores.png')});
+ await p.waitForFunction(()=>document.querySelector('#game-save-status').textContent.startsWith('Saved.'));assert.equal(await p.evaluate(()=>arcade.dance?.id),0);assert.equal(await p.evaluate(()=>arcade.victory.active),false,'human tank dances before the 3D ceremony');await p.locator('.victory-dismiss').click();await p.locator('#game-records summary').click();await p.screenshot({path:path.join(captures,'mattamp-game-scores.png')});
  assert.equal(await p.locator('#game-score-rows tr').count(),1);assert.equal(await p.evaluate(()=>arcade.scores.wins),1);assert.equal(await p.evaluate(()=>arcade.scores.rivalry.at(-1).winner),0);
  await p.locator('#game-again').click({position:{x:20,y:20}});assert.equal(await p.locator('#game-setup').isVisible(),true,'click anywhere on the finished battlefield returns to skirmish setup');assert.equal(await p.locator('#game-bots').inputValue(),'5');assert.equal(await p.locator('#game-skill').inputValue(),'2');assert.equal(await p.evaluate(()=>audio.paused),false);
  for(const clip of ['worms-fire','worms-blast-1','worms-blast-2','worms-blast-3','worms-split']){const duration=await p.evaluate(async clip=>{const a=new Audio('/arcade/'+clip+'.ogg');a.muted=true;await a.play();a.pause();return a.duration;},clip);assert.ok(duration>0);}
@@ -48,7 +48,20 @@ async function launch(){app=await _electron.launch({chromiumSandbox:true,args:[p
  await p.evaluate(()=>{arcade.battle.tanks.slice(2).forEach(t=>t.hp=0);arcade.battle.projectiles=[];arcade.battle.phase='settle';arcade.battle.delay=0;});
  await p.waitForFunction(()=>arcade.battle.phase==='over'&&!arcade.saving&&arcade.scores.played===2);
  assert.equal(await p.evaluate(()=>arcade.scores.rivalry.at(-1).winner),1);assert.match(await p.locator('#game-result').textContent(),/Byte took the ridge/);
+ assert.equal(await p.evaluate(()=>arcade.dance?.id),1);assert.equal(await p.locator('#game-overlay').isVisible(),false);
+ const finalBattle=await p.evaluate(()=>JSON.stringify(arcade.battle)),danceFrame=await p.locator('#game-canvas').evaluate(c=>c.toDataURL());
+ await p.waitForTimeout(350);assert.notEqual(await p.locator('#game-canvas').evaluate(c=>c.toDataURL()),danceFrame,'winning sprite visibly dances');
+ assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),finalBattle,'dance never changes physics or score');assert.equal(await p.evaluate(()=>arcade.scores.played),2);
+ await p.screenshot({path:'/tmp/mattamp-winner-dance.png'});
+ await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>arcade.dance===null);assert.equal(await p.evaluate(()=>arcade.raf),0);assert.equal(await p.evaluate(()=>arcade.victory.active),false);
+ await p.emulateMedia({reducedMotion:'no-preference'});
+
  await p.locator('#game-again').focus();await p.keyboard.press('Space');assert.equal(await p.locator('#game-setup').isVisible(),true,'keyboard replay works after the bots finish');
+ // Leaving during a dance cancels it; returning cannot restart it or a delayed ceremony.
+ await p.locator('#game-start').click();await p.evaluate(()=>{arcade.battle.tanks.forEach(t=>{if(t.id!==1)t.hp=0;});arcade.battle.phase='settle';arcade.battle.delay=0;});
+ await p.waitForFunction(()=>arcade.dance?.id===1&&!arcade.saving);await p.locator('#source-radio').click();assert.equal(await p.evaluate(()=>arcade.dance),null);assert.equal(await p.evaluate(()=>arcade.raf),0);
+ await p.locator('#source-game').click();await p.waitForTimeout(150);assert.equal(await p.evaluate(()=>arcade.dance),null);await p.locator('#game-again').click();
+ await p.locator('#game-start').click();await p.evaluate(()=>{arcade.battle.tanks.forEach(t=>t.hp=0);arcade.battle.phase='settle';arcade.battle.delay=0;});await p.waitForFunction(()=>arcade.record?.result==='draw'&&!arcade.saving);assert.equal(await p.evaluate(()=>arcade.dance),null,'no winner means no dance');
  await p.locator('#source-radio').click();await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===710);await p.waitForTimeout(400);await p.screenshot({path:path.join(captures,'mattamp-game-radio-regression.png')});
- assert.deepEqual(errors,[]);console.log('PASS: wheel/keyboard aim and power, compact single-row controls at 710/430, expansion/manual resize/restore, sprites, six tanks, MIRV, pause/tab switch, radio continuity, Settings, Bug mode, layouts, sound decode, spectator bot combat after player death, delayed result/replay, winner persistence, saved scores across restart.');
+ assert.deepEqual(errors,[]);console.log('PASS: wheel/keyboard aim and power, compact single-row controls at 710/430, expansion/manual resize/restore, sprites, six tanks, MIRV, pause/tab switch, radio continuity, Settings, Bug mode, layouts, sound decode, spectator bot combat after player death, delayed result/replay, winner persistence, winner dance, motion preference and dance cleanup, saved scores across restart.');
  }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});
