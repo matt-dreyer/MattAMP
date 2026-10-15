@@ -3,10 +3,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
 (async()=>{
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-tab-sounds-'));let app;
  fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,podcasts:[],ambient:'off',alwaysOnTop:false}));
- const launcher=path.join(profile,'electron-sandboxed');
- fs.writeFileSync(launcher,'#!/bin/bash\nargs=()\nfor arg in "$@"; do [[ "$arg" == "--no-sandbox" ]] || args+=("$arg"); done\nexec "$MATTAMP_TEST_ELECTRON" "${args[@]}"\n',{mode:0o700});
  try{
-  app=await _electron.launch({executablePath:launcher,args:[path.resolve(__dirname,'..')],env:{...process.env,MATTAMP_TEST_ELECTRON:require('electron'),DECK_TEST_DIR:profile}});
+  app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});
   const p=await app.firstWindow();const errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.waitForFunction(()=>typeof state!=='undefined'&&state);
   await app.evaluate(({webContents,session})=>{for(const w of webContents.getAllWebContents())w.setAudioMuted(true);session.fromPartition('mattamp-ski-cams').protocol.handle('https',()=>new Response('<html>Camera fixture</html>',{headers:{'content-type':'text/html'}}));});
