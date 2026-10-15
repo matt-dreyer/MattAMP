@@ -31,5 +31,16 @@ fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,tabSou
  await p.waitForFunction(()=>document.querySelector('#game-shot').hidden,null,{timeout:4500});
  await botShot();await p.locator('#source-radio').click();assert.equal(await p.locator('#game-shot').isVisible(),false);
  await p.locator('#source-game').click();await botShot();await p.evaluate(()=>arcade.reset());assert.equal(await p.locator('#game-shot').isVisible(),false);
- assert.deepEqual(errors,[]);console.log('PASS: 1–100% power, keyboard/wheel limits, real bot-shot values, unchanged player aim, timed dismissal, tab/reset cleanup and 710/430 layouts.');
+ await p.locator('#settings-open').click();assert.equal(await p.locator('#bot-shot-readouts').isChecked(),true);
+ await p.locator('#bot-shot-readouts').uncheck();await p.waitForFunction(()=>state.gameShotReadouts===false);
+ await p.locator('#bot-shot-readouts').evaluate(el=>el.closest('section').scrollIntoView());
+ await p.locator('#settings-close').click();await p.locator('#game-start').click();await botShot();assert.equal(await p.locator('#game-shot').isVisible(),false,'disabled setting suppresses bot launches');
+ await p.waitForFunction(async()=>!(await window.deck.init()).data.state.gameShotReadouts);
+ await app.close();app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});
+ const reopened=await app.firstWindow();await reopened.locator('#stations button').first().waitFor();
+ assert.equal(await reopened.evaluate(()=>arcade.shotReadouts),false,'preference survives app restart');
+ await reopened.locator('#settings-open').click();assert.equal(await reopened.locator('#bot-shot-readouts').isChecked(),false);
+ await reopened.locator('#bot-shot-readouts').check();assert.equal(await reopened.evaluate(()=>arcade.shotReadouts),true,'readout can be re-enabled');
+ await reopened.locator('#bot-shot-readouts').locator('..').locator('..').screenshot({path:'/tmp/mattamp-shot-setting.png'});
+ assert.deepEqual(errors,[]);console.log('PASS: 1–100% power, keyboard/wheel limits, real bot-shot values, unchanged player aim, timed dismissal, tab/reset cleanup, saved on/off preference across restart and 710/430 layouts.');
  }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});

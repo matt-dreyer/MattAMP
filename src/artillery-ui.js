@@ -3,7 +3,7 @@ class MattArcade{
  constructor(panel,onResize){
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
   this.visible=false;this.expanded=false;this.paused=false;this.sound=true;this.battle=null;this.preview=this.createPreview();this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
-  this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
+  this.shotReadouts=true;this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
   this.victory=new MattVictory(this.$('victory'),()=>{if(this.visible)(this.$('again').disabled?this.canvas:this.$('again')).focus({preventScroll:true});});
   this.victory.motion.addEventListener('change',()=>{if(this.dance&&this.victory.motion.matches)this.finishDance();});
   this.quipResize=new ResizeObserver(()=>this.positionQuip());this.quipResize.observe(this.canvas);
@@ -78,9 +78,10 @@ class MattArcade{
  adjustAim(control,delta){const input=this.$(control);input.value=Math.max(Number(input.min),Math.min(Number(input.max),Number(input.value)+delta));this.updateAim();this.draw();}
  captureVolley(){return {owner:this.battle.active.id,tanks:this.battle.tanks.map(({id,x,y,hp})=>({id,x,y,hp}))};}
  fire(){if(this.paused||!this.visible||!this.battle)return;const volley=this.captureVolley();if(this.battle.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),(this.$('weapon-mirv').checked?'mirv':'shell'))){this.volley=volley;this.playSound('fire');this.sync();}}
+ setShotReadouts(enabled){this.shotReadouts=enabled;if(!enabled)this.clearShot();}
  clearShot(){clearTimeout(this.shotTimer);this.$('shot').hidden=true;}
  showBotShot(tank){
-  this.clearShot();if(tank.id===0)return;
+  this.clearShot();if(!this.shotReadouts||tank.id===0)return;
   this.$('shot').textContent=tank.name+' · '+Math.round(tank.angle)+'° · '+Math.round(tank.power)+'% power';
   this.$('shot').hidden=false;this.shotTimer=setTimeout(()=>this.clearShot(),3000);
  }

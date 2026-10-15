@@ -20,7 +20,7 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={tabSounds:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -54,7 +54,7 @@ function update(patch){
  if(['youtube','audio'].includes(patch.podcastType))state.podcastType=patch.podcastType;
  if(Number.isFinite(patch.volume))state.volume=Math.min(100,Math.max(0,patch.volume));
  if([1,1.25,1.5,1.75,2].includes(patch.speed))state.speed=patch.speed;
- for(const key of ['alwaysOnTop','details','tabSounds'])if(typeof patch[key]==='boolean')state[key]=patch[key];
+ for(const key of ['alwaysOnTop','details','tabSounds','gameShotReadouts'])if(typeof patch[key]==='boolean')state[key]=patch[key];
  if(patch.selected&&typeof patch.selected==='object')for(const [key,value]of Object.entries(patch.selected)){if(state.podcasts.some(s=>key===s.id+':youtube'||key===s.id+':audio')&&typeof value==='string'&&value.length<2048)state.selected[key]=value;}
  if(patch.positions&&typeof patch.positions==='object'){
   for(const [key,value]of Object.entries(patch.positions)){if(key.length<2048&&Number.isFinite(value)&&value>=0&&value<86400)state.positions[key]=value;}
@@ -119,6 +119,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.tabSounds=state.tabSounds!==false;
+ state.gameShotReadouts=state.gameShotReadouts!==false;
  state.cameraCycle=state.cameraCycle===true;
  if(![1,5,15,30,60].includes(state.cameraCycleMinutes))state.cameraCycleMinutes=15;
  try{state.cameras=normalizeCameras(state.cameras);}catch{state.cameras=normalizeCameras();}

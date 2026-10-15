@@ -63,7 +63,7 @@ function snapshot(){
  const n=isVideo()&&yt?yt.getCurrentTime?.():audio.currentTime;
  if(Number.isFinite(n)&&n>=0)state.positions[key]=n;
 }
-async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
+async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,gameShotReadouts:state.gameShotReadouts,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
@@ -84,7 +84,7 @@ function render(){
  $('podcast-type').querySelector('[value=youtube]').disabled=!activeShow()?.playlist;$('podcast-type').querySelector('[value=audio]').disabled=!activeShow()?.feed;$('podcast-type').disabled=!shows.length;
  $('play').disabled=podcast&&!shows.length;$('open-video').disabled=!activeShow()?.playlist;
  $('speed').value=String(state.speed);$('podcast-type').value=state.podcastType;$('audio-timeline').hidden=video;$('open-video').hidden=!video;
- $('tab-sounds').checked=state.tabSounds;
+ $('tab-sounds').checked=state.tabSounds;$('bot-shot-readouts').checked=state.gameShotReadouts;
  $('ambient-mode').value=state.ambient;$('always-top').checked=state.alwaysOnTop;$('details').setAttribute('aria-expanded',String(state.details));$('details').innerHTML=(state.details?'Less':'Details')+icon(state.details?'chevron-up':'chevron-down');
  $('layout').setAttribute('aria-label',state.layout==='sidecar'?'Switch to stacked layout':'Switch to Sidecar layout');
  document.querySelectorAll('[data-station]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.station===state.station)));
@@ -258,6 +258,7 @@ async function init(){
  const boot=await unwrap(window.deck.init());state={...boot.state,origin:boot.origin};stations=boot.stations;shows=boot.shows;
  cameraPanel=new MattSkiCams({cameras:state.cameras,cameraId:state.cameraId,cycle:state.cameraCycle,cycleMinutes:state.cameraCycleMinutes,resize,icons,openSettings:()=>{settings=true;render();syncXBounds();}});
  $('source-cameras').onclick=()=>{watchingCams=true;readingX=false;playingGame=false;mode='full';settings=false;if(isVideo())pause();render();};
+ arcade.setShotReadouts(state.gameShotReadouts);
  $('game-chaos').value=state.chaos;arcade.refreshPreview();
  $('game-chaos').addEventListener('change',e=>{state.chaos=e.target.value;queueSave();});
  for(const station of stations){const button=document.createElement('button');button.dataset.station=station.id;const thumb=document.createElement('img');thumb.alt='';thumb.hidden=true;thumb.decoding='async';thumb.onerror=()=>{thumb.dataset.failed=thumb.src;thumb.hidden=true;};const label=document.createElement('span');label.textContent=station.name;button.append(thumb,label);button.addEventListener('click',()=>{stopAll();state.station=station.id;state.source='radio';current=null;render();queueSave();void playRadio();});$('stations').append(button);}
@@ -309,6 +310,7 @@ async function init(){
  $('settings-open').onclick=()=>{if(isVideo())pause();settings=!settings;render();};$('settings-close').onclick=()=>{settings=false;render();};
  $('ambient-mode').onchange=e=>{state.ambient=e.target.value;syncAmbient();queueSave();};
  $('tab-sounds').onchange=e=>{state.tabSounds=e.target.checked;if(!state.tabSounds)tabAudio.pause();void persist();};
+ $('bot-shot-readouts').onchange=e=>{state.gameShotReadouts=e.target.checked;arcade.setShotReadouts(state.gameShotReadouts);void persist();};
  $('always-top').onchange=e=>{state.alwaysOnTop=e.target.checked;queueSave();};
  window.deck.onKeyStatus(result=>{for(const key of ['hasDiKey','keyring','hasSavedDiKey','keyringPending'])state[key]=result[key];render();});
  $('retry-key').onclick=async()=>{const b=$('retry-key');b.disabled=true;b.textContent='Checking keyring…';try{const result=await unwrap(window.deck.retryKey());for(const key of ['hasDiKey','keyring','hasSavedDiKey','keyringPending'])state[key]=result[key];render();}catch(err){$('settings-message').textContent=err.message;}finally{b.disabled=false;b.textContent='Retry saved key';resize();}};

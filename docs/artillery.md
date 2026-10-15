@@ -31,7 +31,7 @@ Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, s
 
 **Power runs from 1–100%, starting at 50%.** The lower and middle range give finer control for nearby tanks, with the old full-power speed still available for long shots. Bots use the same scale.
 
-When a bot fires, a small readout shows its name, launch angle, and power for three seconds. It leaves your own aiming controls unchanged and clears when you leave or reset the battle.
+When a bot fires, a small readout shows its name, launch angle, and power for three seconds. It leaves your own aiming controls unchanged and clears when you leave or reset the battle. Turn it on or off in **Settings → Game → Show bot shot angle and power**. It starts enabled and remembers your choice across restarts.
 
 ![Byte fires at 66 degrees and 54 percent power, shown briefly above the battlefield](images/bot-shot.png)
 
