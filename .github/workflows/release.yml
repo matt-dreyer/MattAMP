@@ -1,7 +1,7 @@
 name: Build MattAMP
 on:
   push:
-    branches: [main, 'codex/release-*']
+    branches: [main]
     tags: ['v*']
   pull_request:
     branches: [main]
