@@ -1,7 +1,7 @@
 const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-settings-'));fs.writeFileSync(dir+'/state.json',JSON.stringify({volume:0,alwaysOnTop:false,layout:'sidecar',ambient:'off'}));
 (async()=>{let app;try{
- app=await _electron.launch({ignoreDefaultArgs:['--no-sandbox'],args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:dir}});
+ app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:dir}});
  const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();await p.locator('#source-game').click();await p.locator('#game-sound').click();
  await p.evaluate(()=>{audio.src='/startup.mp3';audio.muted=true;audio.loop=true;return audio.play();});
  async function settingsStayOpen(){
@@ -18,8 +18,8 @@ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-settings-'));fs.writeFileSyn
  }
  await settingsStayOpen();await p.locator('#game-start').click();await settingsStayOpen();
  await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===430);await settingsStayOpen();
- await p.locator('#game-expand').click();await p.waitForFunction(()=>innerWidth>710);await settingsStayOpen();await p.waitForFunction(()=>innerWidth===430);
- assert.equal(await p.locator('#game-expand').getAttribute('aria-pressed'),'false');
+ await p.locator('#game-expand').click();await p.waitForFunction(()=>innerWidth>710);const expandedSize=await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getSize());await settingsStayOpen();await p.waitForTimeout(250);assert.deepEqual(await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].getSize()),expandedSize);
+ assert.equal(await p.locator('#game-expand').getAttribute('aria-pressed'),'true');
  assert.equal(await p.locator('#game-controls').isEnabled(),true);assert.equal(await p.locator('#ambient-mode').inputValue(),'stars');
- assert.deepEqual(errors,[]);console.log('PASS: Settings stays usable from Game setup, active battle, stacked and expanded modes; preferences, battle freeze/resume, radio continuity and widget restoration.');
+ assert.deepEqual(errors,[]);console.log('PASS: Settings stays usable from Game setup, active battle, stacked and expanded modes; preferences, battle freeze/resume, radio continuity and game size restoration.');
  }finally{if(app)await app.close();fs.rmSync(dir,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

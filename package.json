@@ -23,7 +23,10 @@
     "dist:linux": "electron-builder --linux --x64 --publish never",
     "dist:win": "electron-builder --win --x64 --publish never",
     "dist:mac": "electron-builder --mac --x64 --arm64 --publish never",
-    "checksums": "node scripts/checksums.cjs"
+    "checksums": "node scripts/checksums.cjs",
+    "test:power": "node scripts/power-smoke.cjs",
+    "test:maximize": "node scripts/maximize-smoke.cjs",
+    "test:bot-scores": "node scripts/bot-scores-smoke.cjs"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

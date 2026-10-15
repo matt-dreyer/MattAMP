@@ -116,7 +116,7 @@ The original internal app name, `workstation-deck`, is retained so existing sett
 | Data | Default Linux location |
 | --- | --- |
 | Preferences, media positions, encrypted listen key | `~/.config/workstation-deck/state.json` (mode 0600) |
-| Top-ten scores, lifetime totals, rivalries | `~/.config/workstation-deck/arcade-scores.json` |
+| Leaderboard, lifetime totals, rivalries | `~/.config/workstation-deck/arcade-scores.json` |
 | Chromium cache and isolated X session | Within `~/.config/workstation-deck/` |
 
 The X partition is `persist:mattamp-x`. Runtime bundles contain none of the author's keys, browser sessions, preferences, or scores. Tests use isolated temporary profiles.

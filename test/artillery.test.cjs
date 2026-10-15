@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {Battle}=require('../src/artillery.js');
+const {Battle,launchSpeed}=require('../src/artillery.js');
 const {createArcadeStore}=require('../src/arcade-store.cjs');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 function rng(seed){return()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
@@ -10,7 +10,7 @@ test('three to five bots spawn on terrain, with equal health and ammunition',()=
  for(const bots of [3,4,5]){const b=battle({bots});assert.equal(b.tanks.length,bots+1);assert.equal(b.active.id,0);assert.equal(new Set(b.tanks.map(t=>t.x)).size,bots+1);for(const t of b.tanks){assert.equal(t.hp,100);assert.equal(t.mirvs,3);assert.equal(t.y,b.ground(t.x)-8);}}
 });
 test('wind bends trajectories, while prediction agrees with actual first impact',()=>{
- const b=battle();b.wind=-18;const left=b.predict(b.active,70,55);b.wind=18;const right=b.predict(b.active,70,55);assert.ok(right.x>left.x+50);
+ const b=battle();b.terrain.fill(440);b.tanks.forEach((t,i)=>{t.x=i?950:200;t.y=432;});b.wind=-18;const left=b.predict(b.active,70,55);b.wind=18;const right=b.predict(b.active,70,55);assert.ok(right.x>left.x+50);
  b.fire(70,55);let hit;const explode=b.explode.bind(b);b.explode=p=>{hit={...p};explode(p);};finishFlight(b);assert.ok(Math.abs(hit.x-right.x)<3);assert.ok(Math.abs(hit.y-right.y)<3);
 });
 test('wind has occasional extreme gusts, calm turns and balanced directions',()=>{
@@ -63,7 +63,7 @@ test('mutual destruction is a draw; unfinished battles produce no record',()=>{
 });
 test('stronger skill earns more points and bots shoot at other bots too',()=>{
  const easy=battle({skill:0}),hard=battle({skill:3});easy.damage=hard.damage=100;assert.ok(hard.score>easy.score);
- const targets=new Set();for(const pick of [0,.99]){const b=battle();b.turn=1;b.tanks.forEach((t,i)=>{t.x=[100,500,300,700,900][i];});let first=true;const random=rng(41);b.random=()=>{if(first){first=false;return pick;}return random();};b.predict=()=>({x:500,y:320});const aim=b.botAim();targets.add(aim.angle<90?'right':'left');assert.ok(aim.power>=10&&aim.power<=100);}assert.equal(targets.size,2);
+ const targets=new Set();for(const pick of [0,.99]){const b=battle();b.turn=1;b.tanks.forEach((t,i)=>{t.x=[100,500,300,700,900][i];});let first=true;const random=rng(41);b.random=()=>{if(first){first=false;return pick;}return random();};b.predict=()=>({x:500,y:320});const aim=b.botAim();targets.add(aim.angle<90?'right':'left');assert.ok(aim.power>=1&&aim.power<=100);}assert.equal(targets.size,2);
 });
 test('high scores persist, rank, cap at ten, and deduplicate retried results',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-scores-'));try{
@@ -101,10 +101,29 @@ test('rivalry ledger attributes blast and fall damage to bots and excludes self 
  b.explode({x:target.x,y:target.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][1],100);
  const self=b.tanks[2];b.explode({x:self.x,y:self.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][2],0);assert.equal(b.score,0);
 });
-test('surviving bots earn an offscreen winner without changing the visible result or score',async()=>{
- const b=battle({bots:3,skill:3});b.tanks[0].hp=0;b.nextTurn();const before=JSON.stringify(b),result=await b.finishRivals();
- assert.equal(JSON.stringify(b),before);assert.ok([1,2,3].includes(result.winner));assert.ok(result.damage.flat().some(n=>n>0));
- const won=battle();won.tanks.slice(1).forEach(t=>t.hp=0);won.nextTurn();assert.equal((await won.finishRivals()).winner,0);
+test('player elimination keeps the visible battle running until the bots earn a winner',()=>{
+ const b=battle({bots:3,skill:3});b.damage=40;b.kills=1;b.shots=2;b.tanks[0].hp=0;
+ assert.equal(b.fire(90,55),false,'destroyed tanks cannot fire');
+ b.nextTurn();const score=b.score;
+ assert.equal(b.phase,'aim');assert.notEqual(b.active.id,0);assert.equal(b.result,null);
+ assert.equal(b.record('MAT','spectator-round-0001'),null,'no premature score or rivalry record');
+ let botShots=0;const fire=b.fire.bind(b);b.fire=(...args)=>{assert.notEqual(b.active.id,0);const fired=fire(...args);if(fired)botShots++;return fired;};
+ for(let i=0;i<20000&&b.phase!=='over';i++)b.step(.05);
+ assert.ok(botShots>1);assert.equal(b.phase,'over');assert.equal(b.result,'loss');assert.equal(b.score,score);assert.equal(b.shots,2);
+ const record=b.record('MAT','spectator-round-0001'),winner=b.tanks.find(t=>t.hp>0);
+ assert.ok(winner);assert.equal(record.memory.winner,winner.id);assert.match(b.message,new RegExp(winner.name+' took the ridge'));
+ assert.ok(record.memory.damage.flat().some(n=>n>0));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-spectator-'));try{
+  const store=createArcadeStore(path.join(dir,'scores.json'));store.record(record);store.record(record);
+  assert.equal(store.read().played,1);assert.equal(store.read().rivalry[0].winner,winner.id);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('a last MIRV still resolves after its owner dies, including a final draw',()=>{
+ const b=battle({bots:3});b.wind=0;b.fire(90,45,'mirv');b.tanks[0].hp=0;
+ for(let i=0;i<1000&&b.projectiles.length!==5;i++)b.step(1/60);
+ assert.equal(b.projectiles.length,5);assert.equal(b.phase,'flight');assert.equal(b.record('MAT','spectator-mirv-0001'),null);
+ finishFlight(b);assert.notEqual(b.active.id,0);assert.equal(b.result,null);
+ b.tanks.forEach(t=>t.hp=0);b.nextTurn();assert.equal(b.result,'draw');assert.equal(b.memory().winner,null);
 });
 test('rivalry persists separately from high scores, expires and deduplicates with old saves intact',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-rivalry-'));try{
@@ -146,4 +165,18 @@ test('current retaliation combines with existing rivalries and resets with a new
  const before=b.targetChoices().find(c=>c.tank.id===2).weight;b.damageLedger[2][1]=40;
  assert.ok(b.targetChoices().find(c=>c.tank.id===2).weight>before);
  const fresh=battle({skill:3,history:[past,past]});fresh.turn=1;assert.equal(fresh.targetChoices().find(c=>c.tank.id===2).weight,before);
+});
+
+test('power spreads short and medium shots across the dial while keeping long-shot reach',()=>{
+ const b=battle();b.wind=0;b.terrain.fill(450);b.tanks.forEach((t,i)=>{t.x=i?950:70;t.y=442;});
+ const land=power=>b.predict(b.tanks[0],45,power).x-70;
+ assert.ok(land(1)<50,'minimum power can drop a shot close by');
+ assert.ok(land(50)>180&&land(50)<300,'half power is useful for a nearby tank');
+ assert.ok(land(70)>500&&land(70)<800,'mid-high power crosses most of the field');
+ assert.ok(land(100)>900,'full power retains long-shot reach');
+ for(let p=2;p<=100;p++)assert.ok(launchSpeed(p)>launchSpeed(p-1));
+ assert.equal(launchSpeed(100),570,'top-end speed stays unchanged');
+ const oldLow=100+15*4.7;
+ assert.ok(Math.abs(launchSpeed(50)-oldLow)<5,'old low-end shots move to the middle of the slider');
+ b.fire(45,1);assert.equal(b.active.power,1,'human shots can use the bottom of the new scale');
 });

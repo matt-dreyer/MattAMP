@@ -27,9 +27,25 @@ test('every terrain keeps tanks on safe flat pads and conditions stay fixed acro
  }
  assert.equal(shapes.size,5);assert.ok(shapes.get('flat')<30);assert.ok(shapes.get('crags')>150);
 });
+test('Off keeps its opening wind through rounds, eliminations and the final result; new battles roll anew',()=>{
+ const random=rng(813),winds=new Set();
+ for(let game=0;game<20;game++){
+  const b=new Battle({chaos:'off',random}),wind=b.wind;winds.add(wind);
+  b.newWind=()=>{throw new Error('Normal battle must not reroll wind');};
+  for(let turn=0;turn<30;turn++){if(turn===10)b.tanks[2].hp=0;b.nextTurn();assert.equal(b.wind,wind);}
+  assert.ok(b.round>1);b.tanks.slice(1).forEach(t=>t.hp=0);b.nextTurn();assert.equal(b.phase,'over');assert.equal(b.wind,wind);
+ }
+ assert.ok(winds.size>1,'each new battle gets a fresh opening wind');
+});
+test('Mixed and Unhinged still change wind on each turn',()=>{
+ for(const chaos of ['mixed','unhinged']){
+  const b=new Battle({chaos,random:rng(32)});let rolls=0;b.newWind=()=>++rolls%2?37:-82;
+  for(let turn=1;turn<=12;turn++){b.nextTurn();assert.equal(rolls,turn);assert.equal(b.wind,turn%2?37:-82);}
+ }
+});
 test('Moonshot lengthens arcs and heavy gravity shortens them',()=>{
  const ranges=[];
- for(const gravity of ['moon','normal','heavy']){const b=fixture('open',gravity);b.wind=0;b.terrain.fill(440);b.active.x=100;b.active.y=432;b.tanks.slice(1).forEach(t=>t.hp=0);ranges.push(b.predict(b.active,45,35).x);}
+ for(const gravity of ['moon','normal','heavy']){const b=fixture('open',gravity);b.wind=0;b.terrain.fill(440);b.active.x=100;b.active.y=432;b.tanks.slice(1).forEach(t=>t.hp=0);ranges.push(b.predict(b.active,45,65).x);}
  assert.ok(ranges[0]>ranges[1]+80&&ranges[1]>ranges[2]+80);
 });
 test('side walls reflect without energy gain or wrap overshoot without flipping direction',()=>{

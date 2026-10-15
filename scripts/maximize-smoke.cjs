@@ -1,0 +1,40 @@
+const {_electron}=require('playwright'),{expect}=require('@playwright/test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-maximize-'));
+fs.writeFileSync(dir+'/state.json',JSON.stringify({volume:0,tabSounds:false,alwaysOnTop:false,layout:'sidecar',ambient:'waves'}));
+(async()=>{let app;try{
+ app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:dir}});
+ const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();
+ const native=()=>app.evaluate(({BrowserWindow,screen})=>{const w=BrowserWindow.getAllWindows()[0];return {maximized:w.isMaximized(),bounds:w.getBounds(),area:screen.getDisplayMatching(w.getBounds()).workArea};});
+ const checkMax=async()=>{await p.waitForFunction(()=>document.querySelector('#maximize').getAttribute('aria-pressed')==='true');await expect.poll(async()=>(await native()).maximized).toBe(true);};
+ const checkRestore=async()=>{await p.waitForFunction(()=>document.querySelector('#maximize').getAttribute('aria-pressed')==='false');await expect.poll(async()=>(await native()).maximized).toBe(false);};
+ await p.locator('#source-game').click();await p.locator('#game-sound').click();await p.locator('#game-start').click();
+ await p.evaluate(()=>{audio.src='/startup.mp3';audio.muted=true;audio.loop=true;return audio.play();});
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(1000,820));await p.waitForTimeout(300);
+ const before=(await native()).bounds,battle=await p.evaluate(()=>JSON.stringify(arcade.battle));
+ await p.locator('#maximize').click();await checkMax();await p.waitForTimeout(300);
+ const max=await native();assert.deepEqual(max.bounds,max.area,'native maximize fills work area');
+ assert.equal(await p.locator('#game-expand').isVisible(),false,'one restore control while maximized');
+ const layout=await p.evaluate(()=>({overflow:document.documentElement.scrollHeight-innerHeight,visible:['.titlebar','.sourcebar','#game-controls','#game-fire'].every(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),expanded:document.querySelector('#deck').classList.contains('arcade-expanded')}));
+ assert.ok(layout.overflow<=1);assert.ok(layout.visible);assert.ok(layout.expanded);
+ assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),battle);assert.equal(await p.evaluate(()=>audio.paused),false);
+ await p.screenshot({path:'/tmp/mattamp-maximized.png'});
+ await p.locator('#settings-open').click();await checkMax();await p.locator('#settings-close').click();await checkMax();
+ await p.evaluate(()=>arcade.reset());await p.locator('#game-start').click();await checkMax();
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].hide());await p.waitForTimeout(150);await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].show());await checkMax();
+ await p.locator('#maximize').click();await checkRestore();await p.waitForTimeout(300);
+ assert.deepEqual((await native()).bounds,before,'restore returns to manually chosen bounds');
+ assert.equal(await p.locator('#game-expand').isVisible(),true);
+ await p.screenshot({path:'/tmp/mattamp-maximize-restored.png'});
+ await p.locator('#maximize').click();await checkMax();await p.locator('#source-radio').click();await checkRestore();await p.waitForFunction(()=>innerWidth===710);
+ // Non-game maximize, OS-triggered changes, and layout switches also synchronize.
+ const radio=(await native()).bounds;await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].maximize());await checkMax();
+ await p.locator('#maximize').click();await checkRestore();await p.waitForTimeout(300);assert.deepEqual((await native()).bounds,radio);
+ await p.locator('#maximize').click();await checkMax();await p.locator('#bug-toggle').click();await p.waitForFunction(()=>innerWidth===56);await checkRestore();
+ await p.locator('#bug').click();await p.waitForFunction(()=>innerWidth===710);
+ // Explicit expanded Game survives a maximize/restore round trip.
+ await p.locator('#source-game').click();await p.locator('#game-expand').click();await p.waitForTimeout(300);const expanded=(await native()).bounds;
+ await p.locator('#maximize').click();await checkMax();await p.locator('#maximize').click();await checkRestore();await p.waitForTimeout(300);
+ assert.deepEqual((await native()).bounds,expanded);assert.equal(await p.evaluate(()=>arcade.expanded),true);
+ await p.locator('#game-expand').click();await p.waitForFunction(()=>innerWidth===710);
+ assert.deepEqual(errors,[]);console.log('PASS: native maximize/restore; viewport controls; battle/audio continuity; settings, resets and hide/show; exact prior bounds; OS events; tab/bug transitions; expanded Game round trip.');
+ }finally{if(app)await app.close();fs.rmSync(dir,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

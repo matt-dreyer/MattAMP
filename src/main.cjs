@@ -18,9 +18,10 @@ if(process.platform==='win32')app.setAppUserModelId('ai.fshbwl.deck');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
-let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
+let lastResizeArgs,maximizeRestore,restoredWindowKey;
+let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={tabSounds:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -54,7 +55,7 @@ function update(patch){
  if(['youtube','audio'].includes(patch.podcastType))state.podcastType=patch.podcastType;
  if(Number.isFinite(patch.volume))state.volume=Math.min(100,Math.max(0,patch.volume));
  if([1,1.25,1.5,1.75,2].includes(patch.speed))state.speed=patch.speed;
- for(const key of ['alwaysOnTop','details','tabSounds'])if(typeof patch[key]==='boolean')state[key]=patch[key];
+ for(const key of ['alwaysOnTop','details','tabSounds','gameShotReadouts'])if(typeof patch[key]==='boolean')state[key]=patch[key];
  if(patch.selected&&typeof patch.selected==='object')for(const [key,value]of Object.entries(patch.selected)){if(state.podcasts.some(s=>key===s.id+':youtube'||key===s.id+':audio')&&typeof value==='string'&&value.length<2048)state.selected[key]=value;}
  if(patch.positions&&typeof patch.positions==='object'){
   for(const [key,value]of Object.entries(patch.positions)){if(key.length<2048&&Number.isFinite(value)&&value>=0&&value<86400)state.positions[key]=value;}
@@ -66,14 +67,31 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
-function resize(view,height,expanded=false){
+function windowSizeKey(view,expanded,game){return [view,state.layout,!!game,expanded].join(':');}
+function resize(view,height,expanded=false,game=''){
  if(!win||!['full','compact','bug'].includes(view))return;
+ lastResizeArgs=[view,height,expanded,game];const key=windowSizeKey(view,expanded,game);
+ // Native maximize owns the bounds; content updates must not shrink it.
+ // An explicit layout change or leaving Game returns to normal widget sizing.
+ if(win.isMaximized()){if(maximizeRestore&&maximizeRestore.key!==key)win.unmaximize();return;}
+ if(restoredWindowKey===key)return;
+ restoredWindowKey=null;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
- if(expanded===true&&view==='full'){
-  if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
+ const playing=game==='play'&&view==='full';
+ if(!['play','settings','bug'].includes(game))gameSession=null;
+ else if(!playing&&gameSession&&!gameSession.suspended){gameSession.bounds=win.getBounds();gameSession.suspended=true;}
+ // Content changes (replay, scores, heckles) must not resize a game window.
+ // Temporary settings/bug views restore the latest user-chosen bounds on return.
+ if(playing&&gameSession&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
+  if(gameSession.suspended){win.setResizable(true);win.setMinimumSize(expanded?Math.min(640,area.width):340,expanded?Math.min(480,area.height):260);win.setBounds(gameSession.bounds);gameSession.suspended=false;}
   mode='full';return;
  }
- if(gameBounds){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
+ const rememberGame=()=>{if(playing)gameSession={layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
+ if(expanded===true&&view==='full'&&game!=='settings'){
+  if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
+  mode='full';rememberGame();return;
+ }
+ if(gameBounds&&(!game||playing)){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
  if(view!=='full'){xFeed?.hide();skiCams?.hide();}
  if(view==='bug'){
   if(mode!=='bug')fullBounds=win.getBounds();
@@ -86,6 +104,7 @@ function resize(view,height,expanded=false){
   const h=Math.min(area.height,Math.max(260,Math.ceil(Number(height)||500)));
   win.setBounds({x:Math.max(area.x,Math.min(bounds.x,area.x+area.width-width)),y:Math.max(area.y,Math.min(bounds.y,area.y+area.height-h)),width,height:h});
  }
+ rememberGame();
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
@@ -108,6 +127,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.tabSounds=state.tabSounds!==false;
+ state.gameShotReadouts=state.gameShotReadouts!==false;
  state.cameraCycle=state.cameraCycle===true;
  if(![1,5,15,30,60].includes(state.cameraCycleMinutes))state.cameraCycleMinutes=15;
  try{state.cameras=normalizeCameras(state.cameras);}catch{state.cameras=normalizeCameras();}
@@ -124,7 +144,17 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win=new BrowserWindow({x:Math.max(work.x,Math.min(initial.x,work.x+work.width-710)),y:Math.max(work.y,Math.min(initial.y,work.y+work.height-560)),width:710,height:560,minWidth:340,minHeight:260,frame:false,transparent:true,backgroundColor:'#00000000',show:false,alwaysOnTop:state.alwaysOnTop,icon:path.join(__dirname,'../assets/icon.png'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
  win.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/(www\.)?(youtube\.com|di\.fm)\//.test(url))shell.openExternal(url);return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
- win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
+ win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=maximizeRestore?.bounds||win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
+ win.on('maximize',()=>{
+  if(!maximizeRestore){const [view,,expanded,game]=lastResizeArgs||['full',0,false,''];maximizeRestore={bounds:win.getNormalBounds(),key:windowSizeKey(view,expanded,game)};}
+  send('deck:window-state',{maximized:true});
+ });
+ win.on('unmaximize',()=>{
+  const restore=maximizeRestore;restoredWindowKey=restore?.key;maximizeRestore=null;
+  if(restore)win.setBounds(restore.bounds);
+  send('deck:window-state',{maximized:false});
+  if(lastResizeArgs)resize(...lastResizeArgs);
+ });
  win.on('minimize',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('hide',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));
@@ -141,12 +171,12 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
- handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup};});
+ handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup,maximized:win.isMaximized()};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());
  handle('deck:arcade-record',record=>arcade.record(record));
  handle('deck:save',patch=>{update(patch);return publicState();});
- handle('deck:resize',(view,height,expanded)=>resize(view,height,expanded));
+ handle('deck:resize',(view,height,expanded,game)=>resize(view,height,expanded,game));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));
  handle('deck:episodes',(show,type,refresh)=>episodes(show,type,!!refresh,state.podcasts));
  handle('deck:podcast-resolve',input=>{
@@ -175,6 +205,11 @@ if(primaryInstance)app.whenReady().then(async()=>{
   if(kind==='youtube'&&/^[\w-]{11}$/.test(id))url='https://www.youtube.com/watch?v='+id;
   if(kind==='channel'){const show=state.podcasts.find(s=>s.id===id);if(show?.playlist)url=youtubeUrl(show);}
   if(!url)throw new Error('Unknown link');await shell.openExternal(url);
+ });
+ handle('deck:maximize',()=>{
+  if(mode==='bug')return;
+  if(win.isMaximized())win.unmaximize();
+  else{const [view,,expanded,game]=lastResizeArgs||['full',0,false,''];maximizeRestore={bounds:win.getBounds(),key:windowSizeKey(view,expanded,game)};win.maximize();}
  });
  handle('deck:hide',()=>win.hide());handle('deck:quit',quit);
  handle('deck:move',(dx,dy)=>{if(mode!=='bug'||!Number.isFinite(dx)||!Number.isFinite(dy))return;const [x,y]=win.getPosition();const nx=x+Math.max(-100,Math.min(100,Math.round(dx))),ny=y+Math.max(-100,Math.min(100,Math.round(dy)));win.setPosition(nx,ny);if(fullBounds){fullBounds.x+=nx-x;fullBounds.y+=ny-y;}});

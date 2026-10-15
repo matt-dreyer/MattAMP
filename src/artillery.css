@@ -92,3 +92,9 @@
 .game-expanded .game-conditions{flex:none;width:min(100%,1200px);margin:0 auto}
 #game-panel td:last-child{min-width:160px;max-width:230px;font:11px/1.5 system-ui,sans-serif;color:#b7c8d1}
 @container(max-width:450px){.game-setup{display:grid;grid-template-columns:60px 1fr 1fr 1fr}.game-setup button{grid-column:1/-1}.game-setup select{min-width:0;width:100%;padding-inline:5px}.game-setup label{min-width:0}}
+
+/* Shot telemetry stays clear of the controls and never changes window size. */
+#game-shot{position:absolute;z-index:2;top:10px;left:10px;max-width:calc(100% - 20px);padding:6px 9px;border:1px solid #66817c;border-radius:5px;background:rgba(16,28,35,.94);color:#d8e7df;font:12px/1.4 ui-monospace,monospace;font-variant-numeric:tabular-nums;pointer-events:none}
+/* Keep shared-score names and numbers legible; narrow widgets scroll the table. */
+#game-panel .game-score-scroll table{min-width:600px}
+#game-panel .game-score-scroll td:nth-child(2){white-space:nowrap}
