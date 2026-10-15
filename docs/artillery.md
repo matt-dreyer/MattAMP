@@ -8,6 +8,8 @@ Open **Game**. Enter up to three arcade initials, choose **3–5 bots**, select 
 
 It's untimed, last-tank-standing artillery. Craters persist, explosions cause splash damage, and tanks can take fall damage. Damage increases after round 12 to keep a battle moving. Bot aim is imperfect; higher skill improves the opposition without making every decision deterministic.
 
+**Very dumb** is the practice tier: bots guess their angle and power without simulating trajectories or compensating for wind, use MIRVs rarely (5% of shots while stocked), and put much less weight on old grudges and repeat winners. They can still land a lucky hit. Casual and above search for better shots; all tiers share the same health, damage, and projectile physics.
+
 Each tank is tinted to match its name, health bar and roster color, with the original sprite shading intact.
 
 Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into five warheads at the top of its arc. Bot and player projectiles use the same physics.
@@ -31,6 +33,8 @@ Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into 
 Game keeps the window size you choose through battle resets, results, and new skirmishes. Settings, bug mode, and hiding the app temporarily leave the battle; returning restores its size. Switching to another tab returns to the normal widget layout. **Restore** or the layout controls still let you change size explicitly.
 
 The title-bar square beside minimize maximizes the window. In Game it uses the same viewport layout as Expand, keeps its size through resets and Settings, and restores your previous dimensions when clicked again. Leaving Game returns to the normal widget.
+
+The title bar, mode tabs, and Game’s Expand/Sound row stay pinned while you scroll through the battlefield, leaderboard, and credits.
 
 Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, source tabs, battlefield, and aiming controls available; scores and credits have their own scrolling area.
 

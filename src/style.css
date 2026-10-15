@@ -98,3 +98,11 @@ select option{background:#25343e;color:var(--text)}
 #camera-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#camera-settings-status[data-error=true]{color:var(--amber)}
 
 .camera-cycle-controls{display:flex;align-items:center;gap:8px;margin-bottom:10px}.camera-cycle-controls button,.camera-cycle-controls select{min-height:32px}.camera-cycle-controls select{flex:1;min-width:0}
+
+/* The chrome stays reachable while the body scrolls, in stacked and sidecar layouts. */
+#deck{overflow:clip}
+#deck>.titlebar{position:sticky;top:0;z-index:30}
+.full>.sourcebar{grid-column:1;grid-row:1;position:sticky;top:var(--titlebar-height,39px);z-index:20;background:var(--shell);padding-bottom:6px}
+.full>.content{grid-column:1;grid-row:2}
+.full>.system{grid-column:2;grid-row:1 / span 2}
+html{scroll-padding-top:var(--chrome-height,100px)}
