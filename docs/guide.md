@@ -18,6 +18,10 @@ Channel art comes from AudioAddict's catalog and image CDN. Metadata is cached f
 
 Use **Podcasts → Player** to choose **YouTube** or **Audio feed**. These are separate feeds, so their episode selections and resume positions are separate too.
 
+Open **Settings → Your podcasts**, or **Manage podcasts** below the player, to customize the lineup. **Add show** accepts a name and either a YouTube playlist/channel URL, a public HTTPS audio RSS feed, or both. The pencil edits a show; the arrows change its position; the trash button removes it, with **Undo removal** available for the most recent removal. Changes save locally and appear in the player immediately. Up to 50 shows are supported, and the original five remain until you edit or remove them.
+
+For custom YouTube shows, use a full-episode playlist when possible. Channel URLs (including `@handle` URLs) use non-Short uploads; the parser excludes videos three minutes or shorter, but longer clips can still appear. Audio-only and video-only shows automatically select their available player. Audio links must be RSS feeds, not Apple Podcasts or Spotify listing pages. The app checks link format when saving; feed availability is checked when you select the show.
+
 The video player has a responsive 16:9 viewport and YouTube's native controls. Four shows use dedicated full-episode playlists. AI for Humans matches non-Short uploads to podcast RSS titles to reject standalone clips. When a playlist's RSS endpoint fails, MattAMP tries that playlist's public page metadata; it does not quietly substitute an unfiltered uploads feed.
 
 Audio supports play/pause, stop, volume/mute, seeking, 15-second rewind, 30-second forward, and speed. Preferences and positions save locally. Default speed is 1×; a manually selected speed is remembered. Settings also accepts a custom YouTube URL.
@@ -85,6 +89,7 @@ Missing sensors display as unavailable rather than an invented zero.
 | `./MattAMP` is not executable after extraction | From the extracted folder, run `chmod +x MattAMP`, then `./MattAMP`. Extract the whole runtime archive with permissions intact. |
 | Missing Linux shared library | Install the missing Electron desktop dependency through your distro's package manager. The ZIP bundles Electron, not every system library. |
 | Radio will not play | Confirm Premium external-player access and that you pasted only the listen key. Save again and try another station. Provider/network failures can also interrupt a stream. |
+| App opens, but the saved radio key is locked | Unlock the desktop keyring in **Passwords and Keys**, then select **Settings → Retry saved key**. Keyring access runs in the background so it cannot freeze startup. |
 | Listen key disappears after restart | A protected system keyring was unavailable. Enable/unlock the desktop keyring for encrypted persistence, or enter the key each session. |
 | Podcast feed is unavailable / returns HTTP 404 | Use the episode refresh button, try another show, or choose **Audio feed**. Provider changes can break feed discovery; MattAMP keeps the full-episode filter rather than showing Shorts. |
 | YouTube frame is blank, blocked, or won't start | Click the embedded player's Play button. If the upload disallows embedding or needs login, use **YouTube** to open it externally, or choose **Audio feed**. |

@@ -2,7 +2,8 @@ const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage
 const path=require('node:path');
 const fs=require('node:fs');
 const http=require('node:http');
-const {STATIONS,SHOWS,Monitor,radioUrls,episodes,videoId,stationArtwork}=require('./services.cjs');
+const {STATIONS,Monitor,radioUrls,episodes,videoId,stationArtwork,fetchText}=require('./services.cjs');
+const {normalizeLibrary,resolveShow,selection,youtubeUrl}=require('./podcast-library.cjs');
 const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
 const {createArcadeStore}=require('./arcade-store.cjs');
@@ -17,10 +18,24 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
-function keyring(){return safeStorage.isEncryptionAvailable()&&safeStorage.getSelectedStorageBackend()!=='basic_text';}
-function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring()};}
+let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
+function keyring(){return keyringAvailable;}
+function keyTimeout(promise){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Unlock your desktop keyring in Passwords and Keys, then retry.')),8000);})]).finally(()=>clearTimeout(timer));}
+function unlockSavedKey(){
+ if(keyringTask)return keyringTask;
+ const revision=keyRevision,cipher=state.diKeyCipher;keyringPending=true;
+ keyringTask=(async()=>{
+  try{
+   keyringAvailable=await safeStorage.isAsyncEncryptionAvailable();
+   if(cipher&&keyringAvailable){const decrypted=await safeStorage.decryptStringAsync(Buffer.from(cipher,'base64'));if(revision===keyRevision&&cipher===state.diKeyCipher)secret=decrypted.result;}
+  }catch{keyringAvailable=false;}
+  finally{keyringPending=false;keyringTask=null;send('deck:key-status',publicState());}
+  return publicState();
+ })();return keyringTask;
+}
+function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring(),hasSavedDiKey:!!state.diKeyCipher,keyringPending};}
 function update(patch){
  if(!patch||typeof patch!=='object')return;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
@@ -30,16 +45,17 @@ function update(patch){
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
  if(['radio','podcast'].includes(patch.source))state.source=patch.source;
  if(STATIONS.some(s=>s.id===patch.station))state.station=patch.station;
- if(SHOWS.some(s=>s.id===patch.show))state.show=patch.show;
+ if(state.podcasts.some(s=>s.id===patch.show))state.show=patch.show;
  if(['youtube','audio'].includes(patch.podcastType))state.podcastType=patch.podcastType;
  if(Number.isFinite(patch.volume))state.volume=Math.min(100,Math.max(0,patch.volume));
  if([1,1.25,1.5,1.75,2].includes(patch.speed))state.speed=patch.speed;
  for(const key of ['alwaysOnTop','details'])if(typeof patch[key]==='boolean')state[key]=patch[key];
- if(patch.selected&&typeof patch.selected==='object')for(const [key,value]of Object.entries(patch.selected)){if(/^(lastweek|humans|allin|dwarkesh|a16z):(youtube|audio)$/.test(key)&&typeof value==='string'&&value.length<2048)state.selected[key]=value;}
+ if(patch.selected&&typeof patch.selected==='object')for(const [key,value]of Object.entries(patch.selected)){if(state.podcasts.some(s=>key===s.id+':youtube'||key===s.id+':audio')&&typeof value==='string'&&value.length<2048)state.selected[key]=value;}
  if(patch.positions&&typeof patch.positions==='object'){
   for(const [key,value]of Object.entries(patch.positions)){if(key.length<2048&&Number.isFinite(value)&&value>=0&&value<86400)state.positions[key]=value;}
   state.positions=Object.fromEntries(Object.entries(state.positions).slice(-300));
  }
+ Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  save();if(win&&win.isAlwaysOnTop()!==state.alwaysOnTop)win.setAlwaysOnTop(state.alwaysOnTop);
 }
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
@@ -83,8 +99,9 @@ async function startServer(){
 if(primaryInstance)app.whenReady().then(async()=>{
  try{const loaded=JSON.parse(fs.readFileSync(stateFile(),'utf8'));if(loaded&&typeof loaded==='object')state={...state,...loaded};}catch{}
  if(!['off','mixed','unhinged'].includes(state.chaos))state.chaos='mixed';
+ try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
+ Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.positions ||= {};state.selected ||= {};
- if(state.diKeyCipher&&keyring()){try{secret=safeStorage.decryptString(Buffer.from(state.diKeyCipher,'base64'));}catch{}}
  await startServer();
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  session.defaultSession.setPermissionCheckHandler(()=>false);
@@ -105,26 +122,39 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
- handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:SHOWS,origin,playStartup};});
+ handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());
  handle('deck:arcade-record',record=>arcade.record(record));
  handle('deck:save',patch=>{update(patch);return publicState();});
  handle('deck:resize',(view,height,expanded)=>resize(view,height,expanded));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));
- handle('deck:episodes',(show,type,refresh)=>episodes(show,type,!!refresh));
- handle('deck:key',value=>{
+ handle('deck:episodes',(show,type,refresh)=>episodes(show,type,!!refresh,state.podcasts));
+ handle('deck:podcast-resolve',input=>{
+  const previous=state.podcasts.find(s=>s.id===input?.id);
+  if(input?.id&&!previous)throw new Error('That show was removed. Add it again.');
+  return resolveShow(input,previous,fetchText);
+ });
+ handle('deck:podcasts-save',library=>{
+  const next=normalizeLibrary(library);
+  state.podcasts=next;Object.assign(state,selection(next,state.show,state.podcastType));
+  state.selected=Object.fromEntries(Object.entries(state.selected).filter(([key])=>next.some(s=>key===s.id+':audio'||key===s.id+':youtube')));
+  save();return {shows:state.podcasts,show:state.show,podcastType:state.podcastType};
+ });
+ handle('deck:key-retry',()=>keyTimeout(unlockSavedKey()));
+ handle('deck:key',async value=>{
   if(typeof value!=='string'||value.length>512||/[\r\n]/.test(value))throw new Error('Invalid listen key');
   const key=value.trim();if(key&&!/^[A-Za-z0-9_-]+$/.test(key))throw new Error('Paste the listen key only, from DI.FM Player Settings.');
-  radioRelay.revoke();secret=key;delete state.diKeyCipher;
-  if(key&&keyring())state.diKeyCipher=safeStorage.encryptString(key).toString('base64');save();return publicState();
+  const revision=++keyRevision;radioRelay.revoke();secret=key;delete state.diKeyCipher;save();
+  if(key){try{keyringAvailable=await keyTimeout(safeStorage.isAsyncEncryptionAvailable());if(keyringAvailable){const cipher=await keyTimeout(safeStorage.encryptStringAsync(key));if(revision===keyRevision)state.diKeyCipher=cipher.toString('base64');}}catch{keyringAvailable=false;}}
+  save();return publicState();
  });
  handle('deck:video-id',value=>{const id=videoId(String(value).slice(0,2048));if(!id)throw new Error('Use a YouTube video URL.');return id;});
  handle('deck:external',async(kind,id)=>{
   let url;if(kind==='di-settings')url='https://www.di.fm/settings';
   if(kind==='di-station'&&STATIONS.some(s=>s.id===id))url='https://www.di.fm/'+id;
   if(kind==='youtube'&&/^[\w-]{11}$/.test(id))url='https://www.youtube.com/watch?v='+id;
-  if(kind==='channel'){const show=SHOWS.find(s=>s.id===id);if(show)url='https://www.youtube.com/channel/'+show.channel;}
+  if(kind==='channel'){const show=state.podcasts.find(s=>s.id===id);if(show?.playlist)url=youtubeUrl(show);}
   if(!url)throw new Error('Unknown link');await shell.openExternal(url);
  });
  handle('deck:hide',()=>win.hide());handle('deck:quit',quit);
@@ -132,6 +162,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  const icon=nativeImage.createFromPath(path.join(__dirname,'../assets/icon.png'));
  tray=new Tray(icon.resize({width:22,height:22}));tray.setToolTip('MattAMP — workstation player');tray.setContextMenu(Menu.buildFromTemplate([{label:'Show MattAMP',click:()=>{win.show();win.focus();}},{label:'Pause playback',click:()=>send('deck:pause')},{type:'separator'},{label:'Quit MattAMP',click:quit}]));tray.on('click',()=>{win.show();win.focus();});
  await win.loadURL(origin+'/');win.show();
+ void unlockSavedKey();
  const monitor=new Monitor();const tick=async()=>{if(busy)return;busy=true;try{send('deck:metrics',await monitor.sample());}catch{send('deck:metrics',{error:'Metrics unavailable',time:Date.now()});}finally{busy=false;}};void tick();timer=setInterval(tick,2000);
 });
 app.on('window-all-closed',()=>app.quit());

@@ -28,6 +28,7 @@
    </div>
    <div id="stations" class="presets" aria-label="DI.FM stations"></div>
    <div id="shows" class="shows" aria-label="Favorite podcasts" hidden></div>
+   <button id="manage-podcasts" class="text-button" hidden><i data-lucide="list-music"></i>Manage podcasts</button>
   </section>
   <section id="game-panel" aria-label="AMP Artillery" hidden>
    <div class="game-heading"><div><span class="game-eyebrow">MATTAMP ARCADE / 01</span><h2>AMP Artillery</h2></div><div class="game-heading-actions"><button id="game-expand" aria-pressed="false" title="Expand the game window; drag its edges to resize">Expand</button><button id="game-sound" aria-pressed="true" title="Toggle game sound">Sound on</button></div></div>
@@ -78,7 +79,22 @@
  </div>
  <section id="settings" hidden aria-label="MattAMP settings">
   <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
-  <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p></form>
+  <section id="podcast-settings" aria-labelledby="podcasts-heading">
+   <div class="podcasts-heading"><h2 id="podcasts-heading">Your podcasts</h2><button id="podcast-add" type="button"><i data-lucide="plus"></i>Add show</button></div>
+   <p class="hint">Your lineup, in your order. Add a YouTube link, an audio RSS feed, or both.</p>
+   <ol id="podcast-library" aria-label="Podcast library"></ol>
+   <form id="podcast-form" hidden>
+    <h3 id="podcast-form-title">Add a show</h3>
+    <label for="podcast-name">Show name</label><input id="podcast-name" type="text" maxlength="80" required autocomplete="off" placeholder="The next rabbit hole">
+    <label for="podcast-youtube">YouTube playlist or channel <span class="optional">optional</span></label><input id="podcast-youtube" type="url" maxlength="2048" placeholder="https://www.youtube.com/@…" aria-describedby="podcast-youtube-help">
+    <p id="podcast-youtube-help" class="hint">A full-episode playlist works best. Channel links skip Shorts, but may include longer clips.</p>
+    <label for="podcast-rss">Audio RSS feed <span class="optional">optional</span></label><input id="podcast-rss" type="url" maxlength="2048" placeholder="https://…/feed.rss" aria-describedby="podcast-rss-help">
+    <p id="podcast-rss-help" class="hint">Use the show's RSS link, rather than its Apple Podcasts or Spotify page.</p>
+    <div class="settings-row"><button id="podcast-save" class="primary" type="submit">Save show</button><button id="podcast-cancel" type="button">Cancel</button></div>
+   </form>
+   <div class="podcast-feedback"><p id="podcast-settings-status" role="status"></p><button id="podcast-undo" type="button" hidden>Undo removal</button></div>
+  </section>
+  <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p><button type="button" id="retry-key" hidden>Retry saved key</button></form>
   <label class="check"><input id="always-top" type="checkbox">Keep MattAMP above other windows</label>
   <div class="ambient-setting"><label for="ambient-mode">Live background</label><select id="ambient-mode"><option value="off">Off</option><option value="flow">Particle flow</option><option value="waves">Water waves</option><option value="stars">Starfield</option><option value="mandelbrot">Mandelbrot zoom</option></select><p class="hint">Slow, dim motion. Pauses when hidden or in Bug mode; respects reduced-motion settings.</p></div>
   <form id="x-form"><h2>X feed</h2><label for="x-accounts">AI circle · X handles</label><textarea id="x-accounts" rows="2" spellcheck="false" placeholder="bcherny, steipete, karpathy, simonw, chamath"></textarea><label class="check"><input id="x-ai-only" type="checkbox" checked>Only AI-related posts</label><p class="hint">Latest posts from these accounts. Replies and reposts are excluded. “For giggles” shows Elon separately.</p><div class="settings-row"><button type="submit">Save feed</button><button type="button" id="x-forget" class="text-button">Forget X sign-in</button></div><p id="x-settings-status" role="status"></p></form>

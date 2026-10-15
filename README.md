@@ -21,7 +21,7 @@ It's a small, slightly ridiculous Linux desktop app: **music, podcasts, a filter
 | The useful stuff | The entirely reasonable additions |
 | --- | --- |
 | Eight DI.FM presets with official channel art | Scorched Earth–inspired tank battles and MIRVs |
-| Five podcast favorites: full YouTube episodes or audio | Sarcastic bots with three-match grudges |
+| Your podcast lineup: YouTube episodes or audio | Sarcastic bots with three-match grudges |
 | A filtered X/Twitter pane | Ricochet walls, wraparound shots, and occasional absurd wind |
 | Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, and Mandelbrot glides |
 | Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |

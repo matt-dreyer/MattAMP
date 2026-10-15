@@ -10,13 +10,7 @@ const STATIONS = [
  ['deephouse','Deep House'], ['synthwave','Synthwave'], ['progressive','Progressive'],
  ['liquiddnb','Liquid DnB'], ['chillout','Chillout'], ['psychill','PsyChill']
 ].map(([id,name])=>({id,name}));
-const SHOWS = [
- {id:'lastweek',playlist:'PLM-oLAM5uh0nDfcweJYejeAdGzPCuh8KP',name:'Last Week in AI',channel:'UCKARTq-t5SPMzwtft8FWwnA',feed:'https://rss.art19.com/last-week-in-ai'},
- {id:'humans',playlist:'UULFghJTNTO9kcDeUFXMuSDGLQ',matchAudioTitles:true,name:'AI for Humans',channel:'UCghJTNTO9kcDeUFXMuSDGLQ',feed:'https://feeds.libsyn.com/469701/rss'},
- {id:'allin',playlist:'PLn5MTSAqaf8peDZQ57QkJBzewJU1aUokl',name:'All-In',channel:'UCESLZhusAkFfsNsApnjF_Cg',feed:'https://allinchamathjason.libsyn.com/rss'},
- {id:'dwarkesh',playlist:'PLd7-bHaQwnthaNDpZ32TtYONGVk95-fhF',name:'Dwarkesh Podcast',channel:'UCXl4i9dYBrFOabk0xGmbkRA',feed:'https://apple.dwarkesh-podcast.workers.dev/feed.rss'},
- {id:'a16z',playlist:'PLM4u6XbiXf5rnUvH5NLdV_It2QLgbHBDZ',name:'The a16z Show',channel:'UC9cn0TuPq4dnbTY-CBsm8XA',feed:'https://feeds.simplecast.com/JGE3yC0V'}
-];
+const {SHOWS}=require('./podcast-library.cjs');
 const list = value => value ? (Array.isArray(value)?value:[value]):[];
 const string = value => typeof value==='object' ? String(value?.['#text']||'') : String(value||'');
 const xml = new XMLParser({ignoreAttributes:false,attributeNamePrefix:'@',processEntities:true,htmlEntities:true});
@@ -56,20 +50,21 @@ function matchPodcastEpisodes(videos,audioEpisodes){
 }
 function youtubeEpisodeFeed(show){return 'https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(show.playlist);}
 const feedCache=new Map();
-async function episodes(showId,type,refresh=false) {
- const show=SHOWS.find(s=>s.id===showId);if(!show||!['youtube','audio'].includes(type))throw new Error('Unknown podcast source');
- const key=showId+':'+type, previous=feedCache.get(key);
+async function episodes(showId,type,refresh=false,library=SHOWS) {
+ const show=library.find(s=>s.id===showId);if(!show||!['youtube','audio'].includes(type))throw new Error('Unknown podcast source');
+ if(type==='audio'&&!show.feed||type==='youtube'&&!show.playlist)throw new Error('This show has no '+(type==='audio'?'audio feed':'YouTube source')+'. Edit it in Settings.');
+ const key=JSON.stringify([showId,type,show.feed,show.playlist,show.filterShorts,show.matchAudioTitles]), previous=feedCache.get(key);
  if(!refresh&&previous&&Date.now()-previous.updated<900000)return previous;
  try{
   let items;
   if(type==='youtube'){
-   try{items=parseFeed(await fetchText(youtubeEpisodeFeed(show)),type);if(!items.length)throw new Error('Empty YouTube feed');}
+   try{if(show.filterShorts)throw new Error('Check video durations');items=parseFeed(await fetchText(youtubeEpisodeFeed(show)),type);if(!items.length)throw new Error('Empty YouTube feed');}
    catch{items=parsePlaylistPage(await fetchText('https://www.youtube.com/playlist?list='+encodeURIComponent(show.playlist)),show.playlist);}
   }else items=parseFeed(await fetchText(show.feed),type);
-  if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh);items=matchPodcastEpisodes(items,audio.items);}
+  if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh,library);items=matchPodcastEpisodes(items,audio.items);}
   items.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
   if(!items.length)throw new Error('No full episodes available in this feed. Try Audio feed.');
-  const result={items:type==='youtube'?items.slice(0,25):items,updated:Date.now(),stale:false};feedCache.set(key,result);return result;
+  const result={items:type==='youtube'?items.slice(0,25):items,updated:Date.now(),stale:false};feedCache.set(key,result);if(feedCache.size>100)feedCache.delete(feedCache.keys().next().value);return result;
  }catch(error){if(previous)return {...previous,stale:true};throw error;}
 }
 function parseArtwork(channels){
@@ -161,4 +156,4 @@ class Monitor {
  }
 }
 function videoId(value){try{const u=new URL(value);if(!['youtube.com','www.youtube.com','youtu.be','m.youtube.com'].includes(u.hostname))return null;const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null;}catch{return /^[\w-]{11}$/.test(value||'')?value:null;}}
-module.exports={STATIONS,SHOWS,matchPodcastEpisodes,youtubeEpisodeFeed,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};
+module.exports={fetchText,STATIONS,SHOWS,matchPodcastEpisodes,youtubeEpisodeFeed,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};
