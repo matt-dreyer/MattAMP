@@ -23,9 +23,12 @@ Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into 
 | Shell / MIRV radio buttons | Select ammunition |
 | Pause | Pause/resume the battle |
 | Expand | Open the large, resizable game layout |
-| Restore / Escape | Restore the widget; Escape dismisses an active victory ceremony first |
+| Title-bar Maximize / Restore | Fill the screen, then return to your previous window size |
+| In-game Restore / Escape | Leave expanded play; Escape dismisses an active victory ceremony first |
 
 Game keeps the window size you choose through battle resets, results, and new skirmishes. Settings, bug mode, and hiding the app temporarily leave the battle; returning restores its size. Switching to another tab returns to the normal widget layout. **Restore** or the layout controls still let you change size explicitly.
+
+The title-bar square beside minimize maximizes the window. In Game it uses the same viewport layout as Expand, keeps its size through resets and Settings, and restores your previous dimensions when clicked again. Leaving Game returns to the normal widget.
 
 Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, source tabs, battlefield, and aiming controls available; scores and credits have their own scrolling area.
 

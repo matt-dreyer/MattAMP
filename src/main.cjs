@@ -18,6 +18,7 @@ if(process.platform==='win32')app.setAppUserModelId('ai.fshbwl.deck');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
+let lastResizeArgs,maximizeRestore,restoredWindowKey;
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
 let state={tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
@@ -66,8 +67,15 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
+function windowSizeKey(view,expanded,game){return [view,state.layout,!!game,expanded].join(':');}
 function resize(view,height,expanded=false,game=''){
  if(!win||!['full','compact','bug'].includes(view))return;
+ lastResizeArgs=[view,height,expanded,game];const key=windowSizeKey(view,expanded,game);
+ // Native maximize owns the bounds; content updates must not shrink it.
+ // An explicit layout change or leaving Game returns to normal widget sizing.
+ if(win.isMaximized()){if(maximizeRestore&&maximizeRestore.key!==key)win.unmaximize();return;}
+ if(restoredWindowKey===key)return;
+ restoredWindowKey=null;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
  const playing=game==='play'&&view==='full';
  if(!['play','settings','bug'].includes(game))gameSession=null;
@@ -136,7 +144,17 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win=new BrowserWindow({x:Math.max(work.x,Math.min(initial.x,work.x+work.width-710)),y:Math.max(work.y,Math.min(initial.y,work.y+work.height-560)),width:710,height:560,minWidth:340,minHeight:260,frame:false,transparent:true,backgroundColor:'#00000000',show:false,alwaysOnTop:state.alwaysOnTop,icon:path.join(__dirname,'../assets/icon.png'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
  win.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/(www\.)?(youtube\.com|di\.fm)\//.test(url))shell.openExternal(url);return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
- win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
+ win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=maximizeRestore?.bounds||win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
+ win.on('maximize',()=>{
+  if(!maximizeRestore){const [view,,expanded,game]=lastResizeArgs||['full',0,false,''];maximizeRestore={bounds:win.getNormalBounds(),key:windowSizeKey(view,expanded,game)};}
+  send('deck:window-state',{maximized:true});
+ });
+ win.on('unmaximize',()=>{
+  const restore=maximizeRestore;restoredWindowKey=restore?.key;maximizeRestore=null;
+  if(restore)win.setBounds(restore.bounds);
+  send('deck:window-state',{maximized:false});
+  if(lastResizeArgs)resize(...lastResizeArgs);
+ });
  win.on('minimize',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('hide',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));
@@ -153,7 +171,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
- handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup};});
+ handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup,maximized:win.isMaximized()};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());
  handle('deck:arcade-record',record=>arcade.record(record));
@@ -187,6 +205,11 @@ if(primaryInstance)app.whenReady().then(async()=>{
   if(kind==='youtube'&&/^[\w-]{11}$/.test(id))url='https://www.youtube.com/watch?v='+id;
   if(kind==='channel'){const show=state.podcasts.find(s=>s.id===id);if(show?.playlist)url=youtubeUrl(show);}
   if(!url)throw new Error('Unknown link');await shell.openExternal(url);
+ });
+ handle('deck:maximize',()=>{
+  if(mode==='bug')return;
+  if(win.isMaximized())win.unmaximize();
+  else{const [view,,expanded,game]=lastResizeArgs||['full',0,false,''];maximizeRestore={bounds:win.getBounds(),key:windowSizeKey(view,expanded,game)};win.maximize();}
  });
  handle('deck:hide',()=>win.hide());handle('deck:quit',quit);
  handle('deck:move',(dx,dy)=>{if(mode!=='bug'||!Number.isFinite(dx)||!Number.isFinite(dy))return;const [x,y]=win.getPosition();const nx=x+Math.max(-100,Math.min(100,Math.round(dx))),ny=y+Math.max(-100,Math.min(100,Math.round(dy)));win.setPosition(nx,ny);if(fullBounds){fullBounds.x+=nx-x;fullBounds.y+=ny-y;}});

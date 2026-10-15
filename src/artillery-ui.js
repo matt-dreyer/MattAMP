@@ -2,7 +2,7 @@
 class MattArcade{
  constructor(panel,onResize){
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
-  this.visible=false;this.expanded=false;this.paused=false;this.sound=true;this.battle=null;this.preview=this.createPreview();this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
+  this.visible=false;this.expanded=false;this.maximized=false;this.paused=false;this.sound=true;this.battle=null;this.preview=this.createPreview();this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
   this.shotReadouts=true;this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
   this.victory=new MattVictory(this.$('victory'),()=>{if(this.visible)(this.$('again').disabled?this.canvas:this.$('again')).focus({preventScroll:true});});
   this.victory.motion.addEventListener('change',()=>{if(this.dance&&this.victory.motion.matches)this.finishDance();});
@@ -115,7 +115,8 @@ class MattArcade{
   const target=b.tanks.find(t=>t.id===choice.id);if(!target)return;
   this.showQuip(b.active,choice.reason==='retaliation'?[target.name+', I have a follow-up question.',target.name+', let’s keep this reciprocal.','Your feedback has been escalated.']:choice.reason==='grudge'?[target.name+', nothing personal. Still lying.','I hold grudges, not high ground.',target.name+', remember me? I certainly do.']:[target.name+', the podium needs a new tenant.','We’ve reviewed '+target.name+'’s monopoly.',target.name+', time for a balance patch.']);
  }
- setExpanded(expanded){this.expanded=expanded;this.panel.classList.toggle('game-expanded',expanded);document.getElementById('deck').classList.toggle('arcade-expanded',expanded);window.scrollTo(0,0);this.$('expand').textContent=expanded?'Restore':'Expand';this.$('expand').setAttribute('aria-pressed',String(expanded));this.onResize();}
+ setMaximized(maximized){this.maximized=maximized;this.$('expand').hidden=maximized;this.setExpanded(this.expanded);}
+ setExpanded(expanded){this.expanded=expanded;this.panel.classList.toggle('game-expanded',expanded||this.maximized);document.getElementById('deck').classList.toggle('arcade-expanded',expanded||this.maximized);window.scrollTo(0,0);this.$('expand').textContent=expanded?'Restore':'Expand';this.$('expand').setAttribute('aria-pressed',String(expanded));this.onResize();}
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
   if(!this.visible||this.paused){this.clearQuip();this.clearShot();this.victory.stop();this.dance=null;}

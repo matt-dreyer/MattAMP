@@ -19,6 +19,11 @@ function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
 let artwork={};
 let readingX=false,playingGame=false,watchingCams=false,cameraPanel=null,xLane='ai';
 const arcade=new MattArcade($('game-panel'),()=>resize());
+function syncWindowState({maximized}){
+ arcade.setMaximized(maximized);const button=$('maximize');
+ button.setAttribute('aria-pressed',String(maximized));button.setAttribute('aria-label',maximized?'Restore window':'Maximize window');button.title=maximized?'Restore window':'Maximize window';button.innerHTML=icon(maximized?'copy':'square');
+ if(state)render();
+}
 function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&mode==='full'&&!appHidden&&!document.hidden);}
 function syncXBounds(){
  cameraPanel?.setVisible(watchingCams&&!settings&&mode==='full'&&!appHidden&&!document.hidden);
@@ -71,7 +76,7 @@ function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame
 function render(){
  const podcast=state.source==='podcast',video=isVideo();
  renderX();syncAmbient();syncGame();
- root.classList.toggle('arcade-expanded',arcade.expanded&&playingGame&&!settings&&mode==='full');
+ root.classList.toggle('arcade-expanded',(arcade.expanded||arcade.maximized)&&playingGame&&!settings&&mode==='full');
  root.classList.toggle('game-mode',playingGame&&!settings&&mode==='full');$('game-panel').hidden=!playingGame||settings||mode!=='full';$('source-game').setAttribute('aria-pressed',String(playingGame));
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
  $('source-cameras').setAttribute('aria-pressed',String(watchingCams));
@@ -318,6 +323,8 @@ async function init(){
  $('key-form').onsubmit=async e=>{e.preventDefault();try{const value=$('listen-key').value;if(!value.trim())throw new Error('Paste your Premium listen key first.');const result=await unwrap(window.deck.setKey(value));state.hasDiKey=result.hasDiKey;state.keyring=result.keyring;state.hasSavedDiKey=result.hasSavedDiKey;$('listen-key').value='';$('settings-message').textContent=result.keyring?'Listen key saved. Choose a station to start.':'Listen key works for this session. Unlock the desktop keyring and save again to keep it.';render();}catch(err){$('settings-message').textContent=err.message;resize();}};
  $('clear-key').onclick=async()=>{stopAll();const result=await unwrap(window.deck.setKey(''));state.hasDiKey=result.hasDiKey;state.hasSavedDiKey=result.hasSavedDiKey;$('listen-key').value='';$('settings-message').textContent='Listen key removed.';render();};
  $('video-form').onsubmit=async e=>{e.preventDefault();try{const id=await unwrap(window.deck.videoId($('video-url').value));stopAll();state.source='podcast';state.podcastType='youtube';settings=false;playingGame=false;readingX=false;watchingCams=false;render();await loadEpisode({id,title:'Custom YouTube video',type:'youtube',url:'https://www.youtube.com/watch?v='+id},true);$('video-url').value='';}catch(err){$('settings-message').textContent=err.message;resize();}};
+ window.deck.onWindowState(syncWindowState);syncWindowState({maximized:boot.maximized});
+ $('maximize').onclick=async()=>{const button=$('maximize');button.disabled=true;try{await unwrap(window.deck.maximize());}catch(err){report(err);}finally{button.disabled=false;}};
  $('hide').onclick=()=>{if(isVideo())pause();void window.deck.hide();};$('quit-top').onclick=$('quit').onclick=()=>{stopAll();void persist().then(()=>window.deck.quit());};
  window.deck.onPause(pause);window.deck.onHidden(()=>{tabAudio.pause();appHidden=true;syncAmbient();syncGame();syncXBounds();if(isVideo())pause();});window.deck.onQuit(()=>{tabAudio.pause();stopAll();void persist();});
  window.addEventListener('beforeunload',()=>{snapshot();void persist();});
