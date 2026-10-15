@@ -18,6 +18,6 @@ Captured from MattAMP in October 2026 using a fresh, isolated profile. These are
 | `game-widget.png` | A normal-size artillery battle, before expanding the window. |
 | `victory.png` | The app's actual WebGL victory ceremony. A winning game state was staged in the isolated profile to capture it. |
 
-The native camera and Twitter panes are included through an Electron desktop capture of the isolated app window. The settings images are cropped to their respective sections. The other images use the app window capture. Screenshots show the current source; the README marks game behavior added after the v0.2.0 release separately.
+The native camera and Twitter panes are included through an Electron desktop capture of the isolated app window. The settings images are cropped to their respective sections. The other images use the app window capture. The sidecar (`desktop.png`), stacked, and compact captures were refreshed on October 15, 2026 for the icon/text tabs, translucent pinned strip, and bare title-bar controls. Other captures illustrate their respective features with the earlier navigation styling. The published v0.3.0 installers predate this navigation refresh.
 
 Third-party camera imagery, channel art, and game artwork retain their original rights; see [arcade credits](../../assets/arcade/README.md).

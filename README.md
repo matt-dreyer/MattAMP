@@ -14,7 +14,7 @@ It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **m
 
 [Screenshots](#take-a-look-around) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
-![MattAMP's current five-tab navigation, Synthwave radio art, glass controls, wave background, and live workstation meters](docs/images/desktop.png)
+![MattAMP's icon-and-text tabs on a translucent bar, Synthwave radio art, wave background, and live workstation meters](docs/images/desktop.png)
 
 ## What's in the little box?
 
@@ -280,11 +280,16 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 
 ## Make yourself at home
 
+**A lighter navigation bar:** DI.FM, Podcasts, Twitter, SkiCams, and Game are icons and text, with a soft hover highlight and mint for the active tab. The strip is 70% opaque with a subtle blur, so the live background can show through. It stays pinned as you scroll, along with the bare title-bar icons. Keyboard focus rings and full click targets remain.
+
+This navigation refresh is in the current source and CI builds; the published v0.3.0 installers have the earlier styling.
+
 | Control | What happens |
 | --- | --- |
 | Layout button | Switch between sidecar and stacked layouts |
 | Compact button | Trim the player down |
 | Bug button | Collapse to a draggable **56 × 56** logo; click it to restore |
+| Maximize / Restore | Fill the screen, then return to your previous size |
 | Settings | Your podcasts, SkiCams, radio setup, live background, and other preferences |
 | Minimize **−** | Hide to the tray |
 | Close **×** | Quit MattAMP |
