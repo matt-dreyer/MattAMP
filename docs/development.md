@@ -40,6 +40,7 @@ The desktop administrator prompt installs `/etc/apparmor.d/mattamp`, scoped to t
 | `src/main.cjs`, `src/preload.cjs` | Electron lifecycle, state, windows, isolated IPC bridge |
 | `src/app.js`, `src/index.html`, `src/style.css` | Player, controls, layouts, settings |
 | `src/podcast-library.cjs` | Podcast source validation, channel resolution, saved library normalization |
+| `src/ski-cams.cjs` / `src/ski-cams-ui.js` | Camera favorites, Sierra resolution, isolated viewer and Settings editor |
 | `src/services.cjs` | Provider data and workstation metrics |
 | `src/radio-relay.cjs` | Local radio relay with opaque stream URLs |
 | `src/youtube-playlist.cjs` | Full-episode playlist discovery and filtering |
@@ -73,6 +74,7 @@ Syntax checks and Node unit tests cover the local modules. For changes involving
 | `npm run test:chaos` | Defaults, persisted selection, preview/start consistency, conditions and saved records |
 | `npm run test:podcasts` | Podcast CRUD, ordering, undo, source fallback, persistence and empty-library UI |
 | `npm run test:keyring-startup` | Startup and Settings remain responsive with an unresponsive keyring |
+| `npm run test:ski-cams` | Camera favorites, muted sandbox, teardown, tab order, layouts and persistence using provider fixtures |
 | `npm run test:smoke` | Original workstation and live-provider smoke test |
 
 Integration scripts launch temporary Electron profiles, keeping the real listen key, X session, and scores separate. Captures go to temporary locations or ignored `test-results/`, depending on the script.

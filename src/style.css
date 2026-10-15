@@ -85,3 +85,14 @@ select option{background:#25343e;color:var(--text)}
 #podcast-name{width:100%;min-width:0;padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;color:var(--text);caret-color:var(--mint)}
 .podcast-feedback{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#podcast-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#podcast-settings-status[data-error=true]{color:var(--amber)}
 #manage-podcasts{margin:0 12px 12px}.compact #manage-podcasts{display:none!important}
+
+/* Five compact tabs fit the widget; playback status stays available to assistive tech. */
+.sourcebar{gap:2px;padding-inline:10px;flex-wrap:wrap}.sourcebar button{padding-inline:3px;gap:3px;font-size:11px;min-width:0}
+#camera-panel{padding:12px;min-width:0}.camera-heading,.camera-controls,.camera-footer{display:flex;align-items:center;gap:8px}.camera-heading{justify-content:space-between;margin-bottom:10px}.camera-heading h2{margin:0}
+.camera-controls{margin-bottom:10px}.camera-controls select{flex:1;width:0;min-height:32px}.camera-controls button{min-height:32px}
+#camera-viewport{width:100%;height:auto;min-height:200px;aspect-ratio:16/9;background:var(--panel);overflow:hidden}#camera-viewport>p{padding:18px}.camera-footer{align-items:flex-start;justify-content:space-between;margin-top:8px}.camera-footer button{flex:none}
+#camera-status{color:var(--muted);font-size:11px;line-height:1.5;margin:0;min-height:33px}
+#camera-settings{padding-bottom:15px;margin-bottom:18px;border-bottom:1px solid var(--edge)}#camera-library{list-style:none;padding:0;margin:10px 0;max-height:260px;overflow-y:auto;scrollbar-gutter:stable}
+#camera-form{border-top:1px solid var(--edge);padding-top:12px}#camera-form h3{font-size:14px;font-weight:500;margin:0 0 12px}#camera-form label:not(:first-of-type){margin-top:12px}
+#camera-name,#camera-resort{width:100%;min-width:0;padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;color:var(--text);caret-color:var(--mint)}
+#camera-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#camera-settings-status[data-error=true]{color:var(--amber)}

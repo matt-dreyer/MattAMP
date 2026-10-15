@@ -28,6 +28,14 @@ Audio supports play/pause, stop, volume/mute, seeking, 15-second rewind, 30-seco
 
 Radio and podcasts wait for Play. The startup intro is separate and plays once per launch. A browser may require you to click the YouTube player's own Play button. Individual videos may prohibit embedding or require login; MattAMP itself does not require a YouTube account.
 
+## SkiCams
+
+The **SkiCams** tab sits just before Game. It starts with Sierra-at-Tahoe's Grandview and West Bowl, Heavenly's Top of Tram, and Kirkwood's Cornice Cam. Choose a view from the menu; Refresh reconnects it, and Browser opens the resort's source page. Sierra's live video IDs are resolved from its official camera list when opened, with the saved link as an offline fallback.
+
+Open **Manage cams** or **Settings → Your SkiCams** to add, edit, reorder, or remove cameras. The latest removal can be undone. Enter a camera name, an optional resort, and a public HTTPS link. YouTube watch/live links become muted players; direct camera-player links work best. Ordinary resort pages retain their own page navigation. Provider availability, offline streams, and playback restrictions remain under the resort's control; Browser is the fallback.
+
+Camera audio is muted while radio/audio podcasts continue. YouTube podcasts pause when hidden. Only one camera loads at a time, in an isolated sandbox without access to MattAMP's settings or credentials. Leaving SkiCams, opening Settings, hiding/minimizing the app, or entering compact/bug mode closes the camera view and stops its stream. Your camera lineup and selection persist locally, including an intentionally empty list. Up to 40 cameras are supported.
+
 ## X/Twitter
 
 **AI circle** uses X's official Latest search, restricted to the selected authors and optionally AI keywords. Replies and reposts are excluded by the query. **For giggles** is a separate Elon Musk search. **Filters** accepts up to 12 handles and controls the topic restriction.

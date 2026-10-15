@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs",
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs && node --check src/ski-cams.cjs && node --check src/ski-cams-ui.js",
     "test:smoke": "node scripts/smoke.cjs",
     "test:arcade": "node scripts/arcade-smoke.cjs",
     "test:heckles": "node scripts/heckles-smoke.cjs",
@@ -16,7 +16,8 @@
     "test:expanded": "node scripts/expanded-smoke.cjs",
     "test:chaos": "node scripts/chaos-smoke.cjs",
     "test:podcasts": "node scripts/podcasts-smoke.cjs",
-    "test:keyring-startup": "node scripts/keyring-startup-smoke.cjs"
+    "test:keyring-startup": "node scripts/keyring-startup-smoke.cjs",
+    "test:ski-cams": "node scripts/ski-cams-smoke.cjs"
   },
   "dependencies": {
     "electron": "44.7.2",

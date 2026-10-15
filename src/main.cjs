@@ -8,7 +8,8 @@ const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
 const {createArcadeStore}=require('./arcade-store.cjs');
 const {DEFAULT_ACCOUNTS,accounts,createXFeed}=require('./x-feed.cjs');
-let xFeed;
+const {normalizeCameras,createSkiCams}=require('./ski-cams.cjs');
+let xFeed,skiCams;
 // Keep the internal identity stable so existing settings, keyring and dock pins survive the rename.
 app.setName('workstation-deck');
 nativeTheme.themeSource='dark';
@@ -18,7 +19,7 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -38,6 +39,7 @@ function unlockSavedKey(){
 function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring(),hasSavedDiKey:!!state.diKeyCipher,keyringPending};}
 function update(patch){
  if(!patch||typeof patch!=='object')return;
+ if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
  if(['off','flow','waves','stars','mandelbrot'].includes(patch.ambient))state.ambient=patch.ambient;
  if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
@@ -69,7 +71,7 @@ function resize(view,height,expanded=false){
   mode='full';return;
  }
  if(gameBounds){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
- if(view!=='full')xFeed?.hide();
+ if(view!=='full'){xFeed?.hide();skiCams?.hide();}
  if(view==='bug'){
   if(mode!=='bug')fullBounds=win.getBounds();
   mode=view;win.setMinimumSize(56,56);win.setResizable(false);
@@ -84,7 +86,7 @@ function resize(view,height,expanded=false){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg','metal-slug-tank.png','metal-slug-blasts.png','worms-fire.ogg','worms-split.ogg',...Array.from({length:3},(_,i)=>'worms-blast-'+(i+1)+'.ogg'),...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  server=http.createServer((req,res)=>{
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
@@ -101,6 +103,8 @@ if(primaryInstance)app.whenReady().then(async()=>{
  if(!['off','mixed','unhinged'].includes(state.chaos))state.chaos='mixed';
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
+ try{state.cameras=normalizeCameras(state.cameras);}catch{state.cameras=normalizeCameras();}
+ if(!state.cameras.some(c=>c.id===state.cameraId))state.cameraId=state.cameras[0]?.id||'';
  state.positions ||= {};state.selected ||= {};
  await startServer();
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
@@ -114,11 +118,19 @@ if(primaryInstance)app.whenReady().then(async()=>{
  win.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/(www\.)?(youtube\.com|di\.fm)\//.test(url))shell.openExternal(url);return {action:'deny'};});
  win.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(origin+'/'))event.preventDefault();});
  win.on('close',()=>{if(gameBounds)state.bounds=gameBounds;else if(mode!=='bug')state.bounds=win.getBounds();else if(fullBounds)state.bounds=fullBounds;save();});
- win.on('minimize',()=>{xFeed?.hide();send('deck:hidden');});
- win.on('hide',()=>{xFeed?.hide();send('deck:hidden');});
+ win.on('minimize',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
+ win.on('hide',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));
  win.on('restore',()=>send('deck:shown'));
  xFeed=createXFeed({win,send,getConfig:()=>({accounts:state.xAccounts,aiOnly:state.xAiOnly})});
+ skiCams=createSkiCams({win,send,getCameras:()=>state.cameras,fetchText});
+ handle('deck:camera-bounds',rect=>skiCams.bounds(rect));
+ handle('deck:camera-action',(action,id)=>skiCams.action(action,id));
+ handle('deck:cameras-save',value=>{
+  const cameras=normalizeCameras(value);skiCams.hide();state.cameras=cameras;
+  if(!cameras.some(c=>c.id===state.cameraId))state.cameraId=cameras[0]?.id||'';
+  save();return {cameras,cameraId:state.cameraId};
+ });
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',stationArtwork);
