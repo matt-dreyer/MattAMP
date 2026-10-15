@@ -1,0 +1,72 @@
+const {_electron}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+(async()=>{
+ const profile=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-podcasts-'));
+ fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,layout:'stack',ambient:'off',alwaysOnTop:false}));
+ const launcher=path.join(profile,'electron-sandboxed');
+ fs.writeFileSync(launcher,'#!/bin/bash\nargs=()\nfor arg in "$@"; do [[ "$arg" == "--no-sandbox" ]] || args+=("$arg"); done\nexec "$MATTAMP_TEST_ELECTRON" "${args[@]}"\n',{mode:0o700});
+ let app;
+ try{
+  app=await _electron.launch({executablePath:launcher,args:[path.resolve(__dirname,'..')],env:{...process.env,MATTAMP_TEST_ELECTRON:require('electron'),DECK_TEST_DIR:profile}});
+  const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+  await app.evaluate(()=>{const original=global.fetch;global.fetch=(url,...args)=>String(url).startsWith('https://example.org/')?Promise.resolve(new Response('<rss><channel><item><guid>test-episode</guid><title>Our test episode</title><enclosure url="https://example.org/episode.mp3"/></item></channel></rss>')):original(url,...args);});
+  await p.locator('#settings-open').click();
+  assert.equal(await p.locator('#podcast-library li').count(),5);
+  await p.locator('#podcast-add').click();
+  await p.locator('#podcast-name').fill('A very good podcast');
+  await p.locator('#podcast-rss').fill('https://example.org/podcast.rss');
+  await p.locator('#podcast-save').click();
+  await p.waitForFunction(()=>document.querySelector('#podcast-settings-status').textContent==='Saved A very good podcast.');
+  assert.equal(await p.locator('#podcast-library li').count(),6);
+  await p.getByRole('button',{name:'Move up A very good podcast',exact:true}).click();
+  await p.waitForFunction(()=>document.querySelectorAll('#podcast-library strong')[4].textContent==='A very good podcast');
+  await p.getByRole('button',{name:'Edit A very good podcast',exact:true}).click();
+  await p.locator('#podcast-youtube').fill('https://example.org/not-youtube');
+  await p.locator('#podcast-save').click();
+  await p.waitForFunction(()=>document.querySelector('#podcast-settings-status').dataset.error==='true');
+  assert.equal(await p.locator('#podcast-library li').count(),6);
+  await p.locator('#podcast-youtube').fill('');
+  await p.locator('#podcast-name').fill('My own podcast');
+  await p.locator('#podcast-save').click();
+  await p.waitForFunction(()=>document.querySelector('#podcast-settings-status').textContent==='Saved My own podcast.');
+  await p.getByRole('button',{name:'Remove My own podcast',exact:true}).click();
+  await p.locator('#podcast-undo').waitFor({state:'visible'});
+  assert.equal(await p.locator('#podcast-library li').count(),5);
+  await p.locator('#podcast-undo').click();
+  await p.waitForFunction(()=>document.querySelectorAll('#podcast-library li').length===6);
+  await p.locator('#settings-close').click();
+  await p.locator('#source-podcast').click();
+  await p.locator('#shows button').filter({hasText:'My own podcast'}).click();
+  await p.waitForFunction(()=>document.querySelector('#episode').textContent.includes('Our test episode'));
+  assert.equal(await p.locator('#podcast-type').inputValue(),'audio');
+  assert.equal(await p.locator('#podcast-type option[value=youtube]').evaluate(el=>el.disabled),true);
+  await p.waitForTimeout(400);
+  await p.reload();
+  await p.waitForFunction(()=>document.querySelector('#episode').textContent.includes('Our test episode'));
+  assert.equal(await p.locator('#shows button').nth(4).innerText(),'My own podcast');
+  await p.locator('#manage-podcasts').click();
+  await p.getByRole('button',{name:'Edit My own podcast',exact:true}).click();
+  await p.screenshot({path:'/tmp/mattamp-podcast-settings-stack.png'});
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await p.locator('#podcast-cancel').click();
+  await p.locator('#settings-close').click();
+  await p.locator('#layout').click();
+  await p.locator('#settings-open').click();
+  await p.screenshot({path:'/tmp/mattamp-podcast-settings-wide.png'});
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  // Removing the current show must select a valid fallback, then support an empty library.
+  for(let i=0;i<6;i++){
+   await p.locator('#podcast-library button[aria-label^="Remove "]').last().click();
+   await p.waitForFunction(n=>document.querySelectorAll('#podcast-library strong').length===n,5-i);
+  }
+  await p.locator('#settings-close').click();
+  assert.equal(await p.locator('#play').isDisabled(),true);
+  assert.equal(await p.locator('#feed-status').innerText(),'No shows yet');
+  await p.reload();
+  await p.waitForFunction(()=>document.querySelector('#feed-status').textContent==='No shows yet');
+  assert.equal(await p.locator('#shows button').count(),0);
+  assert.deepEqual(errors,[]);
+  console.log('PASS: add, edit, invalid URL, reorder, remove/undo, audio-only player, episode load, reload persistence, empty library, stacked/wide layout.');
+ }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true,maxRetries:3});}
+})().catch(e=>{console.error(e);process.exitCode=1;});

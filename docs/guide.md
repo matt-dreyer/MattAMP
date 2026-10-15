@@ -18,11 +18,25 @@ Channel art comes from AudioAddict's catalog and image CDN. Metadata is cached f
 
 Use **Podcasts → Player** to choose **YouTube** or **Audio feed**. These are separate feeds, so their episode selections and resume positions are separate too.
 
+Open **Settings → Your podcasts**, or **Manage podcasts** below the player, to customize the lineup. **Add show** accepts a name and either a YouTube playlist/channel URL, a public HTTPS audio RSS feed, or both. The pencil edits a show; the arrows change its position; the trash button removes it, with **Undo removal** available for the most recent removal. Changes save locally and appear in the player immediately. Up to 50 shows are supported, and the original five remain until you edit or remove them.
+
+For custom YouTube shows, use a full-episode playlist when possible. Channel URLs (including `@handle` URLs) use non-Short uploads; the parser excludes videos three minutes or shorter, but longer clips can still appear. Audio-only and video-only shows automatically select their available player. Audio links must be RSS feeds, not Apple Podcasts or Spotify listing pages. The app checks link format when saving; feed availability is checked when you select the show.
+
 The video player has a responsive 16:9 viewport and YouTube's native controls. Four shows use dedicated full-episode playlists. AI for Humans matches non-Short uploads to podcast RSS titles to reject standalone clips. When a playlist's RSS endpoint fails, MattAMP tries that playlist's public page metadata; it does not quietly substitute an unfiltered uploads feed.
 
 Audio supports play/pause, stop, volume/mute, seeking, 15-second rewind, 30-second forward, and speed. Preferences and positions save locally. Default speed is 1×; a manually selected speed is remembered. Settings also accepts a custom YouTube URL.
 
 Radio and podcasts wait for Play. The startup intro is separate and plays once per launch. A browser may require you to click the YouTube player's own Play button. Individual videos may prohibit embedding or require login; MattAMP itself does not require a YouTube account.
+
+## SkiCams
+
+Turn on **Auto-cycle** to rotate through your saved cameras in order. Choose 1, 5, 15, 30, or 60 minutes; the default is 15. The toggle and interval are remembered. Leaving SkiCams, opening Settings, or minimizing pauses cycling; returning starts a fresh interval. Choosing a camera manually also restarts the interval. At least two saved cameras are needed.
+
+The **SkiCams** tab sits just before Game. It starts with Sierra-at-Tahoe's Grandview and West Bowl, Heavenly's Top of Tram, and Kirkwood's Cornice Cam. Choose a view from the menu; Refresh reconnects it, and Browser opens the resort's source page. Sierra's live video IDs are resolved from its official camera list when opened, with the saved link as an offline fallback.
+
+Open **Manage cams** or **Settings → Your SkiCams** to add, edit, reorder, or remove cameras. The latest removal can be undone. Enter a camera name, an optional resort, and a public HTTPS link. YouTube watch/live links become muted players; direct camera-player links work best. Ordinary resort pages retain their own page navigation. Provider availability, offline streams, and playback restrictions remain under the resort's control; Browser is the fallback.
+
+Camera audio is muted while radio/audio podcasts continue. YouTube podcasts pause when hidden. Only one camera loads at a time, in an isolated sandbox without access to MattAMP's settings or credentials. Leaving SkiCams, opening Settings, hiding/minimizing the app, or entering compact/bug mode closes the camera view and stops its stream. Your camera lineup and selection persist locally, including an intentionally empty list. Up to 40 cameras are supported.
 
 ## X/Twitter
 
@@ -85,6 +99,7 @@ Missing sensors display as unavailable rather than an invented zero.
 | `./MattAMP` is not executable after extraction | From the extracted folder, run `chmod +x MattAMP`, then `./MattAMP`. Extract the whole runtime archive with permissions intact. |
 | Missing Linux shared library | Install the missing Electron desktop dependency through your distro's package manager. The ZIP bundles Electron, not every system library. |
 | Radio will not play | Confirm Premium external-player access and that you pasted only the listen key. Save again and try another station. Provider/network failures can also interrupt a stream. |
+| App opens, but the saved radio key is locked | Unlock the desktop keyring in **Passwords and Keys**, then select **Settings → Retry saved key**. Keyring access runs in the background so it cannot freeze startup. |
 | Listen key disappears after restart | A protected system keyring was unavailable. Enable/unlock the desktop keyring for encrypted persistence, or enter the key each session. |
 | Podcast feed is unavailable / returns HTTP 404 | Use the episode refresh button, try another show, or choose **Audio feed**. Provider changes can break feed discovery; MattAMP keeps the full-episode filter rather than showing Shorts. |
 | YouTube frame is blank, blocked, or won't start | Click the embedded player's Play button. If the upload disallows embedding or needs login, use **YouTube** to open it externally, or choose **Audio feed**. |
@@ -109,6 +124,10 @@ The X partition is `persist:mattamp-x`. Runtime bundles contain none of the auth
 A loopback-only HTTP server serves the UI, supplies a YouTube embed origin, and relays radio through opaque, revocable URLs. The relay keeps the DI.FM key out of the renderer. Some provider stream endpoints are HTTP-only; the relay preserves their protocol. It exposes no telemetry, credential, or control API over HTTP. Privileged app calls use the isolated, sandboxed preload bridge, which remote content cannot access.
 
 Media and X still contact their respective providers; local storage doesn't make those services offline or private from their operators. Podcasts and system metrics need no MattAMP hosted backend, recurring service fee, or API key.
+
+## Tab sound effects
+
+**Settings → Silly tab sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts and Twitter say “Meh,” SkiCams says “Send it!” in a female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
 
 ## Startup audio and credits
 

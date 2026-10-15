@@ -1,0 +1,65 @@
+{
+  "appId": "ai.fshbwl.deck",
+  "productName": "MattAMP",
+  "artifactName": "MattAMP-${version}-${os}-${arch}.${ext}",
+  "directories": {
+    "output": "dist",
+    "buildResources": "build"
+  },
+  "files": [
+    "src/**/*",
+    "assets/**/*",
+    "package.json",
+    "README.md",
+    "docs/guide.md",
+    "!**/.DS_Store"
+  ],
+  "asar": true,
+  "npmRebuild": false,
+  "publish": null,
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb",
+      "tar.gz"
+    ],
+    "executableName": "mattamp",
+    "icon": "build/icon.png",
+    "category": "AudioVideo",
+    "maintainer": "Matt Dreyer <matt-dreyer@users.noreply.github.com>",
+    "desktop": {
+      "entry": {
+        "StartupWMClass": "ai.fshbwl.deck"
+      }
+    },
+    "syncDesktopName": true
+  },
+  "win": {
+    "target": [
+      "nsis",
+      "zip"
+    ],
+    "icon": "build/icon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "artifactName": "MattAMP-${version}-windows-${arch}-setup.${ext}",
+    "createDesktopShortcut": false
+  },
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "category": "public.app-category.entertainment",
+    "icon": "build/icon.png",
+    "identity": "-",
+    "hardenedRuntime": false
+  },
+  "dmg": {
+    "sign": false
+  },
+  "compression": "normal"
+}

@@ -71,7 +71,9 @@ test('high scores persist, rank, cap at ten, and deduplicate retried results',()
   const row={id:'battle-000000000001',initials:'MAT',score:100,win:true,result:'win',bots:4,skill:1,kills:2,shots:8};
   store.record(row);store.record(row);assert.equal(store.read().played,1);
   for(let i=2;i<=12;i++)store.record({...row,id:'battle-'+String(i).padStart(12,'0'),score:i*100});
-  const loaded=createArcadeStore(file).read();assert.equal(loaded.played,12);assert.equal(loaded.wins,12);assert.equal(loaded.scores.length,10);assert.equal(loaded.scores[0].score,1200);assert.equal(loaded.initials,'MAT');assert.equal(fs.statSync(file).mode&0o777,0o600);
+  const loaded=createArcadeStore(file).read();assert.equal(loaded.played,12);assert.equal(loaded.wins,12);assert.equal(loaded.scores.length,10);assert.equal(loaded.scores[0].score,1200);assert.equal(loaded.initials,'MAT');
+  // Windows uses ACLs and does not implement POSIX owner/group permission bits.
+  if(process.platform!=='win32')assert.equal(fs.statSync(file).mode&0o777,0o600);
   assert.throws(()=>store.record({...row,initials:'<script>'}));assert.throws(()=>store.record({...row,score:Infinity}));
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });

@@ -72,3 +72,29 @@ select option{background:#25343e;color:var(--text)}
  #deck button[aria-pressed=true],#deck .primary{background-color:#315144!important}
 }
 @media(prefers-reduced-motion:reduce){#deck button,#deck select{transition:none;transform:none}}
+
+/* The podcast library uses compact rows, with a single inline editor. */
+#podcast-settings{padding-bottom:15px;margin-bottom:18px;border-bottom:1px solid var(--edge)}
+.podcasts-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.podcasts-heading h2{margin:0}
+#podcast-library{list-style:none;margin:10px 0;padding:0;max-height:260px;overflow-y:auto;scrollbar-gutter:stable}
+.podcast-library-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(168,185,199,.18)}
+.podcast-library-copy{min-width:0;flex:1}.podcast-library-copy strong{display:block;font-size:12px;font-weight:500;overflow-wrap:anywhere}.podcast-library-copy small{display:block;color:var(--muted);font-size:11px}
+.podcast-library-actions{display:flex;gap:3px;flex:none}.podcast-library-actions button{min-width:29px;min-height:30px;padding:5px}
+#podcast-form{border-top:1px solid var(--edge);padding-top:12px}#podcast-form h3{font-size:14px;font-weight:500;margin:0 0 12px}
+#podcast-form label:not(:first-of-type){margin-top:12px}#podcast-form .optional{font-size:11px;margin-left:4px}
+#podcast-name{width:100%;min-width:0;padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;color:var(--text);caret-color:var(--mint)}
+.podcast-feedback{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#podcast-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#podcast-settings-status[data-error=true]{color:var(--amber)}
+#manage-podcasts{margin:0 12px 12px}.compact #manage-podcasts{display:none!important}
+
+/* Equal-width tabs fill the content pane; status stays available to assistive tech. */
+.sourcebar{gap:2px;padding-inline:10px;flex-wrap:nowrap}.sourcebar button{flex:1 1 0;justify-content:center;padding-inline:3px;gap:3px;font-size:11px;min-width:0;white-space:nowrap}
+#camera-panel{padding:12px;min-width:0}.camera-heading,.camera-controls,.camera-footer{display:flex;align-items:center;gap:8px}.camera-heading{justify-content:space-between;margin-bottom:10px}.camera-heading h2{margin:0}
+.camera-controls{margin-bottom:10px}.camera-controls select{flex:1;width:0;min-height:32px}.camera-controls button{min-height:32px}
+#camera-viewport{width:100%;height:auto;min-height:200px;aspect-ratio:16/9;background:var(--panel);overflow:hidden}#camera-viewport>p{padding:18px}.camera-footer{align-items:flex-start;justify-content:space-between;margin-top:8px}.camera-footer button{flex:none}
+#camera-status{color:var(--muted);font-size:11px;line-height:1.5;margin:0;min-height:33px}
+#camera-settings{padding-bottom:15px;margin-bottom:18px;border-bottom:1px solid var(--edge)}#camera-library{list-style:none;padding:0;margin:10px 0;max-height:260px;overflow-y:auto;scrollbar-gutter:stable}
+#camera-form{border-top:1px solid var(--edge);padding-top:12px}#camera-form h3{font-size:14px;font-weight:500;margin:0 0 12px}#camera-form label:not(:first-of-type){margin-top:12px}
+#camera-name,#camera-resort{width:100%;min-width:0;padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;color:var(--text);caret-color:var(--mint)}
+#camera-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#camera-settings-status[data-error=true]{color:var(--amber)}
+
+.camera-cycle-controls{display:flex;align-items:center;gap:8px;margin-bottom:10px}.camera-cycle-controls button,.camera-cycle-controls select{min-height:32px}.camera-cycle-controls select{flex:1;min-width:0}

@@ -20,6 +20,7 @@ git archive HEAD | tar -x -C "$mattamp_stage/MattAMP"
  cd "$mattamp_stage/MattAMP"
  npm ci --omit=dev --ignore-scripts --no-audit --no-fund --prefer-offline
 )
+mkdir -p "$mattamp_stage/MattAMP/node_modules/electron"
 cp -a node_modules/electron/dist "$mattamp_stage/MattAMP/node_modules/electron/"
 printf 'MattAMP Linux x86-64\nSource commit: %s\nElectron: %s\n' "$(git rev-parse HEAD)" "$mattamp_version" > "$mattamp_stage/MattAMP/BUILD.txt"
 (

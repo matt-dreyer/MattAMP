@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/app.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/ski-cams-ui.js"></script><script defer src="/app.js"></script></head>
 <body>
 <main id="deck" class="sidecar">
  <canvas id="ambient" aria-hidden="true" hidden></canvas>
@@ -14,7 +14,7 @@
  <button id="bug" aria-label="Open MattAMP" title="Open MattAMP"><i data-lucide="audio-lines" class="bug-mark"></i><span class="bug-led"></span><i data-lucide="pause" class="bug-playback"></i></button>
  <div class="full">
   <div class="content">
-   <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i><span>DI.FM</span></button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i><span>Podcasts</span></button><button id="source-x" aria-label="X / Twitter feed" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.2-8.3L1 2h6.5l4.4 6.7L18.9 2Zm-1.1 18h1.7L6.6 3.9H4.8L17.8 20Z"/></svg><span>Twitter</span></button><button id="source-game" aria-pressed="false"><i data-lucide="gamepad-2"></i><span>Game</span></button><span id="play-status" role="status">Stopped</span></div>
+   <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i><span>DI.FM</span></button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i><span>Podcasts</span></button><button id="source-x" aria-label="X / Twitter feed" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.2-8.3L1 2h6.5l4.4 6.7L18.9 2Zm-1.1 18h1.7L6.6 3.9H4.8L17.8 20Z"/></svg><span>Twitter</span></button><button id="source-cameras" aria-pressed="false"><i data-lucide="mountain-snow"></i><span>SkiCams</span></button><button id="source-game" aria-pressed="false"><i data-lucide="gamepad-2"></i><span>Game</span></button><span id="play-status" class="sr-only" role="status">Stopped</span></div>
   <section class="media" aria-label="Player">
    <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p></div></div>
    <div id="youtube-box" hidden><div id="youtube-player"></div><div id="youtube-placeholder">Choose a show to load its full episodes.</div></div>
@@ -28,6 +28,16 @@
    </div>
    <div id="stations" class="presets" aria-label="DI.FM stations"></div>
    <div id="shows" class="shows" aria-label="Favorite podcasts" hidden></div>
+   <button id="manage-podcasts" class="text-button" hidden><i data-lucide="list-music"></i>Manage podcasts</button>
+  </section>
+  <section id="camera-panel" aria-label="SkiCams" hidden>
+   <div class="camera-heading"><h2>SkiCams</h2><button id="camera-manage" class="text-button"><i data-lucide="settings-2"></i>Manage cams</button></div>
+   <label for="camera-select" class="sr-only">Choose a ski camera</label>
+   <div class="camera-controls"><select id="camera-select"></select><button id="camera-refresh" aria-label="Refresh camera" title="Refresh camera"><i data-lucide="refresh-cw"></i></button></div>
+   <div class="camera-cycle-controls"><button id="camera-cycle" type="button" aria-pressed="false"><i data-lucide="repeat"></i>Auto-cycle</button><label for="camera-cycle-minutes" class="sr-only">Camera cycle interval</label><select id="camera-cycle-minutes"><option value="1">Every minute</option><option value="5">Every 5 min</option><option value="15" selected>Every 15 min</option><option value="30">Every 30 min</option><option value="60">Every hour</option></select></div>
+   <div id="camera-viewport"><p class="hint">Connecting to the mountain…</p></div>
+   <p id="camera-empty" class="hint" hidden>No mountain views yet. Add a camera in Manage cams.</p>
+   <div class="camera-footer"><p id="camera-status" role="status">Camera audio muted · your music keeps playing</p><button id="camera-browser" class="text-button"><i data-lucide="external-link"></i>Browser</button></div>
   </section>
   <section id="game-panel" aria-label="AMP Artillery" hidden>
    <div class="game-heading"><div><span class="game-eyebrow">MATTAMP ARCADE / 01</span><h2>AMP Artillery</h2></div><div class="game-heading-actions"><button id="game-expand" aria-pressed="false" title="Expand the game window; drag its edges to resize">Expand</button><button id="game-sound" aria-pressed="true" title="Toggle game sound">Sound on</button></div></div>
@@ -78,7 +88,37 @@
  </div>
  <section id="settings" hidden aria-label="MattAMP settings">
   <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
-  <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p></form>
+  <section id="podcast-settings" aria-labelledby="podcasts-heading">
+   <div class="podcasts-heading"><h2 id="podcasts-heading">Your podcasts</h2><button id="podcast-add" type="button"><i data-lucide="plus"></i>Add show</button></div>
+   <p class="hint">Your lineup, in your order. Add a YouTube link, an audio RSS feed, or both.</p>
+   <ol id="podcast-library" aria-label="Podcast library"></ol>
+   <form id="podcast-form" hidden>
+    <h3 id="podcast-form-title">Add a show</h3>
+    <label for="podcast-name">Show name</label><input id="podcast-name" type="text" maxlength="80" required autocomplete="off" placeholder="The next rabbit hole">
+    <label for="podcast-youtube">YouTube playlist or channel <span class="optional">optional</span></label><input id="podcast-youtube" type="url" maxlength="2048" placeholder="https://www.youtube.com/@…" aria-describedby="podcast-youtube-help">
+    <p id="podcast-youtube-help" class="hint">A full-episode playlist works best. Channel links skip Shorts, but may include longer clips.</p>
+    <label for="podcast-rss">Audio RSS feed <span class="optional">optional</span></label><input id="podcast-rss" type="url" maxlength="2048" placeholder="https://…/feed.rss" aria-describedby="podcast-rss-help">
+    <p id="podcast-rss-help" class="hint">Use the show's RSS link, rather than its Apple Podcasts or Spotify page.</p>
+    <div class="settings-row"><button id="podcast-save" class="primary" type="submit">Save show</button><button id="podcast-cancel" type="button">Cancel</button></div>
+   </form>
+   <div class="podcast-feedback"><p id="podcast-settings-status" role="status"></p><button id="podcast-undo" type="button" hidden>Undo removal</button></div>
+  </section>
+  <section id="camera-settings" aria-labelledby="cameras-heading">
+   <div class="podcasts-heading"><h2 id="cameras-heading">Your SkiCams</h2><button id="camera-add" type="button"><i data-lucide="plus"></i>Add camera</button></div>
+   <p class="hint">A quick look at your favorite mountains. Saved here, in your order.</p>
+   <ol id="camera-library" aria-label="Camera library"></ol>
+   <form id="camera-form" hidden>
+    <h3 id="camera-form-title">Add a camera</h3>
+    <label for="camera-name">Camera name</label><input id="camera-name" type="text" maxlength="80" required placeholder="Summit cam">
+    <label for="camera-resort">Resort <span class="optional">optional</span></label><input id="camera-resort" type="text" maxlength="80" placeholder="Your mountain">
+    <label for="camera-url">Camera or player URL</label><input id="camera-url" type="url" maxlength="2048" required placeholder="https://…" aria-describedby="camera-url-help">
+    <p class="hint" id="camera-url-help">YouTube live links and direct camera players fit best. Resort pages also work, with their own navigation. Use Browser if a provider blocks playback.</p>
+    <div class="settings-row"><button type="submit" class="primary">Save camera</button><button type="button" id="camera-cancel">Cancel</button></div>
+   </form>
+   <div class="podcast-feedback"><p id="camera-settings-status" role="status"></p><button id="camera-undo" type="button" hidden>Undo removal</button></div>
+  </section>
+  <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p><button type="button" id="retry-key" hidden>Retry saved key</button></form>
+  <label class="check"><input id="tab-sounds" type="checkbox">Silly tab sound effects</label>
   <label class="check"><input id="always-top" type="checkbox">Keep MattAMP above other windows</label>
   <div class="ambient-setting"><label for="ambient-mode">Live background</label><select id="ambient-mode"><option value="off">Off</option><option value="flow">Particle flow</option><option value="waves">Water waves</option><option value="stars">Starfield</option><option value="mandelbrot">Mandelbrot zoom</option></select><p class="hint">Slow, dim motion. Pauses when hidden or in Bug mode; respects reduced-motion settings.</p></div>
   <form id="x-form"><h2>X feed</h2><label for="x-accounts">AI circle · X handles</label><textarea id="x-accounts" rows="2" spellcheck="false" placeholder="bcherny, steipete, karpathy, simonw, chamath"></textarea><label class="check"><input id="x-ai-only" type="checkbox" checked>Only AI-related posts</label><p class="hint">Latest posts from these accounts. Replies and reposts are excluded. “For giggles” shows Elon separately.</p><div class="settings-row"><button type="submit">Save feed</button><button type="button" id="x-forget" class="text-button">Forget X sign-in</button></div><p id="x-settings-status" role="status"></p></form>

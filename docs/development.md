@@ -4,7 +4,7 @@
 
 ## Run from source
 
-Use Linux with a graphical desktop, Git, Node.js, and npm. Install the versions pinned by `package-lock.json` rather than upgrading dependencies incidentally.
+Use Linux, Windows, or macOS with a graphical desktop, Git, Node.js 22+, and npm. Install the versions pinned by `package-lock.json` rather than upgrading dependencies incidentally.
 
 ```sh
 git clone https://github.com/matt-dreyer/MattAMP.git
@@ -39,6 +39,8 @@ The desktop administrator prompt installs `/etc/apparmor.d/mattamp`, scoped to t
 | --- | --- |
 | `src/main.cjs`, `src/preload.cjs` | Electron lifecycle, state, windows, isolated IPC bridge |
 | `src/app.js`, `src/index.html`, `src/style.css` | Player, controls, layouts, settings |
+| `src/podcast-library.cjs` | Podcast source validation, channel resolution, saved library normalization |
+| `src/ski-cams.cjs` / `src/ski-cams-ui.js` | Camera favorites, Sierra resolution, isolated viewer and Settings editor |
 | `src/services.cjs` | Provider data and workstation metrics |
 | `src/radio-relay.cjs` | Local radio relay with opaque stream URLs |
 | `src/youtube-playlist.cjs` | Full-episode playlist discovery and filtering |
@@ -70,13 +72,34 @@ Syntax checks and Node unit tests cover the local modules. For changes involving
 | `npm run test:settings-game` | Settings interaction in Game mode |
 | `npm run test:expanded` | Expanded layouts at 2200×1200, 1000×820, and 640×480; restoration |
 | `npm run test:chaos` | Defaults, persisted selection, preview/start consistency, conditions and saved records |
+| `npm run test:podcasts` | Podcast CRUD, ordering, undo, source fallback, persistence and empty-library UI |
+| `npm run test:keyring-startup` | Startup and Settings remain responsive with an unresponsive keyring |
+| `npm run test:ski-cams` | Camera favorites, muted sandbox, teardown, tab order, layouts and persistence using provider fixtures |
 | `npm run test:smoke` | Original workstation and live-provider smoke test |
 
 Integration scripts launch temporary Electron profiles, keeping the real listen key, X session, and scores separate. Captures go to temporary locations or ignored `test-results/`, depending on the script.
 
 **`test:smoke` is workstation-specific:** it expects the original two RTX cards and internet access, plays muted test media, and depends on public podcast services. It is not a portable, offline CI gate. Other rendering checks still need a suitable graphical environment. Do not disable Electron's sandbox to make a test pass.
 
-## Build a shareable Linux ZIP
+## Native release packages
+
+```sh
+npm ci
+npm run check
+npm test
+npm run dist:linux  # Linux x64: AppImage, deb, tar.gz
+npm run dist:win    # Windows x64: NSIS installer and portable ZIP
+npm run dist:mac    # macOS Intel and Apple Silicon: DMG and ZIP
+npm run checksums
+```
+
+Run each platform's build on that OS. `electron-builder.json` allowlists the app sources, assets, documentation, and production dependencies; user profiles and credentials are excluded. Electron and the build tools are development dependencies. `build/icon.png` is a 1024px raster of the existing bug SVG for native icons. Keep the internal `workstation-deck` identity and `ai.fshbwl.deck` app ID stable to preserve settings and dock integration.
+
+`.github/workflows/release.yml` builds on Linux, Windows, Intel Mac, and Apple Silicon Mac runners, checks the bundled ASAR, and uploads native artifacts. Pushing a `v*` tag matching `package.json` publishes all successful builds to GitHub Releases with SHA-256 checksums; a failed target blocks publication. Branch/PR builds only upload Actions artifacts. Windows is unsigned; macOS uses an ad-hoc signature with no notarization. Developer ID / Windows signing certificates can be added later; never commit signing credentials.
+
+The system monitor retains its Linux `/proc` implementation and uses `systeminformation` for Windows/macOS memory and network counters. GPU meters still require `nvidia-smi`; no Apple/integrated GPU utilization is claimed. Tests cover normalized portable counters and OS-specific ping timeouts; actual hardware differences still need native user testing.
+
+## Legacy shareable Linux ZIP
 
 On Linux x86-64, from a clean, committed checkout:
 

@@ -1,0 +1,76 @@
+const {_electron}=require('playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+(async()=>{
+ const profile=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-cameras-'));
+ fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,ambient:'off',layout:'stack',alwaysOnTop:false}));
+ const launcher=path.join(profile,'electron-sandboxed');
+ fs.writeFileSync(launcher,'#!/bin/bash\nargs=()\nfor arg in "$@"; do [[ "$arg" == "--no-sandbox" ]] || args+=("$arg"); done\nexec "$MATTAMP_TEST_ELECTRON" "${args[@]}"\n',{mode:0o700});
+ let app;
+ try{
+  app=await _electron.launch({executablePath:launcher,args:[path.resolve(__dirname,'..')],env:{...process.env,MATTAMP_TEST_ELECTRON:require('electron'),DECK_TEST_DIR:profile}});
+  const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+  await app.evaluate(({session})=>{
+   session.fromPartition('mattamp-ski-cams').protocol.handle('https',()=>new Response('<html><body style="background:#111b23;color:#9ccab0;font:20px system-ui;display:grid;place-content:center;height:90vh">Camera test fixture</body></html>',{headers:{'content-type':'text/html'}}));
+   const original=global.fetch;global.fetch=(url,...args)=>String(url).includes('sierraattahoe.com')?Promise.resolve(new Response('<script id="sierra-live-webcams-cfg-14">{"cams":{"grandview":{"youtube_video_id":"abcdefghijk"},"westbowl":{"youtube_video_id":"ABCDEFGHIJK"}}}</script>')):original(url,...args);
+  });
+  await p.evaluate(async()=>{const audio=document.querySelector('#audio');audio.src='/startup.mp3';audio.loop=true;audio.volume=0;await audio.play();});
+  await p.locator('#source-cameras').click();
+
+  await p.waitForFunction(()=>document.querySelector('#camera-status').textContent.includes('availability is managed'));
+  const remote=()=>app.evaluate(({webContents})=>webContents.getAllWebContents().filter(w=>w.getURL().startsWith('https://')).map(w=>({url:w.getURL(),muted:w.isAudioMuted(),prefs:w.getLastWebPreferences()})));
+  assert.equal(await p.locator('#audio').evaluate(a=>a.paused),false);
+  let cams=await remote();assert.equal(cams.length,1);assert.equal(cams[0].muted,true);assert.equal(cams[0].prefs.sandbox,true);assert.equal(cams[0].prefs.nodeIntegration,false);
+  await p.locator('#camera-select').selectOption('kirkwood-cornice');
+  await p.waitForFunction(()=>document.querySelector('#camera-status').textContent.includes('availability is managed'));
+  await p.waitForTimeout(200);assert.ok((await remote())[0].url.includes('kirkwoodcornice'));
+  await p.clock.install();
+  assert.equal(await p.locator('#camera-cycle-minutes').inputValue(),'15');
+  await p.locator('#camera-cycle').click();
+  await p.clock.fastForward(15*60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='sierra-grandview');
+  await p.locator('#camera-select').selectOption('sierra-westbowl');
+  await p.clock.fastForward(14*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'sierra-westbowl');
+  await p.clock.fastForward(60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='heavenly-tram');
+  await p.locator('#settings-open').click();
+  await p.waitForFunction(()=>document.querySelector('#camera-panel').hidden);
+  await p.clock.fastForward(30*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'heavenly-tram');
+  await p.locator('#settings-close').click();
+  await p.locator('#camera-panel').waitFor({state:'visible'});
+  await p.locator('#camera-cycle-minutes').selectOption('5');
+  await p.clock.fastForward(5*60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='kirkwood-cornice');
+  await p.locator('#camera-cycle').click();
+  await p.clock.fastForward(10*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'kirkwood-cornice');
+  await p.screenshot({path:'/tmp/mattamp-skicams-stack.png'});
+  const positions=await p.locator('.sourcebar button').evaluateAll(bs=>bs.map(b=>b.getBoundingClientRect().y));assert.equal(new Set(positions).size,1);
+  await p.locator('#settings-open').click();
+  await p.waitForTimeout(150);assert.equal((await remote()).length,0);
+  await p.locator('#camera-add').click();await p.locator('#camera-name').fill('My summit');await p.locator('#camera-resort').fill('Vail');await p.locator('#camera-url').fill('https://example.org/cam');await p.locator('#camera-form button[type=submit]').click();
+  await p.waitForFunction(()=>document.querySelectorAll('#camera-library strong').length===5);
+  await p.getByRole('button',{name:'Edit camera My summit',exact:true}).click();await p.locator('#camera-url').fill('http://example.org/cam');await p.locator('#camera-form button[type=submit]').click();
+  await p.waitForFunction(()=>document.querySelector('#camera-settings-status').dataset.error==='true');
+  await p.locator('#camera-url').fill('https://example.org/cam2');await p.locator('#camera-form button[type=submit]').click();await p.waitForFunction(()=>document.querySelector('#camera-form').hidden);
+  await p.getByRole('button',{name:'Move up camera My summit',exact:true}).click();await p.waitForFunction(()=>document.querySelectorAll('#camera-library strong')[3].textContent==='My summit');
+  await p.getByRole('button',{name:'Remove camera My summit',exact:true}).click();await p.locator('#camera-undo').waitFor({state:'visible'});await p.locator('#camera-undo').click();await p.waitForFunction(()=>document.querySelectorAll('#camera-library strong').length===5);
+  await p.locator('#settings-close').click();await p.locator('#camera-select').selectOption({label:'Vail · My summit'});await p.waitForTimeout(250);
+  await p.locator('#camera-cycle').click();
+  await p.waitForFunction(async()=>{const r=await window.deck.init();return r.data.state.cameraCycle===true;});
+  await p.reload();await p.locator('#source-cameras').click();assert.equal(await p.locator('#camera-cycle-minutes').inputValue(),'5');assert.equal(await p.locator('#camera-cycle').getAttribute('aria-pressed'),'true');assert.equal(await p.locator('#camera-select option:checked').innerText(),'Vail · My summit');
+  await p.locator('#source-game').click();await p.waitForTimeout(150);assert.equal((await remote()).length,0);
+  await p.locator('#source-cameras').click();await p.locator('#compact').click();await p.waitForTimeout(150);assert.equal((await remote()).length,0);
+  await p.locator('#compact').click();await p.locator('#layout').click();await p.locator('#source-cameras').click();await p.waitForTimeout(250);
+  await p.screenshot({path:'/tmp/mattamp-skicams-sidecar.png'});
+  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.equal(new Set(await p.locator('.sourcebar button').evaluateAll(bs=>bs.map(b=>b.getBoundingClientRect().y))).size,1);
+  assert.deepEqual(await p.locator('.sourcebar button').evaluateAll(bs=>bs.map(b=>b.id)),['source-radio','source-podcast','source-x','source-cameras','source-game']);
+  await p.locator('#camera-manage').click();
+  for(let n=5;n>0;n--){await p.locator('#camera-library button[aria-label^="Remove camera"]').last().click();await p.waitForFunction(count=>document.querySelectorAll('#camera-library strong').length===count,n-1);}
+  await p.locator('#settings-close').click();await p.locator('#camera-empty').waitFor({state:'visible'});assert.equal(await p.locator('#camera-cycle').isDisabled(),true);assert.equal((await remote()).length,0);
+  assert.deepEqual(errors,[]);
+  console.log('PASS: requested defaults, isolated muted sandbox, tab/settings/compact teardown, custom CRUD/order/undo, cycling/wrap/manual reset/pause/off/interval persistence, empty state, stack/sidecar.');
+ }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true,maxRetries:3});}
+})().catch(e=>{console.error(e);process.exitCode=1;});

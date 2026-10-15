@@ -1,4 +1,5 @@
 const os = require('node:os');
+const {portableStats,pingArgs}=require('./platform-stats.cjs');
 const {parsePlaylistPage}=require('./youtube-playlist.cjs');
 const fs = require('node:fs/promises');
 const {execFile} = require('node:child_process');
@@ -10,13 +11,7 @@ const STATIONS = [
  ['deephouse','Deep House'], ['synthwave','Synthwave'], ['progressive','Progressive'],
  ['liquiddnb','Liquid DnB'], ['chillout','Chillout'], ['psychill','PsyChill']
 ].map(([id,name])=>({id,name}));
-const SHOWS = [
- {id:'lastweek',playlist:'PLM-oLAM5uh0nDfcweJYejeAdGzPCuh8KP',name:'Last Week in AI',channel:'UCKARTq-t5SPMzwtft8FWwnA',feed:'https://rss.art19.com/last-week-in-ai'},
- {id:'humans',playlist:'UULFghJTNTO9kcDeUFXMuSDGLQ',matchAudioTitles:true,name:'AI for Humans',channel:'UCghJTNTO9kcDeUFXMuSDGLQ',feed:'https://feeds.libsyn.com/469701/rss'},
- {id:'allin',playlist:'PLn5MTSAqaf8peDZQ57QkJBzewJU1aUokl',name:'All-In',channel:'UCESLZhusAkFfsNsApnjF_Cg',feed:'https://allinchamathjason.libsyn.com/rss'},
- {id:'dwarkesh',playlist:'PLd7-bHaQwnthaNDpZ32TtYONGVk95-fhF',name:'Dwarkesh Podcast',channel:'UCXl4i9dYBrFOabk0xGmbkRA',feed:'https://apple.dwarkesh-podcast.workers.dev/feed.rss'},
- {id:'a16z',playlist:'PLM4u6XbiXf5rnUvH5NLdV_It2QLgbHBDZ',name:'The a16z Show',channel:'UC9cn0TuPq4dnbTY-CBsm8XA',feed:'https://feeds.simplecast.com/JGE3yC0V'}
-];
+const {SHOWS}=require('./podcast-library.cjs');
 const list = value => value ? (Array.isArray(value)?value:[value]):[];
 const string = value => typeof value==='object' ? String(value?.['#text']||'') : String(value||'');
 const xml = new XMLParser({ignoreAttributes:false,attributeNamePrefix:'@',processEntities:true,htmlEntities:true});
@@ -56,20 +51,21 @@ function matchPodcastEpisodes(videos,audioEpisodes){
 }
 function youtubeEpisodeFeed(show){return 'https://www.youtube.com/feeds/videos.xml?playlist_id='+encodeURIComponent(show.playlist);}
 const feedCache=new Map();
-async function episodes(showId,type,refresh=false) {
- const show=SHOWS.find(s=>s.id===showId);if(!show||!['youtube','audio'].includes(type))throw new Error('Unknown podcast source');
- const key=showId+':'+type, previous=feedCache.get(key);
+async function episodes(showId,type,refresh=false,library=SHOWS) {
+ const show=library.find(s=>s.id===showId);if(!show||!['youtube','audio'].includes(type))throw new Error('Unknown podcast source');
+ if(type==='audio'&&!show.feed||type==='youtube'&&!show.playlist)throw new Error('This show has no '+(type==='audio'?'audio feed':'YouTube source')+'. Edit it in Settings.');
+ const key=JSON.stringify([showId,type,show.feed,show.playlist,show.filterShorts,show.matchAudioTitles]), previous=feedCache.get(key);
  if(!refresh&&previous&&Date.now()-previous.updated<900000)return previous;
  try{
   let items;
   if(type==='youtube'){
-   try{items=parseFeed(await fetchText(youtubeEpisodeFeed(show)),type);if(!items.length)throw new Error('Empty YouTube feed');}
+   try{if(show.filterShorts)throw new Error('Check video durations');items=parseFeed(await fetchText(youtubeEpisodeFeed(show)),type);if(!items.length)throw new Error('Empty YouTube feed');}
    catch{items=parsePlaylistPage(await fetchText('https://www.youtube.com/playlist?list='+encodeURIComponent(show.playlist)),show.playlist);}
   }else items=parseFeed(await fetchText(show.feed),type);
-  if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh);items=matchPodcastEpisodes(items,audio.items);}
+  if(type==='youtube'&&show.matchAudioTitles){const audio=await episodes(showId,'audio',refresh,library);items=matchPodcastEpisodes(items,audio.items);}
   items.sort((a,b)=>(Date.parse(b.date)||0)-(Date.parse(a.date)||0));
   if(!items.length)throw new Error('No full episodes available in this feed. Try Audio feed.');
-  const result={items:type==='youtube'?items.slice(0,25):items,updated:Date.now(),stale:false};feedCache.set(key,result);return result;
+  const result={items:type==='youtube'?items.slice(0,25):items,updated:Date.now(),stale:false};feedCache.set(key,result);if(feedCache.size>100)feedCache.delete(feedCache.keys().next().value);return result;
  }catch(error){if(previous)return {...previous,stale:true};throw error;}
 }
 function parseArtwork(channels){
@@ -129,7 +125,7 @@ function parseGpus(text) {
  });
 }
 async function ping(host) {
- try {const {stdout}=await run('ping',['-n','-c','1','-W','2',host],{timeout:3500,maxBuffer:8192});const m=stdout.match(/time[=<]([\d.]+)/);return {reachable:true,ms:m?Number(m[1]):null};}
+ try {const {stdout}=await run('ping',pingArgs(host),{timeout:3500,maxBuffer:8192});const m=stdout.match(/time[=<]([\d.]+)/);return {reachable:true,ms:m?Number(m[1]):null};}
  catch{return {reachable:false,ms:null};}
 }
 class Monitor {
@@ -138,7 +134,7 @@ class Monitor {
   if(this.checking)return;this.checking=true;
   try{
    if(!route){this.reach={status:'disconnected',router:null,internet:null,checked:Date.now()};return;}
-   const [router,a,b]=await Promise.all([ping(route.gateway),ping('1.1.1.1'),ping('8.8.8.8')]);
+   const [router,a,b]=await Promise.all([route.gateway?ping(route.gateway):Promise.resolve({reachable:false,ms:null}),ping('1.1.1.1'),ping('8.8.8.8')]);
    let internet=a.reachable?a:b;
    if(!internet.reachable){try{const start=performance.now();const r=await fetch('https://connectivitycheck.gstatic.com/generate_204',{signal:AbortSignal.timeout(4000),redirect:'error'});if(r.status===204)internet={reachable:true,ms:Math.round(performance.now()-start),via:'HTTPS'};}catch{}}
    this.reach={status:internet.reachable?'online':router.reachable?'upstream-unreachable':'unreachable',router,internet,checked:Date.now()};
@@ -147,18 +143,19 @@ class Monitor {
  async sample(){
   const now=Date.now(),cpus=os.cpus();const cpu=cpus.reduce((a,c)=>({idle:a.idle+c.times.idle,total:a.total+Object.values(c.times).reduce((x,y)=>x+y,0)}),{idle:0,total:0});
   let percent=null;if(this.previousCpu&&cpu.total>this.previousCpu.total)percent=Math.max(0,Math.min(100,100*(1-(cpu.idle-this.previousCpu.idle)/(cpu.total-this.previousCpu.total))));this.previousCpu=cpu;
+  const portable=process.platform==='linux'?null:await portableStats();
   const [mem,routeText,net,gpus]=await Promise.allSettled([
-   fs.readFile('/proc/meminfo','utf8'),fs.readFile('/proc/net/route','utf8'),fs.readFile('/proc/net/dev','utf8'),
+   ...(portable?[null,null,null]:[fs.readFile('/proc/meminfo','utf8'),fs.readFile('/proc/net/route','utf8'),fs.readFile('/proc/net/dev','utf8')]),
    run('nvidia-smi',['--query-gpu=index,uuid,name,utilization.gpu,memory.used,memory.total,temperature.gpu','--format=csv,noheader,nounits'],{timeout:1800,maxBuffer:32768})
   ]);
-  const route=routeText.status==='fulfilled'?defaultRoute(routeText.value):null;
-  const counters=route&&net.status==='fulfilled'?netCounters(net.value,route.iface):null;let down=null,up=null;
+  const route=portable?portable.route:routeText.status==='fulfilled'?defaultRoute(routeText.value):null;
+  const counters=portable?portable.counters:route&&net.status==='fulfilled'?netCounters(net.value,route.iface):null;let down=null,up=null;
   if(counters&&this.previousNet?.iface===route.iface){const seconds=(now-this.previousNet.time)/1000;if(seconds>0&&counters.rx>=this.previousNet.rx&&counters.tx>=this.previousNet.tx){down=(counters.rx-this.previousNet.rx)*8/seconds/1e6;up=(counters.tx-this.previousNet.tx)*8/seconds/1e6;}}
   this.previousNet=counters?{...counters,iface:route.iface,time:now}:null;
   if(!this.reach.checked||now-this.reach.checked>10000||this.lastIface!==route?.iface){void this.reachability(route);this.lastIface=route?.iface;}
-  this.snapshot={time:now,cpu:percent,memory:mem.status==='fulfilled'?memoryFromProc(mem.value):null,network:{...this.reach,iface:route?.iface||null,gateway:route?.gateway||null,down,up},gpus:gpus.status==='fulfilled'?parseGpus(gpus.value.stdout):[],gpuError:gpus.status!=='fulfilled'};
+  this.snapshot={time:now,cpu:percent,memory:portable?portable.memory:mem.status==='fulfilled'?memoryFromProc(mem.value):null,network:{...this.reach,iface:route?.iface||null,gateway:route?.gateway||null,down,up},gpus:gpus.status==='fulfilled'?parseGpus(gpus.value.stdout):[],gpuError:gpus.status!=='fulfilled'};
   return this.snapshot;
  }
 }
 function videoId(value){try{const u=new URL(value);if(!['youtube.com','www.youtube.com','youtu.be','m.youtube.com'].includes(u.hostname))return null;const id=u.hostname==='youtu.be'?u.pathname.slice(1):u.searchParams.get('v')||u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(id||'')?id:null;}catch{return /^[\w-]{11}$/.test(value||'')?value:null;}}
-module.exports={STATIONS,SHOWS,matchPodcastEpisodes,youtubeEpisodeFeed,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};
+module.exports={fetchText,STATIONS,SHOWS,matchPodcastEpisodes,youtubeEpisodeFeed,stationArtwork,parseArtwork,Monitor,parseFeed,parsePlaylist,radioUrls,episodes,memoryFromProc,defaultRoute,netCounters,parseGpus,videoId,publicUrl};

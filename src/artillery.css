@@ -1,5 +1,5 @@
 /* A dim, compact arcade inside the existing glass shell. */
-.sourcebar{flex-wrap:wrap}.sourcebar button{padding-inline:8px}#play-status{padding:3px 0}
+#play-status{padding:3px 0}
 .game-mode:not(.settings-mode)>.full{display:block}.game-mode #system{display:none}.game-mode #compact-status{display:block;border-top:1px solid #445360;padding-top:8px}
 #game-panel{padding:12px;container-type:inline-size;--glass-fill:rgba(25,39,49,.66);--glass-hover:rgba(51,72,84,.78);--glass-selected:rgba(39,75,61,.74)}.game-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.game-heading h2{font-size:23px;letter-spacing:-.04em;margin:0;color:#b6ddbd;font-weight:600}.game-eyebrow{font:10px ui-monospace,monospace;letter-spacing:.12em;color:var(--muted)}#game-sound{font-size:11px;min-height:32px}
 .game-setup{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:0 0 12px}.game-setup label{display:grid;gap:4px;font-size:11px;color:var(--muted)}.game-setup input{background:rgba(21,36,48,.78);color:var(--text);width:57px;height:32px;border:1px solid var(--edge);border-radius:6px;padding:5px;font:14px ui-monospace,monospace;text-transform:uppercase}.game-setup select{height:32px}.game-setup button{min-height:32px;flex:1;white-space:nowrap}
