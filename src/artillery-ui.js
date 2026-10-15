@@ -18,7 +18,7 @@ class MattArcade{
   this.$('abandon-no').onclick=()=>{this.$('abandon').hidden=true;this.paused=false;this.sync();};
   this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>{if(this.visible&&this.battle?.phase==='over'&&!this.saving&&!this.victory.active)this.reset();};
   this.$('save-retry').onclick=()=>void this.saveScore();
-  this.$('initials').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);};
+  this.$('initials').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);this.updatePreviewName();};
   for(const details of panel.querySelectorAll('details'))details.addEventListener('toggle',onResize);
   this.canvas.onpointerdown=e=>{
    const b=this.battle;if(!b||b.phase!=='aim'||b.active.id!==0||this.paused)return;
@@ -60,12 +60,13 @@ class MattArcade{
   this.blastFrames=[...Array.from({length:10},(_,i)=>[104+i*48,84,48,64]),...[[2,47],[49,47],[96,47],[143,45],[188,44],[232,44],[276,42],[318,41],[359,38],[397,38],[435,36],[471,34],[505,35],[540,36]].map(([x,w])=>[x,148,w,64])];
   void this.loadScores();this.draw();
  }
- createPreview(){return new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value),chaos:this.$('chaos').value});}
+ createPreview(){const preview=new MattArtillery.Battle({bots:Number(this.$('bots').value),skill:Number(this.$('skill').value),chaos:this.$('chaos').value});preview.tanks[0].name=this.$('initials').value.toUpperCase()||'MAT';return preview;}
+ updatePreviewName(){if(this.battle)return;this.preview.tanks[0].name=this.$('initials').value.toUpperCase()||'MAT';this.draw();}
  refreshPreview(){if(this.battle)return;this.preview=this.createPreview();this.render();this.draw();this.onResize();}
- async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
+ async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.updatePreviewName();this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
  start(){
   this.victory.stop();this.clearQuip();this.volley=null;this.dance=null;
-  this.battle=this.preview;this.battle.history=(this.scores?.rivalry||[]).slice(-3);this.initials=this.$('initials').value.toUpperCase()||'MAT';this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
+  this.battle=this.preview;this.battle.history=(this.scores?.rivalry||[]).slice(-3);this.initials=this.$('initials').value.toUpperCase()||'MAT';this.battle.tanks[0].name=this.initials;this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
   this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
   this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon-shell').checked=true;this.updateAim();this.sync();this.$('angle').focus();
  }

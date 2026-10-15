@@ -200,9 +200,9 @@ Your favorites and rotation preferences stay on your machine. No MattAMP account
 
 ## Tiny tanks. Questionable decisions.
 
-**AMP Artillery** is an untimed, last-tank-standing skirmish against **3–5 bots**. Pick a skill from **Very dumb** to **Human-ish**, enter your three-letter arcade initials, and start rearranging the landscape.
+**AMP Artillery** is an untimed, last-tank-standing skirmish against **3–5 bots**. Pick a skill from **Very dumb** to **Human-ish**, enter your three-letter arcade initials, and start rearranging the landscape. Your initials also name your tank on the battlefield and health roster.
 
-![Expanded AMP Artillery battlefield with five tanks, wraparound walls, and aiming controls](docs/images/artillery.png)
+![Expanded AMP Artillery battlefield with five tanks labeled with arcade names and aiming controls](docs/images/artillery.png)
 
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 

@@ -7,7 +7,7 @@ Captured from MattAMP in October 2026 using a fresh, isolated profile. These are
 | `desktop.png` | Five-tab navigation, Synthwave artwork, wave background, and live workstation meters. Radio is stopped because this profile has no Premium key. |
 | `skicams.png` | Heavenly's real Top of Tram player inside SkiCams, with 15-minute auto-cycle enabled. The provider controls the stream and its availability. |
 | `skicams-settings.png` | The camera settings section with the four default views and favorite-management controls. |
-| `artillery.png` | An expanded five-tank skirmish with an Unhinged arena and wraparound walls. |
+| `artillery.png` | An expanded five-tank skirmish with a Mixed arena, Moonshot gravity, and MAT as the player tank name. |
 | `stacked.png`, `compact.png`, `bug.png` | The other three desktop layouts; the bug is captured at its native 56 × 56 size. |
 | `podcasts-youtube.png`, `podcasts-audio.png` | The same real Last Week in AI episode loaded through the YouTube and RSS players, ready to play. |
 | `podcasts-settings.png` | The editable default podcast library. |
