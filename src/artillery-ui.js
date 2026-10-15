@@ -109,7 +109,7 @@ class MattArcade{
   this.showQuip(b.active,choice.reason==='retaliation'?[target.name+', you started this shit.',target.name+', my turn, asshole.','Hit me again. See what fucking happens.']:choice.reason==='grudge'?[target.name+', I remember that shit.','That crater? Still fucking personal.',target.name+', payback has arrived.']:[target.name+', won enough? Eat this.','Someone end '+target.name+'’s damn streak.',target.name+', time to share the suffering.']);
  }
  setExpanded(expanded){this.expanded=expanded;this.panel.classList.toggle('game-expanded',expanded);document.getElementById('deck').classList.toggle('arcade-expanded',expanded);window.scrollTo(0,0);this.$('expand').textContent=expanded?'Restore':'Expand';this.$('expand').setAttribute('aria-pressed',String(expanded));this.onResize();}
- setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible){this.silence();if(this.expanded)this.setExpanded(false);}this.sync();}
+ setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
   if(!this.visible||this.paused){this.clearQuip();this.victory.stop();this.dance=null;}
   cancelAnimationFrame(this.raf);this.raf=0;this.last=0;this.render();this.draw();

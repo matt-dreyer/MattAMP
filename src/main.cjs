@@ -18,7 +18,7 @@ if(process.platform==='win32')app.setAppUserModelId('ai.fshbwl.deck');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
-let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
+let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
 let state={tabSounds:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
@@ -66,14 +66,24 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
-function resize(view,height,expanded=false){
+function resize(view,height,expanded=false,game=''){
  if(!win||!['full','compact','bug'].includes(view))return;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
- if(expanded===true&&view==='full'){
-  if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
+ const playing=game==='play'&&view==='full';
+ if(!['play','settings','bug'].includes(game))gameSession=null;
+ else if(!playing&&gameSession&&!gameSession.suspended){gameSession.bounds=win.getBounds();gameSession.suspended=true;}
+ // Content changes (replay, scores, heckles) must not resize a game window.
+ // Temporary settings/bug views restore the latest user-chosen bounds on return.
+ if(playing&&gameSession&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
+  if(gameSession.suspended){win.setResizable(true);win.setMinimumSize(expanded?Math.min(640,area.width):340,expanded?Math.min(480,area.height):260);win.setBounds(gameSession.bounds);gameSession.suspended=false;}
   mode='full';return;
  }
- if(gameBounds){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
+ const rememberGame=()=>{if(playing)gameSession={layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
+ if(expanded===true&&view==='full'&&game!=='settings'){
+  if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
+  mode='full';rememberGame();return;
+ }
+ if(gameBounds&&(!game||playing)){win.setMinimumSize(340,260);win.setBounds(gameBounds);gameBounds=null;}
  if(view!=='full'){xFeed?.hide();skiCams?.hide();}
  if(view==='bug'){
   if(mode!=='bug')fullBounds=win.getBounds();
@@ -86,6 +96,7 @@ function resize(view,height,expanded=false){
   const h=Math.min(area.height,Math.max(260,Math.ceil(Number(height)||500)));
   win.setBounds({x:Math.max(area.x,Math.min(bounds.x,area.x+area.width-width)),y:Math.max(area.y,Math.min(bounds.y,area.y+area.height-h)),width,height:h});
  }
+ rememberGame();
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
@@ -146,7 +157,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:arcade-read',()=>arcade.read());
  handle('deck:arcade-record',record=>arcade.record(record));
  handle('deck:save',patch=>{update(patch);return publicState();});
- handle('deck:resize',(view,height,expanded)=>resize(view,height,expanded));
+ handle('deck:resize',(view,height,expanded,game)=>resize(view,height,expanded,game));
  handle('deck:radio',async station=>radioRelay.issue(await radioUrls(station,secret)).map(route=>origin+route));
  handle('deck:episodes',(show,type,refresh)=>episodes(show,type,!!refresh,state.podcasts));
  handle('deck:podcast-resolve',input=>{

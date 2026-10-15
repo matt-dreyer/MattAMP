@@ -25,6 +25,8 @@ Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into 
 | Expand | Open the large, resizable game layout |
 | Restore / Escape | Restore the widget; Escape dismisses an active victory ceremony first |
 
+Game keeps the window size you choose through battle resets, results, and new skirmishes. Settings, bug mode, and hiding the app temporarily leave the battle; returning restores its size. Switching to another tab returns to the normal widget layout. **Restore** or the layout controls still let you change size explicitly.
+
 Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, source tabs, battlefield, and aiming controls available; scores and credits have their own scrolling area.
 
 Radio or audio podcasts can continue. Game **Sound on/off** is independent. Switching tabs, opening Settings, hiding the app, or entering bug mode freezes the battle. YouTube pauses when hidden.

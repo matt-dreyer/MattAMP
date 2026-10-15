@@ -219,7 +219,7 @@ The bots have opinions. They can return fire, remember who hurt them across thre
 | Adjust precisely with the wheel | Hover **Angle** or **Power**; wheel over the battlefield changes power |
 | Choose ammunition | **Shell / MIRV** buttons |
 | Fire | **Enter** or **Fire!** |
-| Make room for destruction | **Expand**, then resize the window |
+| Make room for destruction | **Expand**, then resize; your size stays through new battles until you change tabs |
 | Return to the widget | **Restore** or **Esc** |
 | Play another match | Click the finished battlefield; keyboard users can focus it and press **Enter / Space** |
 
