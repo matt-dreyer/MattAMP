@@ -4,8 +4,6 @@ A local Linux desktop player and workstation monitor. Eight DI.FM presets, five 
 
 ## Share / install on another Linux PC
 
-The GitHub repository is **private**. A friend needs collaborator access to clone it; a ZIP can be shared directly without GitHub access. The repository includes a full setup and feature guide, but no public installer/release is currently published.
-
 **Easiest: the `MattAMP-linux-x64-<commit>.zip` runtime bundle.** It includes Electron and production dependencies; Node/npm is not required. Extract the whole folder, open a terminal there, and run `./MattAMP`. Click **Game** to play. Use `bash scripts/install.sh` for an application-menu/dock launcher. Keep that folder in place. See [START-HERE.txt](START-HERE.txt) for the short handoff guide and Ubuntu sandbox setup.
 
 This build targets **64-bit Intel/AMD Linux**, not ARM. A modern graphical desktop and Electron’s system libraries are required; distro compatibility has not been tested exhaustively. The game runs offline and needs neither NVIDIA hardware nor any media account. DI.FM Premium is only needed for radio. Missing GPU sensors appear as unavailable.
