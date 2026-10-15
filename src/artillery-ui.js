@@ -3,7 +3,7 @@ class MattArcade{
  constructor(panel,onResize){
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
   this.visible=false;this.expanded=false;this.maximized=false;this.paused=false;this.sound=true;this.battle=null;this.preview=this.createPreview();this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
-  this.shotReadouts=true;this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
+  this.shotReadouts=true;this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;this.tintedTanks=new WeakMap();
   this.victory=new MattVictory(this.$('victory'),()=>{if(this.visible)(this.$('again').disabled?this.canvas:this.$('again')).focus({preventScroll:true});});
   this.victory.motion.addEventListener('change',()=>{if(this.dance&&this.victory.motion.matches)this.finishDance();});
   this.quipResize=new ResizeObserver(()=>this.positionQuip());this.quipResize.observe(this.canvas);
@@ -198,6 +198,21 @@ class MattArcade{
   const a=new Audio('/arcade/'+clip+'.ogg');a.volume=name==='blast'?.16:.2;this.audio.push(a);void a.play().catch(()=>{});
  }
  silence(){this.victory.mute();for(const a of this.audio)a.pause();this.audio=[];}
+ tankSprite(name,color){
+  const source=this.assets[name];if(!source)return null;
+  let variants=this.tintedTanks.get(source);if(!variants){variants=new Map();this.tintedTanks.set(source,variants);}
+  if(variants.has(color))return variants.get(color);
+  const sprite=document.createElement('canvas'),metal=name==='metal-slug-tank';sprite.width=metal?60:source.width;sprite.height=metal?58:source.height;
+  const ctx=sprite.getContext('2d');if(metal)ctx.drawImage(source,4,4,60,58,0,0,60,58);else ctx.drawImage(source,0,0);
+  const pixels=ctx.getImageData(0,0,sprite.width,sprite.height),data=pixels.data,rgb=color.slice(1).match(/../g).map(channel=>parseInt(channel,16));
+  // Palette-swap the shaded metal once per team; retain alpha, dark outlines and bright glints.
+  for(let i=0;i<data.length;i+=4){
+   if(!data[i+3])continue;
+   const light=(data[i]*.2126+data[i+1]*.7152+data[i+2]*.0722)/255;
+   for(let channel=0;channel<3;channel++)data[i+channel]=light<=.75?rgb[channel]*light/.75:rgb[channel]+(255-rgb[channel])*(light-.75)/.25;
+  }
+  ctx.putImageData(pixels,0,0);variants.set(color,sprite);return sprite;
+ }
  draw(){
   const c=this.ctx,b=this.battle||this.preview;if(!c)return;
   c.clearRect(0,0,1000,540);c.fillStyle='#101c2a';c.fillRect(0,0,1000,540);
@@ -230,12 +245,12 @@ class MattArcade{
    const r=t.angle*Math.PI/180;
    if(this.assets['metal-slug-tank']){
     c.save();c.imageSmoothingEnabled=false;if(t.angle>90)c.scale(-1,1);
-    c.drawImage(this.assets['metal-slug-tank'],4,4,60,58,-30,-50,60,58);c.restore();
+    c.drawImage(this.tankSprite('metal-slug-tank',t.color),-30,-50,60,58);c.restore();
     // The artwork keeps its original gun; a team-colored sight shows the exact shot angle.
     if(t.hp>0&&b.active===t){c.save();c.strokeStyle=t.color;c.lineWidth=2;c.setLineDash([3,4]);c.beginPath();c.moveTo(Math.cos(r)*28,-5-Math.sin(r)*28);c.lineTo(Math.cos(r)*55,-5-Math.sin(r)*55);c.stroke();c.restore();}
    }else{
     if(this.assets.tracks)c.drawImage(this.assets.tracks,-20,-2,40,14);else{c.fillStyle='#101820';c.fillRect(-18,0,36,12);}
-    if(this.assets.tank)c.drawImage(this.assets.tank,-18,-17,36,25);else{c.fillStyle=t.color;c.fillRect(-15,-10,30,15);}
+    if(this.assets.tank)c.drawImage(this.tankSprite('tank',t.color),-18,-17,36,25);else{c.fillStyle=t.color;c.fillRect(-15,-10,30,15);}
     c.strokeStyle=t.color;c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(0,-4);c.lineTo(Math.cos(r)*27,-4-Math.sin(r)*27);c.stroke();
    }
    c.restore();

@@ -8,6 +8,8 @@ Open **Game**. Enter up to three arcade initials, choose **3–5 bots**, select 
 
 It's untimed, last-tank-standing artillery. Craters persist, explosions cause splash damage, and tanks can take fall damage. Damage increases after round 12 to keep a battle moving. Bot aim is imperfect; higher skill improves the opposition without making every decision deterministic.
 
+Each tank is tinted to match its name, health bar and roster color, with the original sprite shading intact.
+
 Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into five warheads at the top of its arc. Bot and player projectiles use the same physics.
 
 ## Aim and fire
