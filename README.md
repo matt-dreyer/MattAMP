@@ -1,8 +1,6 @@
 # MattAMP
 
-Personal repository: [matt-dreyer/MattAMP](https://github.com/matt-dreyer/MattAMP). Extracted from FBStack with the app’s commit history preserved.
-
-A local Linux desktop player and workstation monitor, built for Matt’s 49-inch OLED. Eight DI.FM presets, five podcast favorites, live network/CPU/memory readings, and both NVIDIA GPUs in one muted desktop widget.
+A local Linux desktop player and workstation monitor. Eight DI.FM presets, five podcast favorites, live network/CPU/memory readings, and both NVIDIA GPUs in one muted desktop widget.
 
 ## Share / install on another Linux PC
 
