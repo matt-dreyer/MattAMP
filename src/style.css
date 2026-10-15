@@ -114,3 +114,12 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 }
 #deck .window-actions button:enabled:hover{color:#fff}
 #deck .window-actions #quit-top:enabled:hover{color:#ffadb5}
+
+/* Mode navigation is icon/text, with a surface highlight only on hover. */
+#deck .sourcebar button,
+#deck .sourcebar button:enabled:hover{
+ background:transparent!important;border:0;box-shadow:none;backdrop-filter:none;
+}
+#deck .sourcebar button:enabled:hover{background-color:rgba(168,185,199,.1)!important;color:var(--text)}
+#deck .sourcebar button[aria-pressed=true]{color:var(--mint)}
+#deck .sourcebar button[aria-pressed=true]:enabled:hover{color:#c4e5d2}
