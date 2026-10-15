@@ -10,7 +10,7 @@ test('three to five bots spawn on terrain, with equal health and ammunition',()=
  for(const bots of [3,4,5]){const b=battle({bots});assert.equal(b.tanks.length,bots+1);assert.equal(b.active.id,0);assert.equal(new Set(b.tanks.map(t=>t.x)).size,bots+1);for(const t of b.tanks){assert.equal(t.hp,100);assert.equal(t.mirvs,3);assert.equal(t.y,b.ground(t.x)-8);}}
 });
 test('wind bends trajectories, while prediction agrees with actual first impact',()=>{
- const b=battle();b.wind=-18;const left=b.predict(b.active,70,55);b.wind=18;const right=b.predict(b.active,70,55);assert.ok(right.x>left.x+50);
+ const b=battle();b.terrain.fill(440);b.tanks.forEach((t,i)=>{t.x=i?950:200;t.y=432;});b.wind=-18;const left=b.predict(b.active,70,55);b.wind=18;const right=b.predict(b.active,70,55);assert.ok(right.x>left.x+50);
  b.fire(70,55);let hit;const explode=b.explode.bind(b);b.explode=p=>{hit={...p};explode(p);};finishFlight(b);assert.ok(Math.abs(hit.x-right.x)<3);assert.ok(Math.abs(hit.y-right.y)<3);
 });
 test('wind has occasional extreme gusts, calm turns and balanced directions',()=>{

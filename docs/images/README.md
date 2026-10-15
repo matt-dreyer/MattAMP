@@ -14,6 +14,7 @@ Captured from MattAMP in October 2026 using a fresh, isolated profile. These are
 | `twitter.png` | Twitter's actual signed-out page inside the app, with both feed filter buttons visible. No account was signed in for this capture. |
 | `background-flow.png`, `background-stars.png`, `background-mandelbrot.png`, `background-off.png` | Each alternative background setting; `desktop.png` shows Water waves. Animation is frozen at the captured frame. |
 | `bot-shot.png` | A staged bot launch captured from the real battlefield: the three-second angle/power readout. |
+| `terrain-variety.png` | Three seeded examples of each terrain family, assembled from the actual battlefield canvas. Uses the real generator, tank pads, sprites and renderer in an isolated profile. |
 | `game-widget.png` | A normal-size artillery battle, before expanding the window. |
 | `victory.png` | The app's actual WebGL victory ceremony. A winning game state was staged in the isolated profile to capture it. |
 

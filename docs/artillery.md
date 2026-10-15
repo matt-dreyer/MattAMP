@@ -64,7 +64,9 @@ Wild gusts are highlighted in the wind readout. These are game-strength units, n
 | Mixed | One of five styles | Changed gravity **or** special side walls |
 | Unhinged | One of five styles | Changed gravity **and** special side walls |
 
-Terrains: **rolling hills, deep valley, craggy peaks, plateaus, flatlands**.
+Terrains: **rolling hills, deep valley, craggy peaks, plateaus, flatlands**. Each rolls a fresh silhouette: hills vary in height and slope, valleys shift off-center with unequal shoulders, peaks change count and steepness, and plateaus vary their shelf heights and widths. Flatlands keep low relief. Tank pads blend into the surrounding ground.
+
+![Three generated battlefield examples for each of the five terrain families](images/terrain-variety.png)
 
 Gravity: **Normal 1×**, **Moonshot 0.64×**, **Heavy 1.6×**.
 

@@ -26,27 +26,56 @@
   return Object.freeze({chaos,terrain,gravity:changeGravity?pick(['moon','heavy']):'normal',walls:chaos==='unhinged'||!changeGravity?pick(['ricochet','wrap']):'open'});
  }
  function describeConditions(value){const c=validateConditions(value);return CHAOS[c.chaos]+' · '+TERRAINS[c.terrain]+' · '+GRAVITY_NAMES[c.gravity]+' · '+WALLS[c.walls];}
+ const smooth=t=>t*t*(3-2*t);
+ function terrainNoise(random,spacing){
+  const offset=random(),values=Array.from({length:Math.ceil(W/spacing)+3},()=>random()*2-1);
+  return x=>{const at=x/spacing+offset,i=Math.floor(at),t=smooth(at-i);return values[i]*(1-t)+values[i+1]*t;};
+ }
+ function generateTerrain(kind,random){
+  const between=(low,high)=>low+(high-low)*random();
+  const broad=terrainNoise(random,between(140,260)),detail=terrainNoise(random,between(35,75));
+  const base=between(310,355),tilt=between(-35,35),relief=between(50,85),heights=new Float64Array(W+1);
+  let profile;
+  if(kind==='valley'){
+   const center=between(260,740),left=between(160,330),right=between(160,330),depth=between(145,210),rim=between(205,245);
+   profile=x=>{const distance=(x-center)/(x<center?left:right);return rim+depth*Math.exp(-distance*distance)+broad(x)*23+detail(x)*5+tilt*(x/W-.5);};
+  }else if(kind==='crags'){
+   const count=3+Math.floor(random()*4),peaks=Array.from({length:count},(_,i)=>({x:(i+between(.15,.85))*W/count,width:between(35,100),height:between(100,205),lean:between(.65,1.6)}));
+   profile=x=>base+broad(x)*38+detail(x)*12-peaks.reduce((sum,p)=>{const d=(x-p.x)/(p.width*(x<p.x?1:p.lean));return sum+p.height*Math.exp(-d*d);},0);
+  }else if(kind==='plateaus'){
+   const shelves=[{x:0,y:between(210,420),edge:0}];let x=0;
+   while(x<W){x+=between(100,230);const previous=shelves.at(-1).y;let y=between(200,430);if(Math.abs(y-previous)<55)y=previous<315?between(365,430):between(200,255);shelves.push({x,y,edge:between(20,60)});}
+   profile=x=>{let i=1;while(i<shelves.length-1&&x>shelves[i].x)i++;const next=shelves[i],previous=shelves[i-1],t=smooth(clamp((x-next.x+next.edge)/next.edge,0,1));return previous.y*(1-t)+next.y*t+detail(x)*4;};
+  }else if(kind==='flat'){
+   const floor=between(350,405),slope=between(-6,6);
+   profile=x=>floor+broad(x)*8+detail(x)*2+slope*(x/W-.5);
+  }else{
+   profile=x=>base+broad(x)*relief+detail(x)*9+tilt*(x/W-.5);
+  }
+  for(let x=0;x<=W;x++)heights[x]=profile(x);
+  const low=Math.min(...heights),high=Math.max(...heights),span=high-low;
+  // Preserve the profile instead of clipping peaks into identical flat ceilings/floors.
+  if(kind==='crags'){
+   const range=between(185,260),top=between(170,450-range);
+   for(let x=0;x<=W;x++)heights[x]=top+(heights[x]-low)*range/Math.max(1,span);
+  }else if(span>280){for(let x=0;x<=W;x++)heights[x]=170+(heights[x]-low)*280/span;}
+  else{const shift=low<170?170-low:high>450?450-high:0;for(let x=0;x<=W;x++)heights[x]+=shift;}
+  return heights;
+ }
  class Battle{
   constructor({bots=4,skill=1,random=Math.random,history=[],chaos='mixed'}={}){
    this.history=history.slice(-3);this.damageLedger=Array.from({length:6},()=>Array(6).fill(0));this.lastTarget=null;
    this.random=random;this.bots=clamp(Math.round(bots)||4,3,5);this.skill=clamp(Math.round(skill)||0,0,3);
    this.conditions=rollConditions(chaos,random);
-   this.terrain=new Float64Array(W+1);const a=random()*7,b=random()*7;
-   for(let x=0;x<=W;x++){
-    let y;
-    switch(this.conditions.terrain){
-     case 'valley':y=220+190*Math.sin(Math.PI*x/W)+12*Math.sin(x/70+a);break;
-     case 'crags':y=320+75*Math.sin(x/100+a)+45*Math.sin(x/37+b);break;
-     case 'plateaus':y=315+80*Math.tanh(3*Math.sin(x/135+a))+8*Math.sin(x/40+b);break;
-     case 'flat':y=380+9*Math.sin(x/180+a)+4*Math.sin(x/55+b);break;
-     default:y=325+55*Math.sin(x/190+a)+28*Math.sin(x/76+b);
-    }
-    this.terrain[x]=clamp(y,170,450);
-   }
+   this.terrain=generateTerrain(this.conditions.terrain,random);
    const slots=Array.from({length:this.bots+1},(_,i)=>70+i*860/this.bots);
    const playerSlot=Math.floor(random()*slots.length);
    this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':BOT_NAMES[i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,damage:0,kills:0,shots:0,angle:x<W/2?55:125,power:50,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
-   for(const tank of this.tanks)for(let x=Math.round(tank.x)-18;x<=tank.x+18;x++)this.terrain[x]=tank.y+8;
+   // Flat spawn pads blend back into the slope instead of cutting vertical ledges.
+   for(const tank of this.tanks)for(let x=Math.round(tank.x)-42;x<=tank.x+42;x++){
+    const distance=Math.abs(x-Math.round(tank.x)),blend=smooth(clamp((distance-18)/24,0,1));
+    this.terrain[x]=(tank.y+8)*(1-blend)+this.terrain[x]*blend;
+   }
    this.turn=0;this.round=1;this.shots=0;this.kills=0;this.damage=0;this.phase='aim';this.projectiles=[];this.blasts=[];this.lastTrails=[];this.wind=this.newWind();this.delay=0;this.result=null;
    this.message='Your turn. Pick an angle and power.';
   }
@@ -187,6 +216,6 @@
    return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory(),botScores};
   }
  }
- const api={Battle,launchSpeed,SKILLS,COLORS,BOT_NAMES,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
+ const api={Battle,launchSpeed,generateTerrain,SKILLS,COLORS,BOT_NAMES,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.MattArtillery=api;
 })(typeof window==='object'?window:globalThis);

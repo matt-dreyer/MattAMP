@@ -235,7 +235,7 @@ The bots have opinions. They can return fire, remember who hurt them across thre
 | **Mixed — default** | One of five terrains, plus altered gravity **or** special walls. |
 | **Unhinged** | Varied terrain, altered gravity **and** special walls. |
 
-Moonshot gravity floats your shots. Heavy gravity brings them home early. Ricochet walls bounce them back; wraparound walls send them through the other side. The preview shows the actual arena you'll play. With Chaos Off, wind is rolled once for the battle; Mixed and Unhinged change it each turn. Terrain style, gravity, and wall rules stay fixed for that match.
+Moonshot gravity floats your shots. Heavy gravity brings them home early. Ricochet walls bounce them back; wraparound walls send them through the other side. Each terrain type rolls fresh heights, widths, slopes, and asymmetry; even normal rolling hills get a new silhouette. Tank pads blend into the landscape. The preview shows the actual arena you'll play. With Chaos Off, wind is rolled once for the battle; Mixed and Unhinged change it each turn. Terrain style, gravity, and wall rules stay fixed for that match.
 
 **Humans and bots share a local top-ten leaderboard**, using the same scoring rules. Bots are marked by name; your lifetime wins stay separate. Existing human scores remain, and bot entries begin with newly completed battles. There is no turn timer. Radio or an audio podcast can keep playing. Leaving the game pauses the battle.
 
