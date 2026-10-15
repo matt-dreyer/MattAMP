@@ -13,6 +13,31 @@ test('wind bends trajectories, while prediction agrees with actual first impact'
  const b=battle();b.wind=-18;const left=b.predict(b.active,70,55);b.wind=18;const right=b.predict(b.active,70,55);assert.ok(right.x>left.x+50);
  b.fire(70,55);let hit;const explode=b.explode.bind(b);b.explode=p=>{hit={...p};explode(p);};finishFlight(b);assert.ok(Math.abs(hit.x-right.x)<3);assert.ok(Math.abs(hit.y-right.y)<3);
 });
+test('wind has occasional extreme gusts, calm turns and balanced directions',()=>{
+ const b=battle({random:rng(934)}),counts=[0,0,0];let left=0,right=0,calm=0;
+ for(let i=0;i<20000;i++){const w=b.newWind(),n=Math.abs(w);assert.ok(Number.isInteger(w)&&n<=150);counts[n<=30?0:n<=75?1:2]++;if(w<0)left++;else if(w>0)right++;else calm++;}
+ assert.ok(counts[0]>11400&&counts[0]<12600,'most turns remain manageable');
+ assert.ok(counts[1]>5400&&counts[1]<6600,'strong crosswinds are common');
+ assert.ok(counts[2]>1600&&counts[2]<2400,'wild gusts remain occasional');
+ assert.ok(calm>0);assert.ok(Math.abs(left-right)<600,'no directional bias');
+});
+test('extreme winds bend shots sharply, stay fixed in flight and match prediction',()=>{
+ const endpoints=[];
+ for(const wind of [-150,150]){
+  const b=battle();b.wind=wind;const expected=b.predict(b.active,90,55);endpoints.push(expected.x);
+  let hit;const explode=b.explode.bind(b);b.explode=p=>{hit={...p};explode(p);};b.fire(90,55);
+  for(let i=0;i<2000&&b.phase==='flight';i++){b.step(1/120/2.3);assert.equal(b.wind,wind);}
+  assert.equal(b.phase,'settle');assert.ok(Number.isFinite(hit.x)&&Number.isFinite(hit.y));
+  assert.ok(Math.abs(hit.x-expected.x)<1&&Math.abs(hit.y-expected.y)<1,'bot prediction and real shells share gust physics');
+ }
+ assert.ok(endpoints[1]-endpoints[0]>500,'a wild gust can sweep a high shot across the battlefield');
+});
+test('bots and MIRVs remain finite and resolve under either extreme wind',()=>{
+ for(const wind of [-150,150])for(const skill of [0,1,2,3]){
+  const b=battle({skill});b.wind=wind;b.turn=1;const aim=b.botAim();assert.ok(Number.isFinite(aim.angle)&&Number.isFinite(aim.power));
+  b.fire(aim.angle,aim.power,'mirv');finishFlight(b);assert.ok(b.tanks.every(t=>Number.isFinite(t.hp)&&Number.isFinite(t.y)));
+ }
+});
 test('MIRV splits into five warheads, charges once, and resolves its whole volley before changing turn',()=>{
  const b=battle();b.wind=0;assert.ok(b.fire(90,45,'mirv'));assert.equal(b.tanks[0].mirvs,2);assert.equal(b.shots,1);assert.equal(b.fire(90,45),false);
  for(let i=0;i<1000&&b.projectiles.length===1&&b.phase==='flight';i++)b.step(1/60);

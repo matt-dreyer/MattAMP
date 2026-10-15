@@ -92,7 +92,7 @@ To remove the launcher, delete only `~/.local/bin/mattamp`, `~/.local/bin/workst
 
 ## AMP Artillery
 
-Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn; damage increases after round 12. Bots use imperfect aim and choose among all opponents.
+Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn and holds steady through the shot: 60% mild (0–30), 30% strong (31–75), and 10% wild gusts (76–150), with either direction equally likely. Wild gusts are highlighted in the wind readout; values are game-strength units, not mph. Damage increases after round 12. Bots use imperfect aim and choose among all opponents.
 
 Radio/audio can keep playing. Switching away, opening Settings, hiding the app or entering Bug mode freezes the game. YouTube pauses when hidden. **Sound on/off** controls the game effects independently. After a match, click anywhere on the battlefield to open the next skirmish setup (or Tab to it and press Enter/Space). Replay waits for score saving to finish. Leaving an unfinished match earns no record; completed results save automatically with a retry button if disk access fails.
 

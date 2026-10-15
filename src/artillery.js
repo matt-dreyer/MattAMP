@@ -20,7 +20,13 @@
   }
   get active(){return this.tanks[this.turn];}
   ground(x){return this.terrain[clamp(Math.round(x),0,W)];}
-  newWind(){return Math.round((this.random()-.5)*36);}
+  newWind(){
+   // Mostly playable breezes, frequent hard crosswinds, occasional ridiculous gusts.
+   // Roll once per turn; prediction and every shell/MIRV share the same wind.
+   const roll=this.random(),[low,high]=roll<.6?[0,30]:roll<.9?[31,75]:[76,150];
+   const strength=low+Math.floor(this.random()*(high-low+1));
+   return strength===0?0:strength*(this.random()<.5?-1:1);
+  }
   get multiplier(){return SKILLS[this.skill].multiplier*(1+(this.bots-3)*.15);}
   get score(){return Math.round((this.damage*10+this.kills*250+(this.result==='win'?1000+this.tanks[0].hp*5:0))*this.multiplier);}
   projectile(tank,angle,power,weapon){const r=angle*Math.PI/180,speed=100+power*4.7;return {x:tank.x+Math.cos(r)*18,y:tank.y-Math.sin(r)*18,vx:Math.cos(r)*speed,vy:-Math.sin(r)*speed,weapon,owner:tank.id,time:0,trail:[]};}

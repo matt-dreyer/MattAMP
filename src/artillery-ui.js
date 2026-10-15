@@ -145,7 +145,7 @@ class MattArcade{
   const b=this.battle,over=b?.phase==='over',mine=b?.active.id===0&&b.phase==='aim'&&!this.paused;
   this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
   this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name+' · '+b.multiplier.toFixed(2)+'×':'Last tank standing';
-  this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+Math.abs(b.wind):'Wind —';
+  const wind=Math.abs(b?.wind||0);this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+wind+(wind>=76?' · WILD GUST':wind>=31?' · Strong':''):'Wind —';this.$('wind').classList.toggle('wild-gust',!!b&&wind>=76);
   this.$('score').textContent=String(b?.score||0).padStart(6,'0');
   this.$('status').textContent=this.paused?'Paused. Take your time.':b?.message||'Choose your rivals, then start a battle.';
   this.$('overlay').hidden=!!b&&!this.paused&&!over;
