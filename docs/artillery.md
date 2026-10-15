@@ -32,6 +32,8 @@ Game keeps the window size you choose through battle resets, results, and new sk
 
 The title-bar square beside minimize maximizes the window. In Game it uses the same viewport layout as Expand, keeps its size through resets and Settings, and restores your previous dimensions when clicked again. Leaving Game returns to the normal widget.
 
+The title bar, mode tabs, and Game’s Expand/Sound row stay pinned while you scroll through the battlefield, leaderboard, and credits.
+
 Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, source tabs, battlefield, and aiming controls available; scores and credits have their own scrolling area.
 
 **Power runs from 1–100%, starting at 50%.** The lower and middle range give finer control for nearby tanks, with the old full-power speed still available for long shots. Bots use the same scale.

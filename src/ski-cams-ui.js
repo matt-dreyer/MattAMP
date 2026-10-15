@@ -74,7 +74,7 @@ class MattSkiCams {
  setVisible(visible){const changed=this.visible!==visible;this.visible=visible;this.$('camera-panel').hidden=!visible;if(changed)this.resetCycle();this.syncBounds();}
  syncBounds(){
   const rect=this.$('camera-viewport').getBoundingClientRect();
-  void this.unwrap(window.deck.cameraBounds({visible:this.visible&&!!this.cameras.length,id:this.selected,x:rect.x,y:rect.y,width:rect.width,height:rect.height})).catch(err=>{this.$('camera-status').textContent=err.message;});
+  void this.unwrap(window.deck.cameraBounds({visible:this.visible&&!!this.cameras.length&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom,id:this.selected,x:rect.x,y:rect.y,width:rect.width,height:rect.height})).catch(err=>{this.$('camera-status').textContent=err.message;});
  }
 }
 window.MattSkiCams=MattSkiCams;
