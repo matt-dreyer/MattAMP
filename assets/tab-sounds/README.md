@@ -11,8 +11,8 @@ No celebrity recording, voice sample, or voice clone was used.
 | meh.mp3 | Meh. | en-US-ChristopherNeural | -18% | -10Hz |
 | yeah.mp3 | Yeah! | en-US-GuyNeural | -40% | -8Hz |
 
-Leading/trailing silence was trimmed with FFmpeg. The radio clip was additionally
-stretched with `atempo=0.72`. All clips were normalized to -18 LUFS / -2 dBTP,
+Leading/trailing silence was trimmed with FFmpeg. The radio and SkiCams clips were additionally
+stretched with `atempo=0.72` (28% slower without changing pitch). All clips were normalized to -18 LUFS / -2 dBTP,
 with a short fade-in and 80ms tail, then encoded as 24kHz mono 64kbps MP3.
 They are bundled media: no speech service or Python package is used at runtime.
 Service-generated output is not covered by edge-tts's code license.
