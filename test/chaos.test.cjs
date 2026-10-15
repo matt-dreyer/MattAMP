@@ -29,7 +29,7 @@ test('every terrain keeps tanks on safe flat pads and conditions stay fixed acro
 });
 test('Moonshot lengthens arcs and heavy gravity shortens them',()=>{
  const ranges=[];
- for(const gravity of ['moon','normal','heavy']){const b=fixture('open',gravity);b.wind=0;b.terrain.fill(440);b.active.x=100;b.active.y=432;b.tanks.slice(1).forEach(t=>t.hp=0);ranges.push(b.predict(b.active,45,35).x);}
+ for(const gravity of ['moon','normal','heavy']){const b=fixture('open',gravity);b.wind=0;b.terrain.fill(440);b.active.x=100;b.active.y=432;b.tanks.slice(1).forEach(t=>t.hp=0);ranges.push(b.predict(b.active,45,65).x);}
  assert.ok(ranges[0]>ranges[1]+80&&ranges[1]>ranges[2]+80);
 });
 test('side walls reflect without energy gain or wrap overshoot without flipping direction',()=>{

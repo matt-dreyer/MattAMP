@@ -3,7 +3,7 @@ class MattArcade{
  constructor(panel,onResize){
   this.panel=panel;this.onResize=onResize;this.$=id=>panel.querySelector('#game-'+id);this.canvas=this.$('canvas');this.ctx=this.canvas.getContext('2d');
   this.visible=false;this.expanded=false;this.paused=false;this.sound=true;this.battle=null;this.preview=this.createPreview();this.raf=0;this.last=0;this.lastState='';this.record=null;this.saving=false;this.audio=[];this.assets={};
-  this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
+  this.shotTimer=0;this.bubbleTimer=0;this.lastQuip='';this.volley=null;this.dance=null;
   this.victory=new MattVictory(this.$('victory'),()=>{if(this.visible)(this.$('again').disabled?this.canvas:this.$('again')).focus({preventScroll:true});});
   this.victory.motion.addEventListener('change',()=>{if(this.dance&&this.victory.motion.matches)this.finishDance();});
   this.quipResize=new ResizeObserver(()=>this.positionQuip());this.quipResize.observe(this.canvas);
@@ -65,19 +65,25 @@ class MattArcade{
  refreshPreview(){if(this.battle)return;this.preview=this.createPreview();this.render();this.draw();this.onResize();}
  async loadScores(){try{const res=await window.deck.arcadeRead();if(!res.ok)throw new Error(res.error);this.scores=res.data;this.$('initials').value=res.data.initials||'MAT';this.updatePreviewName();this.renderScores();}catch(e){this.$('score-empty').textContent=e.message;}}
  start(){
-  this.victory.stop();this.clearQuip();this.volley=null;this.dance=null;
+  this.victory.stop();this.clearQuip();this.clearShot();this.volley=null;this.dance=null;
   this.battle=this.preview;this.battle.history=(this.scores?.rivalry||[]).slice(-3);this.initials=this.$('initials').value.toUpperCase()||'MAT';this.battle.tanks[0].name=this.initials;this.id=crypto.randomUUID();this.record=null;this.paused=false;this.lastState='';
   this.$('setup').hidden=true;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('save-retry').hidden=true;this.$('new').hidden=false;
-  this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=55;this.$('weapon-shell').checked=true;this.updateAim();this.sync();this.$('angle').focus();
+  this.$('angle').value=this.battle.tanks[0].angle;this.$('power').value=50;this.$('weapon-shell').checked=true;this.updateAim();this.sync();this.$('angle').focus();
  }
- reset(){this.victory.stop();this.clearQuip();this.volley=null;this.dance=null;this.battle=null;this.preview=this.createPreview();this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
+ reset(){this.victory.stop();this.clearQuip();this.clearShot();this.volley=null;this.dance=null;this.battle=null;this.preview=this.createPreview();this.record=null;this.paused=false;this.$('setup').hidden=false;this.$('end').hidden=true;this.$('abandon').hidden=true;this.$('new').hidden=true;this.$('roster').replaceChildren();this.sync();this.$('start').focus();}
  updateAim(){
-  const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power;
+  const angle=Number(this.$('angle').value),power=Number(this.$('power').value);this.$('angle-value').textContent=angle+'°';this.$('power-value').textContent=power+'%';this.$('power').setAttribute('aria-valuetext',power+' percent');
   if(this.battle?.phase==='aim'&&this.battle.active.id===0){this.battle.active.angle=angle;this.battle.active.power=power;}
  }
  adjustAim(control,delta){const input=this.$(control);input.value=Math.max(Number(input.min),Math.min(Number(input.max),Number(input.value)+delta));this.updateAim();this.draw();}
  captureVolley(){return {owner:this.battle.active.id,tanks:this.battle.tanks.map(({id,x,y,hp})=>({id,x,y,hp}))};}
  fire(){if(this.paused||!this.visible||!this.battle)return;const volley=this.captureVolley();if(this.battle.active.id===0&&this.battle.fire(Number(this.$('angle').value),Number(this.$('power').value),(this.$('weapon-mirv').checked?'mirv':'shell'))){this.volley=volley;this.playSound('fire');this.sync();}}
+ clearShot(){clearTimeout(this.shotTimer);this.$('shot').hidden=true;}
+ showBotShot(tank){
+  this.clearShot();if(tank.id===0)return;
+  this.$('shot').textContent=tank.name+' · '+Math.round(tank.angle)+'° · '+Math.round(tank.power)+'% power';
+  this.$('shot').hidden=false;this.shotTimer=setTimeout(()=>this.clearShot(),3000);
+ }
  clearQuip(){clearTimeout(this.bubbleTimer);this.$('quip').hidden=true;}
  positionQuip(){const bubble=this.$('quip');if(bubble.hidden||!this.quipSpeaker)return;const x=this.quipSpeaker.x/1000*this.canvas.clientWidth-bubble.offsetLeft;bubble.style.setProperty('--tail-x',Math.max(14,Math.min(bubble.clientWidth-14,x))+'px');}
  reactToVolley(){
@@ -111,7 +117,7 @@ class MattArcade{
  setExpanded(expanded){this.expanded=expanded;this.panel.classList.toggle('game-expanded',expanded);document.getElementById('deck').classList.toggle('arcade-expanded',expanded);window.scrollTo(0,0);this.$('expand').textContent=expanded?'Restore':'Expand';this.$('expand').setAttribute('aria-pressed',String(expanded));this.onResize();}
  setVisible(visible){if(this.visible===visible)return;this.visible=visible;if(!visible)this.silence();this.sync();}
  sync(){
-  if(!this.visible||this.paused){this.clearQuip();this.victory.stop();this.dance=null;}
+  if(!this.visible||this.paused){this.clearQuip();this.clearShot();this.victory.stop();this.dance=null;}
   cancelAnimationFrame(this.raf);this.raf=0;this.last=0;this.render();this.draw();
   if(this.visible&&!this.paused&&this.battle&&(this.battle.phase!=='over'||this.dance))this.raf=requestAnimationFrame(t=>this.tick(t));
   if(this.paused)this.silence();this.onResize();
@@ -125,7 +131,7 @@ class MattArcade{
    this.draw();this.raf=requestAnimationFrame(t=>this.tick(t));return;
   }
   const phase=b.phase,blasts=b.blasts.length,children=b.projectiles.length,volley=phase==='aim'?this.captureVolley():null;b.step(dt);
-  if(phase==='aim'&&b.phase==='flight'){this.volley={...volley,target:b.lastTarget};this.playSound('fire');this.tauntRival();}
+  if(phase==='aim'&&b.phase==='flight'){this.volley={...volley,target:b.lastTarget};this.playSound('fire');this.showBotShot(b.active);this.tauntRival();}
   if(phase==='flight'&&b.phase==='settle')this.reactToVolley();
   if(b.blasts.length>blasts)this.playSound('blast');
   if(children===1&&b.projectiles.length===5)this.playSound('split');
@@ -135,7 +141,7 @@ class MattArcade{
   if(b.phase==='over'){
    b.blasts=[];this.draw();
    if(!this.record){
-    this.record=b.record(this.initials,this.id);this.clearQuip();
+    this.record=b.record(this.initials,this.id);this.clearQuip();this.clearShot();
     const winner=b.tanks.find(t=>t.hp>0);
     if(winner&&!this.victory.motion.matches)this.dance={id:winner.id,elapsed:0,wheelie:Math.random()<1/3};
     if(b.result==='win')this.silence();else this.playSound('loss');

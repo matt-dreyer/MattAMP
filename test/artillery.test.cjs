@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {Battle}=require('../src/artillery.js');
+const {Battle,launchSpeed}=require('../src/artillery.js');
 const {createArcadeStore}=require('../src/arcade-store.cjs');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 function rng(seed){return()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
@@ -63,7 +63,7 @@ test('mutual destruction is a draw; unfinished battles produce no record',()=>{
 });
 test('stronger skill earns more points and bots shoot at other bots too',()=>{
  const easy=battle({skill:0}),hard=battle({skill:3});easy.damage=hard.damage=100;assert.ok(hard.score>easy.score);
- const targets=new Set();for(const pick of [0,.99]){const b=battle();b.turn=1;b.tanks.forEach((t,i)=>{t.x=[100,500,300,700,900][i];});let first=true;const random=rng(41);b.random=()=>{if(first){first=false;return pick;}return random();};b.predict=()=>({x:500,y:320});const aim=b.botAim();targets.add(aim.angle<90?'right':'left');assert.ok(aim.power>=10&&aim.power<=100);}assert.equal(targets.size,2);
+ const targets=new Set();for(const pick of [0,.99]){const b=battle();b.turn=1;b.tanks.forEach((t,i)=>{t.x=[100,500,300,700,900][i];});let first=true;const random=rng(41);b.random=()=>{if(first){first=false;return pick;}return random();};b.predict=()=>({x:500,y:320});const aim=b.botAim();targets.add(aim.angle<90?'right':'left');assert.ok(aim.power>=1&&aim.power<=100);}assert.equal(targets.size,2);
 });
 test('high scores persist, rank, cap at ten, and deduplicate retried results',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-scores-'));try{
@@ -165,4 +165,18 @@ test('current retaliation combines with existing rivalries and resets with a new
  const before=b.targetChoices().find(c=>c.tank.id===2).weight;b.damageLedger[2][1]=40;
  assert.ok(b.targetChoices().find(c=>c.tank.id===2).weight>before);
  const fresh=battle({skill:3,history:[past,past]});fresh.turn=1;assert.equal(fresh.targetChoices().find(c=>c.tank.id===2).weight,before);
+});
+
+test('power spreads short and medium shots across the dial while keeping long-shot reach',()=>{
+ const b=battle();b.wind=0;b.terrain.fill(450);b.tanks.forEach((t,i)=>{t.x=i?950:70;t.y=442;});
+ const land=power=>b.predict(b.tanks[0],45,power).x-70;
+ assert.ok(land(1)<50,'minimum power can drop a shot close by');
+ assert.ok(land(50)>180&&land(50)<300,'half power is useful for a nearby tank');
+ assert.ok(land(70)>500&&land(70)<800,'mid-high power crosses most of the field');
+ assert.ok(land(100)>900,'full power retains long-shot reach');
+ for(let p=2;p<=100;p++)assert.ok(launchSpeed(p)>launchSpeed(p-1));
+ assert.equal(launchSpeed(100),570,'top-end speed stays unchanged');
+ const oldLow=100+15*4.7;
+ assert.ok(Math.abs(launchSpeed(50)-oldLow)<5,'old low-end shots move to the middle of the slider');
+ b.fire(45,1);assert.equal(b.active.power,1,'human shots can use the bottom of the new scale');
 });

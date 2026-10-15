@@ -5,6 +5,8 @@
  const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:8,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+ // Fine control for nearby shots; retain the old maximum for long lobs and wild wind.
+ const launchSpeed=power=>40+530*(clamp(power,1,100)/100)**2;
  const TERRAINS={rolling:'Rolling hills',valley:'Valley',crags:'Craggy peaks',plateaus:'Plateaus',flat:'Flatlands'};
  const GRAVITY={normal:125,moon:80,heavy:200};
  const GRAVITY_NAMES={normal:'Normal gravity',moon:'Moonshot ×0.64',heavy:'Heavy gravity ×1.6'};
@@ -42,7 +44,7 @@
    }
    const slots=Array.from({length:this.bots+1},(_,i)=>70+i*860/this.bots);
    const playerSlot=Math.floor(random()*slots.length);
-   this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':['Byte','Floppy','Modem','Turbo','DOS'][i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,angle:x<W/2?55:125,power:55,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
+   this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':['Byte','Floppy','Modem','Turbo','DOS'][i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,angle:x<W/2?55:125,power:50,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
    for(const tank of this.tanks)for(let x=Math.round(tank.x)-18;x<=tank.x+18;x++)this.terrain[x]=tank.y+8;
    this.turn=0;this.round=1;this.shots=0;this.kills=0;this.damage=0;this.phase='aim';this.projectiles=[];this.blasts=[];this.lastTrails=[];this.wind=this.newWind();this.delay=0;this.result=null;
    this.message='Your turn. Pick an angle and power.';
@@ -58,11 +60,11 @@
   }
   get multiplier(){return SKILLS[this.skill].multiplier*(1+(this.bots-3)*.15);}
   get score(){return Math.round((this.damage*10+this.kills*250+(this.result==='win'?1000+this.tanks[0].hp*5:0))*this.multiplier);}
-  projectile(tank,angle,power,weapon){const r=angle*Math.PI/180,speed=100+power*4.7;return {x:tank.x+Math.cos(r)*18,y:tank.y-Math.sin(r)*18,vx:Math.cos(r)*speed,vy:-Math.sin(r)*speed,weapon,owner:tank.id,time:0,trail:[]};}
+  projectile(tank,angle,power,weapon){const r=angle*Math.PI/180,speed=launchSpeed(power);return {x:tank.x+Math.cos(r)*18,y:tank.y-Math.sin(r)*18,vx:Math.cos(r)*speed,vy:-Math.sin(r)*speed,weapon,owner:tank.id,time:0,trail:[]};}
   fire(angle,power,weapon='shell'){
    if(this.phase!=='aim'||this.active.hp<=0||!Number.isFinite(angle)||!Number.isFinite(power)||!['shell','mirv'].includes(weapon))return false;
    if(weapon==='mirv'&&this.active.mirvs<=0)return false;
-   this.active.angle=clamp(angle,5,175);this.active.power=clamp(power,10,100);
+   this.active.angle=clamp(angle,5,175);this.active.power=clamp(power,1,100);
    if(weapon==='mirv')this.active.mirvs--;
    if(this.active.id===0)this.shots++;
    this.projectiles=[this.projectile(this.active,this.active.angle,this.active.power,weapon)];this.lastTrails=[];this.phase='flight';this.message=this.active.name+' fired '+(weapon==='mirv'?'a MIRV.':'a shell.');return true;
@@ -110,11 +112,11 @@
    // Reputation changes target odds equally for human and bot identities, never accuracy.
    const tank=this.active,target=this.chooseTarget(),skill=SKILLS[this.skill];
    const targetX=clamp(target.x+(this.random()-.5)*2*skill.error,15,W-15);
-   let best={angle:55,power:55,cost:Infinity};
+   let best={angle:55,power:50,cost:Infinity};
    for(let i=0;i<skill.samples;i++){
     // Special boundaries make firing away from the target a valid bank/portal shot.
     const right=(targetX>tank.x)!==(this.conditions.walls!=='open'&&i%3===0);
-    const angle=right?10+this.random()*75:95+this.random()*75,power=20+this.random()*80;
+    const angle=right?10+this.random()*75:95+this.random()*75,power=1+this.random()*99;
     const p=this.predict(tank,angle,power),cost=Math.hypot(p.x-targetX,p.y-target.y)+(Math.abs(p.x-tank.x)<55?180:0);
     if(cost<best.cost)best={angle,power,cost};
    }
@@ -171,6 +173,6 @@
   memory(){const alive=this.tanks.filter(t=>t.hp>0);return {winner:alive.length===1?alive[0].id:null,damage:this.damageLedger.map(row=>[...row])};}
   record(initials,id){if(this.phase!=='over')return null;return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory()};}
  }
- const api={Battle,SKILLS,COLORS,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
+ const api={Battle,launchSpeed,SKILLS,COLORS,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.MattArtillery=api;
 })(typeof window==='object'?window:globalThis);

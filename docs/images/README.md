@@ -7,12 +7,13 @@ Captured from MattAMP in October 2026 using a fresh, isolated profile. These are
 | `desktop.png` | Five-tab navigation, Synthwave artwork, wave background, and live workstation meters. Radio is stopped because this profile has no Premium key. |
 | `skicams.png` | Heavenly's real Top of Tram player inside SkiCams, with 15-minute auto-cycle enabled. The provider controls the stream and its availability. |
 | `skicams-settings.png` | The camera settings section with the four default views and favorite-management controls. |
-| `artillery.png` | An expanded five-tank skirmish with a Mixed arena, Moonshot gravity, and MAT as the player tank name. |
+| `artillery.png` | An expanded five-tank skirmish with a Mixed arena, the updated 50% power default, and MAT as the player tank name. |
 | `stacked.png`, `compact.png`, `bug.png` | The other three desktop layouts; the bug is captured at its native 56 × 56 size. |
 | `podcasts-youtube.png`, `podcasts-audio.png` | The same real Last Week in AI episode loaded through the YouTube and RSS players, ready to play. |
 | `podcasts-settings.png` | The editable default podcast library. |
 | `twitter.png` | Twitter's actual signed-out page inside the app, with both feed filter buttons visible. No account was signed in for this capture. |
 | `background-flow.png`, `background-stars.png`, `background-mandelbrot.png`, `background-off.png` | Each alternative background setting; `desktop.png` shows Water waves. Animation is frozen at the captured frame. |
+| `bot-shot.png` | A staged bot launch captured from the real battlefield: the three-second angle/power readout. |
 | `game-widget.png` | A normal-size artillery battle, before expanding the window. |
 | `victory.png` | The app's actual WebGL victory ceremony. A winning game state was staged in the isolated profile to capture it. |
 

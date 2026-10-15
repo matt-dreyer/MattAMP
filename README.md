@@ -204,6 +204,8 @@ Your favorites and rotation preferences stay on your machine. No MattAMP account
 
 ![Expanded AMP Artillery battlefield with five tanks labeled with arcade names and aiming controls](docs/images/artillery.png)
 
+Power now uses a gentler **1–100%** scale, starting at **50%**, so close shots have room on the dial. Bot shots briefly show the shooter’s angle and power.
+
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 
 **New in the current source (after v0.2.0):** getting knocked out puts you in spectator mode. The bots finish their fight on-screen, and the survivor does a dumb little victory dance—occasionally a wheelie. Scores and grudges use the actual final result.

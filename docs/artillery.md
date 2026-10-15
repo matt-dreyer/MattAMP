@@ -29,6 +29,12 @@ Game keeps the window size you choose through battle resets, results, and new sk
 
 Narrow layouts wrap the controls as needed. Expanded mode keeps the title bar, source tabs, battlefield, and aiming controls available; scores and credits have their own scrolling area.
 
+**Power runs from 1–100%, starting at 50%.** The lower and middle range give finer control for nearby tanks, with the old full-power speed still available for long shots. Bots use the same scale.
+
+When a bot fires, a small readout shows its name, launch angle, and power for three seconds. It leaves your own aiming controls unchanged and clears when you leave or reset the battle.
+
+![Byte fires at 66 degrees and 54 percent power, shown briefly above the battlefield](images/bot-shot.png)
+
 Radio or audio podcasts can continue. Game **Sound on/off** is independent. Switching tabs, opening Settings, hiding the app, or entering bug mode freezes the battle. YouTube pauses when hidden.
 
 ## Wind: sometimes a suggestion, sometimes a grudge
