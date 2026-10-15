@@ -178,6 +178,13 @@ async function init(){
  $('source-game').onclick=()=>{playingGame=true;readingX=false;mode='full';settings=false;if(isVideo())pause();render();};
  $('source-x').onclick=()=>toggleX(true);$('source-radio').onclick=()=>{toggleX(false);void switchSource('radio');};$('source-podcast').onclick=()=>{toggleX(false);void switchSource('podcast');};$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
  $('volume').oninput=e=>{state.volume=Number(e.target.value);muted=false;startupAudio.volume=state.volume/100;startupAudio.muted=false;audio.volume=state.volume/100;audio.muted=false;if(yt){yt.setVolume(state.volume);yt.unMute();}render();queueSave();};
+ $('volume').addEventListener('wheel',e=>{
+  if(e.ctrlKey||!e.deltaY)return;
+  e.preventDefault();
+  const slider=e.currentTarget;
+  if(e.deltaY<0)slider.stepUp();else slider.stepDown();
+  slider.dispatchEvent(new Event('input',{bubbles:true}));
+ },{passive:false});
  $('mute').onclick=()=>{muted=!muted;startupAudio.muted=muted;audio.muted=muted;if(yt)muted?yt.mute():yt.unMute();render();};
  $('rewind').onclick=()=>seekBy(-15);$('forward').onclick=()=>seekBy(30);$('speed').onchange=e=>{state.speed=Number(e.target.value);audio.playbackRate=state.speed;yt?.setPlaybackRate(state.speed);queueSave();};
  $('seek').oninput=e=>{if(Number.isFinite(audio.duration))audio.currentTime=Number(e.target.value);snapshot();queueSave();};
