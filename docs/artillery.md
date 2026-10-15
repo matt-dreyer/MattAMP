@@ -4,7 +4,7 @@
 
 ## Pick a fight
 
-Open **Game**. Enter up to three arcade initials, choose **3–5 bots**, select **Very dumb / Casual / Sharp / Human-ish**, and choose **Chaos**. The preview is the arena you'll get when you press **Start battle**.
+Open **Game**. Enter up to three arcade initials, choose **3–5 bots**, select **Very dumb / Casual / Sharp / Human-ish**, and choose **Chaos**. The preview is the arena you'll get when you click the battlefield or press **Start battle**.
 
 It's untimed, last-tank-standing artillery. Craters persist, explosions cause splash damage, and tanks can take fall damage. Damage increases after round 12 to keep a battle moving. Bot aim is imperfect; higher skill improves the opposition without making every decision deterministic.
 

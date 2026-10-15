@@ -16,7 +16,7 @@ class MattArcade{
   this.$('sound').onclick=()=>{this.sound=!this.sound;this.$('sound').textContent=this.sound?'Sound on':'Sound off';this.$('sound').setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.silence();};
   this.$('new').onclick=()=>{this.paused=true;this.$('abandon').hidden=false;this.sync();};
   this.$('abandon-no').onclick=()=>{this.$('abandon').hidden=true;this.paused=false;this.sync();};
-  this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>{if(this.visible&&this.battle?.phase==='over'&&!this.saving&&!this.victory.active)this.reset();};
+  this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>{if(!this.visible)return;if(!this.battle)this.$('setup').requestSubmit();else if(this.battle.phase==='over'&&!this.saving&&!this.victory.active)this.reset();};
   this.$('save-retry').onclick=()=>void this.saveScore();
   this.$('initials').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);this.updatePreviewName();};
   for(const details of panel.querySelectorAll('details'))details.addEventListener('toggle',onResize);
@@ -182,7 +182,8 @@ class MattArcade{
   this.$('overlay').hidden=!!b&&!this.paused&&(!over||!!this.dance);
   this.$('overlay-title').textContent=this.paused?'Taking five.':over?(b.result==='win'?'RIDGE CHAMPION':b.result==='draw'?'EVERYBODY LOSES':'ONE MORE ROUND?'):'A little scorched nostalgia.';
   this.$('overlay-detail').textContent=this.paused?'Resume when you’re ready.':over?this.initials+' / '+b.score.toLocaleString()+' POINTS':'One ridge. You and 3–5 bots. Three MIRVs each.';
-  this.$('end').hidden=!over;this.$('again').hidden=!over;this.$('replay-hint').hidden=!over;this.$('new').hidden=!b||over;
+  this.$('end').hidden=!over;this.$('again').hidden=!!b&&!over;this.$('replay-hint').hidden=!over;this.$('new').hidden=!b||over;
+  const fieldAction=b?'New skirmish':'Start battle';this.$('again').setAttribute('aria-label',fieldAction);this.$('again').firstElementChild.textContent=fieldAction;
   if(!b)return;
   this.$('result').textContent=over?b.message+' '+b.kills+' knockouts · '+b.shots+(b.shots===1?' shot.':' shots.'):'';
   const remaining=b.tanks[0].mirvs;this.$('mirv-count').textContent=remaining;this.$('weapon-mirv').setAttribute('aria-label','MIRV, '+remaining+' left');this.$('weapon-mirv').disabled=remaining===0;if(!remaining)this.$('weapon-shell').checked=true;

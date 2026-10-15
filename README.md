@@ -216,6 +216,7 @@ The bots have opinions. They can return fire, remember who hurt them across thre
 
 | Do this | With this |
 | --- | --- |
+| Start a battle | Click the preview battlefield or **Start battle** |
 | Aim left / right | **← / →**, the Angle slider, or click the sky |
 | Increase / decrease power | **↑ / ↓** or the Power slider |
 | Adjust precisely with the wheel | Hover **Angle** or **Power**; wheel over the battlefield changes power |
