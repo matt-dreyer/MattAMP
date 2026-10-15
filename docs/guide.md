@@ -30,6 +30,8 @@ Radio and podcasts wait for Play. The startup intro is separate and plays once p
 
 ## SkiCams
 
+Turn on **Auto-cycle** to rotate through your saved cameras in order. Choose 1, 5, 15, 30, or 60 minutes; the default is 15. The toggle and interval are remembered. Leaving SkiCams, opening Settings, or minimizing pauses cycling; returning starts a fresh interval. Choosing a camera manually also restarts the interval. At least two saved cameras are needed.
+
 The **SkiCams** tab sits just before Game. It starts with Sierra-at-Tahoe's Grandview and West Bowl, Heavenly's Top of Tram, and Kirkwood's Cornice Cam. Choose a view from the menu; Refresh reconnects it, and Browser opens the resort's source page. Sierra's live video IDs are resolved from its official camera list when opened, with the saved link as an offline fallback.
 
 Open **Manage cams** or **Settings → Your SkiCams** to add, edit, reorder, or remove cameras. The latest removal can be undone. Enter a camera name, an optional resort, and a public HTTPS link. YouTube watch/live links become muted players; direct camera-player links work best. Ordinary resort pages retain their own page navigation. Provider availability, offline streams, and playback restrictions remain under the resort's control; Browser is the fallback.

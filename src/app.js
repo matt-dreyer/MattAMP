@@ -245,7 +245,7 @@ async function savePodcastForm(e){
 }
 async function init(){
  const boot=await unwrap(window.deck.init());state={...boot.state,origin:boot.origin};stations=boot.stations;shows=boot.shows;
- cameraPanel=new MattSkiCams({cameras:state.cameras,cameraId:state.cameraId,resize,icons,openSettings:()=>{settings=true;render();syncXBounds();}});
+ cameraPanel=new MattSkiCams({cameras:state.cameras,cameraId:state.cameraId,cycle:state.cameraCycle,cycleMinutes:state.cameraCycleMinutes,resize,icons,openSettings:()=>{settings=true;render();syncXBounds();}});
  $('source-cameras').onclick=()=>{watchingCams=true;readingX=false;playingGame=false;mode='full';settings=false;if(isVideo())pause();render();};
  $('game-chaos').value=state.chaos;arcade.refreshPreview();
  $('game-chaos').addEventListener('change',e=>{state.chaos=e.target.value;queueSave();});

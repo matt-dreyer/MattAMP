@@ -34,6 +34,7 @@
    <div class="camera-heading"><h2>SkiCams</h2><button id="camera-manage" class="text-button"><i data-lucide="settings-2"></i>Manage cams</button></div>
    <label for="camera-select" class="sr-only">Choose a ski camera</label>
    <div class="camera-controls"><select id="camera-select"></select><button id="camera-refresh" aria-label="Refresh camera" title="Refresh camera"><i data-lucide="refresh-cw"></i></button></div>
+   <div class="camera-cycle-controls"><button id="camera-cycle" type="button" aria-pressed="false"><i data-lucide="repeat"></i>Auto-cycle</button><label for="camera-cycle-minutes" class="sr-only">Camera cycle interval</label><select id="camera-cycle-minutes"><option value="1">Every minute</option><option value="5">Every 5 min</option><option value="15" selected>Every 15 min</option><option value="30">Every 30 min</option><option value="60">Every hour</option></select></div>
    <div id="camera-viewport"><p class="hint">Connecting to the mountain…</p></div>
    <p id="camera-empty" class="hint" hidden>No mountain views yet. Add a camera in Manage cams.</p>
    <div class="camera-footer"><p id="camera-status" role="status">Camera audio muted · your music keeps playing</p><button id="camera-browser" class="text-button"><i data-lucide="external-link"></i>Browser</button></div>

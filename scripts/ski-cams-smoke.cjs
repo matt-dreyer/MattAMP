@@ -23,6 +23,28 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
   await p.locator('#camera-select').selectOption('kirkwood-cornice');
   await p.waitForFunction(()=>document.querySelector('#camera-status').textContent.includes('availability is managed'));
   await p.waitForTimeout(200);assert.ok((await remote())[0].url.includes('kirkwoodcornice'));
+  await p.clock.install();
+  assert.equal(await p.locator('#camera-cycle-minutes').inputValue(),'15');
+  await p.locator('#camera-cycle').click();
+  await p.clock.fastForward(15*60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='sierra-grandview');
+  await p.locator('#camera-select').selectOption('sierra-westbowl');
+  await p.clock.fastForward(14*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'sierra-westbowl');
+  await p.clock.fastForward(60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='heavenly-tram');
+  await p.locator('#settings-open').click();
+  await p.waitForFunction(()=>document.querySelector('#camera-panel').hidden);
+  await p.clock.fastForward(30*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'heavenly-tram');
+  await p.locator('#settings-close').click();
+  await p.locator('#camera-panel').waitFor({state:'visible'});
+  await p.locator('#camera-cycle-minutes').selectOption('5');
+  await p.clock.fastForward(5*60000);
+  await p.waitForFunction(()=>document.querySelector('#camera-select').value==='kirkwood-cornice');
+  await p.locator('#camera-cycle').click();
+  await p.clock.fastForward(10*60000);
+  assert.equal(await p.locator('#camera-select').inputValue(),'kirkwood-cornice');
   await p.screenshot({path:'/tmp/mattamp-skicams-stack.png'});
   const positions=await p.locator('.sourcebar button').evaluateAll(bs=>bs.map(b=>b.getBoundingClientRect().y));assert.equal(new Set(positions).size,1);
   await p.locator('#settings-open').click();
@@ -35,7 +57,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
   await p.getByRole('button',{name:'Move up camera My summit',exact:true}).click();await p.waitForFunction(()=>document.querySelectorAll('#camera-library strong')[3].textContent==='My summit');
   await p.getByRole('button',{name:'Remove camera My summit',exact:true}).click();await p.locator('#camera-undo').waitFor({state:'visible'});await p.locator('#camera-undo').click();await p.waitForFunction(()=>document.querySelectorAll('#camera-library strong').length===5);
   await p.locator('#settings-close').click();await p.locator('#camera-select').selectOption({label:'Vail · My summit'});await p.waitForTimeout(250);
-  await p.reload();await p.locator('#source-cameras').click();assert.equal(await p.locator('#camera-select option:checked').innerText(),'Vail · My summit');
+  await p.locator('#camera-cycle').click();
+  await p.waitForFunction(async()=>{const r=await window.deck.init();return r.data.state.cameraCycle===true;});
+  await p.reload();await p.locator('#source-cameras').click();assert.equal(await p.locator('#camera-cycle-minutes').inputValue(),'5');assert.equal(await p.locator('#camera-cycle').getAttribute('aria-pressed'),'true');assert.equal(await p.locator('#camera-select option:checked').innerText(),'Vail · My summit');
   await p.locator('#source-game').click();await p.waitForTimeout(150);assert.equal((await remote()).length,0);
   await p.locator('#source-cameras').click();await p.locator('#compact').click();await p.waitForTimeout(150);assert.equal((await remote()).length,0);
   await p.locator('#compact').click();await p.locator('#layout').click();await p.locator('#source-cameras').click();await p.waitForTimeout(250);
@@ -45,8 +69,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
   assert.deepEqual(await p.locator('.sourcebar button').evaluateAll(bs=>bs.map(b=>b.id)),['source-radio','source-podcast','source-x','source-cameras','source-game']);
   await p.locator('#camera-manage').click();
   for(let n=5;n>0;n--){await p.locator('#camera-library button[aria-label^="Remove camera"]').last().click();await p.waitForFunction(count=>document.querySelectorAll('#camera-library strong').length===count,n-1);}
-  await p.locator('#settings-close').click();await p.locator('#camera-empty').waitFor({state:'visible'});assert.equal((await remote()).length,0);
+  await p.locator('#settings-close').click();await p.locator('#camera-empty').waitFor({state:'visible'});assert.equal(await p.locator('#camera-cycle').isDisabled(),true);assert.equal((await remote()).length,0);
   assert.deepEqual(errors,[]);
-  console.log('PASS: requested defaults, isolated muted sandbox, tab/settings/compact teardown, custom CRUD/order/undo, persistence, empty state, stack/sidecar.');
+  console.log('PASS: requested defaults, isolated muted sandbox, tab/settings/compact teardown, custom CRUD/order/undo, cycling/wrap/manual reset/pause/off/interval persistence, empty state, stack/sidecar.');
  }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true,maxRetries:3});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

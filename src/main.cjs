@@ -19,7 +19,7 @@ const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}
 let win,tray,server,origin,timer,fullBounds,gameBounds,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -39,6 +39,8 @@ function unlockSavedKey(){
 function publicState(){const {diKeyCipher,...visible}=state;return {...visible,hasDiKey:!!secret,keyring:keyring(),hasSavedDiKey:!!state.diKeyCipher,keyringPending};}
 function update(patch){
  if(!patch||typeof patch!=='object')return;
+ if(typeof patch.cameraCycle==='boolean')state.cameraCycle=patch.cameraCycle;
+ if([1,5,15,30,60].includes(patch.cameraCycleMinutes))state.cameraCycleMinutes=patch.cameraCycleMinutes;
  if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
  if(['off','flow','waves','stars','mandelbrot'].includes(patch.ambient))state.ambient=patch.ambient;
@@ -103,6 +105,8 @@ if(primaryInstance)app.whenReady().then(async()=>{
  if(!['off','mixed','unhinged'].includes(state.chaos))state.chaos='mixed';
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
+ state.cameraCycle=state.cameraCycle===true;
+ if(![1,5,15,30,60].includes(state.cameraCycleMinutes))state.cameraCycleMinutes=15;
  try{state.cameras=normalizeCameras(state.cameras);}catch{state.cameras=normalizeCameras();}
  if(!state.cameras.some(c=>c.id===state.cameraId))state.cameraId=state.cameras[0]?.id||'';
  state.positions ||= {};state.selected ||= {};

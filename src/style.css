@@ -96,3 +96,5 @@ select option{background:#25343e;color:var(--text)}
 #camera-form{border-top:1px solid var(--edge);padding-top:12px}#camera-form h3{font-size:14px;font-weight:500;margin:0 0 12px}#camera-form label:not(:first-of-type){margin-top:12px}
 #camera-name,#camera-resort{width:100%;min-width:0;padding:8px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;color:var(--text);caret-color:var(--mint)}
 #camera-settings-status{font-size:12px;color:var(--mint);overflow-wrap:anywhere}#camera-settings-status[data-error=true]{color:var(--amber)}
+
+.camera-cycle-controls{display:flex;align-items:center;gap:8px;margin-bottom:10px}.camera-cycle-controls button,.camera-cycle-controls select{min-height:32px}.camera-cycle-controls select{flex:1;min-width:0}

@@ -1,9 +1,12 @@
 /* Local camera favorites; remote pages stay in the isolated main-process view. */
 class MattSkiCams {
- constructor({cameras,cameraId,resize,icons,openSettings}){
+ constructor({cameras,cameraId,cycle=false,cycleMinutes=15,resize,icons,openSettings}){
   this.cameras=cameras;this.selected=cameraId;this.resize=resize;this.icons=icons;this.openSettings=openSettings;this.visible=false;this.busy=false;this.editing=null;this.removed=null;
+  this.cycle=cycle;this.cycleMinutes=cycleMinutes;this.cycleTimer=null;
   this.$=id=>document.getElementById(id);
-  this.$('camera-select').onchange=async e=>{this.selected=e.target.value;try{await this.unwrap(window.deck.save({cameraId:this.selected}));this.render();this.syncBounds();}catch(err){this.message(err.message,true);}};
+  this.$('camera-select').onchange=e=>void this.selectCamera(e.target.value);
+  this.$('camera-cycle').onclick=()=>void this.configureCycle(!this.cycle,this.cycleMinutes);
+  this.$('camera-cycle-minutes').onchange=e=>void this.configureCycle(this.cycle,Number(e.target.value));
   this.$('camera-refresh').onclick=()=>void this.action('refresh');this.$('camera-browser').onclick=()=>void this.action('browser');
   this.$('camera-manage').onclick=()=>{this.openSettings();this.$('cameras-heading').scrollIntoView({block:'start'});this.$('camera-add').focus();};
   this.$('camera-add').onclick=()=>this.edit();this.$('camera-cancel').onclick=()=>{this.$('camera-form').hidden=true;this.editing=null;this.resize();this.$('camera-add').focus();};
@@ -14,7 +17,28 @@ class MattSkiCams {
  }
  async unwrap(promise){const result=await promise;if(!result.ok)throw new Error(result.error);return result.data;}
  message(text,error=false){this.$('camera-settings-status').textContent=text;this.$('camera-settings-status').dataset.error=String(error);this.resize();}
+ async selectCamera(id){
+  this.selected=id;this.render();this.syncBounds();this.resetCycle();
+  try{await this.unwrap(window.deck.save({cameraId:id}));}catch(err){this.$('camera-status').textContent=err.message;}
+ }
+ async configureCycle(enabled,minutes){
+  this.cycle=enabled;this.cycleMinutes=minutes;this.render();this.resetCycle();
+  try{await this.unwrap(window.deck.save({cameraCycle:enabled,cameraCycleMinutes:minutes}));}catch(err){this.$('camera-status').textContent=err.message;}
+ }
+ resetCycle(){
+  clearTimeout(this.cycleTimer);this.cycleTimer=null;
+  if(!this.visible||!this.cycle||this.cameras.length<2)return;
+  this.cycleTimer=setTimeout(()=>{
+   this.cycleTimer=null;
+   const index=this.cameras.findIndex(c=>c.id===this.selected);
+   void this.selectCamera(this.cameras[(index+1)%this.cameras.length].id);
+  },this.cycleMinutes*60000);
+ }
  render(){
+  this.$('camera-cycle').setAttribute('aria-pressed',String(this.cycle));
+  this.$('camera-cycle').disabled=this.cameras.length<2;
+  this.$('camera-cycle').title=this.cameras.length<2?'Add at least two cameras to auto-cycle':'Cycle through your cameras while SkiCams is open';
+  this.$('camera-cycle-minutes').value=String(this.cycleMinutes);
   const select=this.$('camera-select');select.replaceChildren(...this.cameras.map(c=>new Option((c.resort?c.resort+' · ':'')+c.name,c.id)));select.value=this.selected;select.disabled=!this.cameras.length;
   if(!this.cameras.length)select.append(new Option('Add your first camera',''));
   this.$('camera-refresh').disabled=this.$('camera-browser').disabled=!this.cameras.length;
@@ -44,10 +68,10 @@ class MattSkiCams {
   const controls=[...this.$('camera-settings').querySelectorAll('button,input')].map(el=>[el,el.disabled]);for(const [el]of controls)el.disabled=true;
   try{const result=await this.unwrap(window.deck.camerasSave(next));this.cameras=result.cameras;this.selected=result.cameraId;this.message(message);return true;}
   catch(err){this.message(err.message,true);return false;}
-  finally{this.busy=false;for(const [el,disabled]of controls)el.disabled=disabled;this.render();this.syncBounds();}
+  finally{this.busy=false;for(const [el,disabled]of controls)el.disabled=disabled;this.render();this.syncBounds();this.resetCycle();}
  }
  async action(action){try{await this.unwrap(window.deck.cameraAction(action,this.selected));if(action==='refresh')this.syncBounds();}catch(err){this.$('camera-status').textContent=err.message;}}
- setVisible(visible){this.visible=visible;this.$('camera-panel').hidden=!visible;this.syncBounds();}
+ setVisible(visible){const changed=this.visible!==visible;this.visible=visible;this.$('camera-panel').hidden=!visible;if(changed)this.resetCycle();this.syncBounds();}
  syncBounds(){
   const rect=this.$('camera-viewport').getBoundingClientRect();
   void this.unwrap(window.deck.cameraBounds({visible:this.visible&&!!this.cameras.length,id:this.selected,x:rect.x,y:rect.y,width:rect.width,height:rect.height})).catch(err=>{this.$('camera-status').textContent=err.message;});
