@@ -26,7 +26,8 @@
     "checksums": "node scripts/checksums.cjs",
     "test:power": "node scripts/power-smoke.cjs",
     "test:maximize": "node scripts/maximize-smoke.cjs",
-    "test:bot-scores": "node scripts/bot-scores-smoke.cjs"
+    "test:bot-scores": "node scripts/bot-scores-smoke.cjs",
+    "test:sticky-chrome": "node scripts/sticky-chrome-smoke.cjs"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

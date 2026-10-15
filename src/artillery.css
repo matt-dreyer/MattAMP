@@ -98,3 +98,5 @@
 /* Keep shared-score names and numbers legible; narrow widgets scroll the table. */
 #game-panel .game-score-scroll table{min-width:600px}
 #game-panel .game-score-scroll td:nth-child(2){white-space:nowrap}
+
+.game-mode:not(.arcade-expanded) .game-heading{position:sticky;top:calc(var(--titlebar-height,39px) + var(--sourcebar-height,52px));z-index:10;background:var(--shell)}

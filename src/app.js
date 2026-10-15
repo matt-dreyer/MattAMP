@@ -25,9 +25,16 @@ function syncWindowState({maximized}){
  if(state)render();
 }
 function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&mode==='full'&&!appHidden&&!document.hidden);}
+function syncChrome(){
+ const title=document.querySelector('.titlebar').offsetHeight,tabs=document.querySelector('.sourcebar').offsetHeight;
+ root.style.setProperty('--titlebar-height',title+'px');root.style.setProperty('--sourcebar-height',tabs+'px');
+ const heading=playingGame&&!settings&&mode==='full'&&!arcade.expanded&&!arcade.maximized?document.querySelector('.game-heading').offsetHeight:0;
+ document.documentElement.style.setProperty('--chrome-height',(title+tabs+heading+12)+'px');
+ syncXBounds();
+}
 function syncXBounds(){
  cameraPanel?.setVisible(watchingCams&&!settings&&mode==='full'&&!appHidden&&!document.hidden);
- const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&mode==='full'&&!document.hidden;
+ const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&mode==='full'&&!document.hidden&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom;
  void window.deck.xBounds({visible,x:rect.x,y:rect.y,width:rect.width,height:rect.height});
 }
 function toggleX(open){watchingCams=false;playingGame=false;readingX=open;if(open){mode='full';settings=false;if(isVideo())pause();}render();}
@@ -340,6 +347,7 @@ async function init(){
  };
  audio.ontimeupdate=()=>{if(state.source!=='podcast'||isVideo())return;$('elapsed').textContent=formatTime(audio.currentTime);$('duration').textContent=Number.isFinite(audio.duration)?formatTime(audio.duration):'—';$('seek').disabled=!Number.isFinite(audio.duration);$('seek').max=Number.isFinite(audio.duration)?audio.duration:1;$('seek').value=audio.currentTime;};
  setInterval(()=>{if(playing){snapshot();void persist();}},5000);
+ const chromeObserver=new ResizeObserver(syncChrome);for(const selector of ['.titlebar','.sourcebar','.game-heading'])chromeObserver.observe(document.querySelector(selector));
  new ResizeObserver(resize).observe(document.querySelector('.full'));new ResizeObserver(resize).observe($('settings'));
  $('station-art').onerror=()=>{$('station-art').dataset.failed=$('station-art').src;$('station-art').hidden=true;};
  void unwrap(window.deck.artwork()).then(result=>{artwork=result;applyArtwork();resize();}).catch(()=>{});
