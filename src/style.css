@@ -102,7 +102,7 @@ select option{background:#25343e;color:var(--text)}
 /* The chrome stays reachable while the body scrolls, in stacked and sidecar layouts. */
 #deck{overflow:clip}
 #deck>.titlebar{position:sticky;top:0;z-index:30}
-.full>.sourcebar{grid-column:1;grid-row:1;position:sticky;top:var(--titlebar-height,39px);z-index:20;background:var(--shell);padding-bottom:6px}
+.full>.sourcebar{grid-column:1;grid-row:1;position:sticky;top:var(--titlebar-height,39px);z-index:20;background:rgba(35,43,52,.7);backdrop-filter:blur(6px);padding-bottom:6px}
 .full>.content{grid-column:1;grid-row:2}
 .full>.system{grid-column:2;grid-row:1 / span 2}
 html{scroll-padding-top:var(--chrome-height,100px)}
@@ -123,3 +123,7 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 #deck .sourcebar button:enabled:hover{background-color:rgba(168,185,199,.1)!important;color:var(--text)}
 #deck .sourcebar button[aria-pressed=true]{color:var(--mint)}
 #deck .sourcebar button[aria-pressed=true]:enabled:hover{color:#c4e5d2}
+
+/* Keep navigation opaque when transparency is unavailable or unwanted. */
+@supports not (backdrop-filter:blur(1px)){.full>.sourcebar{background:var(--shell)}}
+@media(prefers-reduced-transparency:reduce){.full>.sourcebar{background:var(--shell);backdrop-filter:none}}
