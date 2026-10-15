@@ -1,147 +1,187 @@
+<p align="center">
+  <img src="assets/icon.png" width="96" alt="MattAMP bug logo">
+</p>
+
 # MattAMP
 
-A local Linux desktop player and workstation monitor. Eight DI.FM presets, five podcast favorites, live network/CPU/memory readings, and both NVIDIA GPUs in one muted desktop widget.
+**Reclaim your desktop. Lose an evening.**
 
-## Share / install on another Linux PC
+Remember when your computer had a personality? Winamp was playing, Fractint was doing something hypnotic, and “one more round” of Scorched Earth was a perfectly reasonable use of the next three hours?
 
-**Easiest: the `MattAMP-linux-x64-<commit>.zip` runtime bundle.** It includes Electron and production dependencies; Node/npm is not required. Extract the whole folder, open a terminal there, and run `./MattAMP`. Click **Game** to play. Use `bash scripts/install.sh` for an application-menu/dock launcher. Keep that folder in place. See [START-HERE.txt](START-HERE.txt) for the short handoff guide and Ubuntu sandbox setup.
+MattAMP started with a much smaller ambition: replace a few desktop widgets and get some screen space back. Then came the radio presets. The podcasts. The glass buttons. The drifting fractals. Then somebody said “MIRVs,” and here we are.
 
-This build targets **64-bit Intel/AMD Linux**, not ARM. A modern graphical desktop and Electron’s system libraries are required; distro compatibility has not been tested exhaustively. The game runs offline and needs neither NVIDIA hardware nor any media account. DI.FM Premium is only needed for radio. Missing GPU sensors appear as unavailable.
+It's a small, slightly ridiculous Linux desktop app: **music, podcasts, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
-The **source ZIP** is smaller but needs Node/npm and `npm ci` before running `./MattAMP`. User profiles, listen keys, X sessions, settings and scores are stored outside the app and are never packaged.
+[Get running](#get-running) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
-To build both ZIPs from a clean committed checkout on Linux x86-64:
+![MattAMP's dark glass radio widget, Mandelbrot background, and live workstation meters](docs/images/desktop.png)
+
+## What's in the little box?
+
+| The useful stuff | The entirely reasonable additions |
+| --- | --- |
+| Eight DI.FM presets with official channel art | Scorched Earth–inspired tank battles and MIRVs |
+| Five podcast favorites: full YouTube episodes or audio | Sarcastic bots with three-match grudges |
+| A filtered X/Twitter pane | Ricochet walls, wraparound shots, and occasional absurd wind |
+| Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, and Mandelbrot glides |
+| Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |
+
+Built for a Linux workstation and a large OLED, with dark glass, muted color, and enough contrast to find the window. The effects are optional. The silliness is more fundamental.
+
+## Get running
+
+### Just let me play
+
+**[Download the Linux x64 runtime ZIP](https://drive.google.com/file/d/1c_W4ALm0PoKuRQJ8SB-4nG0fc_SfvX7J/view)** — shared build `cb2d469`.
+
+1. Extract the **whole folder** somewhere permanent, such as `~/Apps/MattAMP`.
+2. Open a terminal in the extracted `MattAMP` folder and run:
+
+   ```sh
+   ./MattAMP
+   ```
+
+3. Click **Game**, choose your bots and difficulty, and hit **Start battle**. Chaos starts on **Mixed**.
+
+The runtime ZIP includes Electron and its dependencies. **No Node.js, npm, account, subscription, or internet connection is needed to play artillery.** This download is a fixed build, not an auto-updating installer; the source instructions below get the current code.
+
+Want it in your application menu and dock? From the same folder:
 
 ```sh
-npm ci
-bash scripts/package-linux.sh "$HOME/Downloads"
+bash scripts/install.sh
 ```
 
-The builder exports only committed source, installs clean production dependencies, copies the matching pinned Electron runtime and its license notices, and writes SHA-256 checksums. It never copies your live app profile or unrelated workspace files. Bundled third-party artwork/audio retain their documented rights and credits.
+Launch **MattAMP** from the application menu, then pin it using your desktop's usual controls. Keep the extracted folder in place: the launcher points to it.
 
-## Open it
+**Requirements:** 64-bit Intel/AMD Linux, a graphical desktop, and the usual Electron desktop libraries. NVIDIA hardware is optional. The shared bundle is not an ARM, Windows, or macOS build; compatibility has not been tested on every Linux distribution.
 
-Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The original `workstation-deck` command remains an alias-compatible entry point.
+<details>
+<summary>Ubuntu sandbox error, or want to verify the download?</summary>
 
-- **X / Twitter**, beside **Podcasts**, opens the X feed. The content buttons remain visible so you can return directly to DI.FM or Podcasts.
-- **DI.FM / Podcasts** switches the one active playback source.
-- **Podcasts → Player** switches between a visible YouTube player and the show’s audio RSS feed. YouTube lists full podcast episodes, excluding the general Shorts/upload feed; audio feeds list podcast episodes.
-- The column button switches **Sidecar / stacked** layouts. The panel button toggles **compact** view.
-- The audio-lines button collapses MattAMP to a **56 × 56 bug**. Drag it to move; click to restore. Radio and audio podcasts continue. YouTube pauses when hidden, including Bug mode, Settings, and the tray.
-- Drag the title bar to move the full window. The minus button hides it to the tray; **X quits MattAMP**. The tray menu restores, pauses, or quits it.
-- **Details** reveals memory/VRAM/temperature readings. The network status expands router and internet probe details.
-- **Dark glass controls** let the live background show through station presets, playback controls, source tabs and selects, with mint selection, subtle hover highlights and opaque labels. Reduced-transparency preferences use solid fills.
-- **Settings → Live background** selects **Particle flow** (default), **Water waves**, **Starfield**, **Mandelbrot zoom**, or **Off**. The choice is remembered locally. Slow, dim blue-green motion appears inside MattAMP and leaves controls clickable. Animation stops and clears when Off, in Bug mode, hidden in the tray, or when reduced motion is enabled. The radio station card is translucent so the selected effect shows through behind its text and artwork. Flow and Starfield use denser fields of dim particles; Waves adds closely spaced lines. Starfield keeps its slow depth-based drift and gentle shimmer. Mandelbrot explores six detailed regions using randomized horizontal/vertical glides, curved approaches and slow rotating spirals. Each 2½–3½-minute pass varies its direction and depth, then smoothly returns to the wide view before the next destination. The same area or route never repeats back-to-back. Mouse parallax still works, and the palette stays dim blue-green. Its GPU renderer is capped at 18 fps and 640 pixels on the longest edge; systems without WebGL show a quiet static fractal instead. X and video retain their own backgrounds.
-  Ambient effects respond gently to the mouse over MattAMP: particle flow bends around the pointer, waves form local ripples, stars shift with depth, and Mandelbrot pans slightly. Responses ease in and out, leave clicks and scrolling to the existing controls, and stop with the background under Off, hidden, Bug mode or reduced motion. Embedded provider surfaces retain their own mouse handling.
+If Ubuntu reports a user-namespace or SUID sandbox-helper error, run this from the extracted folder and approve the administrator prompt:
 
-## DI.FM Premium setup
+```sh
+bash scripts/install-sandbox-profile.sh
+```
 
-Open MattAMP **Settings → DI.FM settings**, find your **Premium Player Settings / listen key**, and paste only the key into MattAMP. Save it, close Settings, then choose a station.
+It installs an AppArmor profile for this folder's Electron executable. Run it again if you move the folder. Launch MattAMP as your normal user; keep Electron's sandbox enabled.
 
-MattAMP encrypts the key using Electron’s safeStorage backed by GNOME Keyring on this workstation. If a protected keyring is unavailable, the key stays in memory for the current session. The app never falls back to storing a plaintext key. **Forget key** removes the saved key and stops playback.
+SHA-256 for `MattAMP-linux-x64-cb2d469.zip`:
 
-Official DI.FM channel artwork loads from AudioAddict’s channel catalog and image CDN, with a larger current-station cover and small preset thumbnails. Metadata is cached for a day within the running app; unavailable artwork falls back to text. The provider’s images are not bundled in this repository.
+```text
+7e0a1cf4719cfa88e4fc91f2a255de70c0cef817281c5c0239134e9a3d8fbb58
+```
 
-Station presets: Future Synthpop, Classic Trance, Deep House, Synthwave, Progressive, Liquid DnB, Chillout, PsyChill. Playback uses DI.FM’s Premium external-player playlists; a valid subscription and listen key are required.
+Compare with `sha256sum MattAMP-linux-x64-cb2d469.zip` before extracting. More help: [troubleshooting](docs/guide.md#troubleshooting).
 
-## Podcasts
+</details>
 
-Favorites: Last Week in AI, AI for Humans, All-In, Dwarkesh Podcast, The a16z Show.
+### Run the current source
 
-The YouTube player uses a responsive 16:9 viewport and native controls. Four shows use their dedicated full-episode playlists; AI for Humans matches non-Short uploads to its podcast RSS titles to exclude standalone videos and clips. If YouTube’s playlist RSS endpoint fails, MattAMP reads the same playlist’s public page metadata instead, excluding Shorts, unknown-duration entries and videos outside that playlist. AI for Humans still requires podcast-title matching. Feed failures do not fall back to unfiltered uploads. The default playback speed is 1×; a speed you choose manually is remembered. Click its Play button when the browser requires a user gesture. Individual uploads may disallow embeds or require a YouTube login; use **YouTube** to open the episode externally, or select **Audio feed**. YouTube and RSS editions are separate feeds, so their episode selection and resume positions are separate too. No YouTube account is required by MattAMP itself.
-
-Audio controls include play/pause, stop, volume/mute, seek, 15-second rewind, 30-second forward, and playback speed. Positions and preferences save locally. Radio and podcasts wait for Play. The classic Winamp intro plays once per app launch at your saved volume; starting playback or pressing Stop/Pause cuts it short. Restoring the window or launching a second instance does not replay it. A custom YouTube URL can be loaded from Settings.
-
-## X feed
-
-Click **X / Twitter** beside **Podcasts**. **AI circle** uses X’s official Latest search, limited to `@bcherny`, `@steipete`, `@karpathy`, `@simonw`, and `@chamath`, plus AI-related keywords. Replies and reposts are excluded by the search query. **For giggles** is a separate Elon Musk lane, so high post volume cannot flood the AI circle. Filters edits the account list (up to 12 handles) and AI-topic restriction. Search matching and result availability are controlled by X; keyword filtering can miss relevant posts that do not mention those terms. This is a filtered X page, not a custom ranked feed, and navigating inside X can leave the filter; click AI circle to return.
-
-Sign in directly on X’s own page with your usual account, then click AI circle. X’s login form may use its own light theme. The session is remembered only in MattAMP’s isolated `persist:mattamp-x` Chromium partition; the app does not import browser cookies, collect your password, or require an X API key. Settings → Forget X sign-in clears this local session. **Browser** opens the same filtered search in your default browser using that browser’s existing login (it does not transfer the session back into MattAMP). Google/Apple sign-in attempts open a fresh filtered X page in your browser; choose the provider again there so the entire login stays in one browser session. MattAMP does not forward the in-app provider callback to Chrome: that callback belongs to the in-app X session and cannot reconnect from another browser. For the embedded pane, use direct X sign-in with an authentication method supported by its Chromium view.
-
-The embedded reader hides X’s desktop navigation rail and trends column, giving the timeline the full pane width. Direct sign-in returning to Home automatically resumes the selected author filter. Login dialogs retain X’s layout.
-
-X runs in a sandboxed WebContentsView without Node or MattAMP’s preload bridge. Remote content cannot access app IPC or the DI.FM key; camera, microphone, notifications and downloads are denied. X media stays muted so radio/audio podcasts can continue; switching to X pauses YouTube. The X pane hides in compact/bug modes and while Settings is open. Loading X does not automatically follow anyone, publish posts, or create lists. Direct sign-in with an X backup code and an authenticated embedded timeline have been confirmed by the user. Google/Apple browser sign-in still does not transfer into the embedded session.
-
-## Local data and monitoring
-
-MattAMP keeps its original internal app ID and storage paths so the rename preserves your dock pin, settings, and saved listen key.
-
-Preferences and encrypted key: `~/.config/workstation-deck/state.json` (mode 0600). Chromium media/cache data is also in this app’s config directory. Test runs use separate temporary profiles and never touch the saved listen key.
-
-CPU/RAM/network counters come from Linux and update every two seconds. GPU utilization, VRAM and temperature come from `nvidia-smi`. Traffic measures the default-route interface in Mbps. Every ten seconds, reachability checks the router and public internet endpoints; ICMP failure falls back to an HTTPS connectivity check. “No ping response” alone does not prove the router is down. Missing sensors are shown as unavailable, never as fabricated zero readings.
-
-A loopback-only HTTP server supplies the UI, YouTube embed origin, and a radio relay using opaque, revocable URLs. DI.FM external-player streams include HTTP-only endpoints; the relay preserves the provider’s protocol while keeping the listen key out of the renderer. It exposes no telemetry, credentials, or control API over HTTP. Privileged calls use a sandboxed, isolated Electron preload bridge. Remote content cannot invoke that bridge. No hosted backend, recurring service fee, or API key is needed for podcasts and metrics.
-
-## Develop / reinstall
-
-Requires Linux, Node/npm, a graphical desktop, `ping`, and NVIDIA drivers/`nvidia-smi` for GPU readings. GNOME Keyring/libsecret supplies protected secret persistence.
+The repository is public. With Git, Node.js, and npm installed:
 
 ```sh
 git clone https://github.com/matt-dreyer/MattAMP.git
 cd MattAMP
 npm ci
-npm run check
-npm test
-bash scripts/install.sh
-npm start
+./MattAMP
 ```
 
-`node scripts/smoke.cjs` runs a live Electron smoke test against this workstation and public podcast services. It expects both RTX cards and internet access, plays muted test media, opens temporary windows, and writes screenshots under ignored `test-results/`. External provider availability can affect it.
+A GitHub **Download ZIP** contains source only; it still needs `npm ci`. The runtime download above already includes what it needs. See the [development guide](docs/development.md) for checks, packaging, and project layout.
 
-On Ubuntu with restricted unprivileged user namespaces, run `bash scripts/install-sandbox-profile.sh` once after installation. It uses the desktop administrator prompt to install `/etc/apparmor.d/mattamp`, scoped to this checkout’s Electron executable, with the `userns` permission Electron needs to build its sandbox. It does not disable sandboxing or change system-wide namespace restrictions. Rerun it if the install path changes. This fixes dock launches that abort with the “SUID sandbox helper … not configured correctly” error. The launcher invokes the bundled Electron executable directly, without relying on an interactive shell’s Node setup.
+## Tiny tanks. Questionable decisions.
 
-The launcher uses this checkout and its pinned Electron installation. Keep this directory in place. There is no auto-updater or login autostart. To upgrade dependencies, update the lockfile deliberately and rerun checks.
+**AMP Artillery** is an untimed, last-tank-standing skirmish against **3–5 bots**. Pick a skill from **Very dumb** to **Human-ish**, enter your three-letter arcade initials, and start rearranging the landscape.
 
-To remove the launcher, delete only `~/.local/bin/mattamp`, `~/.local/bin/workstation-deck`, `~/.local/share/applications/ai.fshbwl.deck.desktop`, and `~/.local/share/icons/hicolor/128x128/apps/ai.fshbwl.deck.png`. Preferences can be retained for reinstall; deleting the app’s config directory removes those too. Other desktop monitors are independent.
+![Expanded AMP Artillery battlefield with five tanks, ricochet walls, and aiming controls](docs/images/artillery.png)
 
-## Startup sound
+You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 
-`assets/startup.mp3` is the original DJ Mike Llama “Llama Whippin’ Intro” (Winamp 2.91), preserved in [Webamp’s example](https://github.com/captbaritone/webamp/blob/master/examples/minimal/index.html). Source: [pinned audio asset](https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82cfe0e37286dbbe0666072dc3190a83bc/mp3/llama-2.91.mp3). Winamp and the sample audio belong to their respective rights holders; the clip is not covered by Webamp’s code license. Bundled for this personal desktop app so startup works offline.
+The bots have opinions. They can return fire, remember who hurt them across three completed battles, and gang up on a repeat winner—including another bot. Good hits and spectacular misses earn sarcastic, sometimes profane cartoon heckles.
 
-## Provider references
+### The controls
 
-- [DI.FM Premium and external players](https://www.di.fm/premium)
-- [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
-- [YouTube embedded-player identification requirements](https://developers.google.com/youtube/terms/required-minimum-functionality)
-- [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage)
+| Do this | With this |
+| --- | --- |
+| Aim left / right | **← / →**, the Angle slider, or click the sky |
+| Increase / decrease power | **↑ / ↓** or the Power slider |
+| Adjust precisely with the wheel | Hover **Angle** or **Power**; wheel over the battlefield changes power |
+| Choose ammunition | **Shell / MIRV** buttons |
+| Fire | **Enter** or **Fire!** |
+| Make room for destruction | **Expand**, then resize the window |
+| Return to the widget | **Restore** or **Esc** |
+| Play another match | Click the finished battlefield; keyboard users can focus it and press **Enter / Space** |
 
-## AMP Artillery
+### Choose your chaos
 
-Open **Game** for an untimed skirmish against 3–5 bots. Enter up to three arcade initials, select Very dumb / Casual / Sharp / Human-ish, choose Chaos, and start. Click the sky or adjust Angle, set Power, and Fire. Every tank gets unlimited shells and three MIRVs, which split into five warheads at the top of the arc. Craters, splash damage and falls persist through the battle. Wind changes each turn and holds steady through the shot: 60% mild (0–30), 30% strong (31–75), and 10% wild gusts (76–150), with either direction equally likely. Wild gusts are highlighted in the wind readout; values are game-strength units, not mph. Damage increases after round 12. Bots use imperfect aim and choose among all opponents.
+| Mode | What the next arena throws at you |
+| --- | --- |
+| **Off** | Rolling hills, normal gravity, open sides. Wind still varies. |
+| **Mixed — default** | One of five terrains, plus altered gravity **or** special walls. |
+| **Unhinged** | Varied terrain, altered gravity **and** special walls. |
 
-Radio/audio can keep playing. Switching away, opening Settings, hiding the app or entering Bug mode freezes the game. YouTube pauses when hidden. **Sound on/off** controls the game effects independently. After a match, click anywhere on the battlefield to open the next skirmish setup (or Tab to it and press Enter/Space). Replay waits for score saving to finish. Leaving an unfinished match earns no record; completed results save automatically with a retry button if disk access fails.
+Moonshot gravity floats your shots. Heavy gravity brings them home early. Ricochet walls bounce them back; wraparound walls send them through the other side. The preview shows the actual arena you'll play. Wind changes each turn; terrain style, gravity, and wall rules stay fixed for that match.
 
-Local records live in `arcade-scores.json` in Electron’s `workstation-deck` user-data directory (normally `~/.config/workstation-deck/` on Linux). It keeps the top ten, initials, skill, bot count, result and lifetime wins/completed battles. Scoring: 10 per enemy damage + 250 per knockout + a win bonus of 1,000 + 5 per remaining HP, multiplied by difficulty and bot count. Records use atomic writes and duplicate-save protection; they are personal scores, not an online anti-cheat system.
+**Top ten scores and lifetime wins save locally.** There is no turn timer. Radio or an audio podcast can keep playing. Leaving the game pauses the battle.
 
-Metal Slug sprites, Worms 2 effects, and Kenney fallbacks are in `assets/arcade/` with per-source provenance. The retro game assets retain their original copyrights; the Kenney CC0 license does not cover them. `npm test` covers game physics, MIRVs, damage, turn order and records; `npm run test:arcade` runs the isolated Electron integration check without using the real radio key or X session.
+<details>
+<summary>And if you win? We may have overdone it.</summary>
 
-### Artillery victory lap
+![MattAMP's gold 3D tank trophy, orbiting rings, and confetti celebration](docs/images/victory.png)
 
-Wins trigger a nine-second GPU-rendered gold tank ceremony with 2,400 tumbling confetti pieces, a moving camera, lights and a synthesized fanfare. **Back to scores** or **Escape** skips it. Game Sound off mutes the fanfare; radio keeps playing. Leaving the game stops and releases the scene. Reduced motion freezes the 3D scene, and WebGL failure leaves a static victory message. Score saving runs independently. Tank heckles include sarcastic profanity for kills, awful misses and self damage.
+Nine seconds of a GPU-rendered gold tank, moving camera, lights, 2,400 pieces of confetti, and a fanfare. An entirely proportionate response to defeating Floppy.
 
-`npm run test:victory` exercises real WebGL rendering, wide/narrow layouts, win-only activation, dismissal, timed cleanup, reduced motion, context loss, sound cleanup and radio/score continuity in an isolated Electron profile.
+**Back to scores** or **Esc** skips it. Reduced motion gives you a still scene; a WebGL failure falls back to a static victory message. Your score saves independently of the spectacle.
 
-### Aim, rivalries and a bigger battlefield
+</details>
 
-- **Left/Right** turns the barrel left/right; **Up/Down** changes power; **Enter** fires. Scroll over **Angle** or **Power** (including the labels) to change that value. Scrolling over the battlefield still adjusts power.
-- **Shell / MIRV** are compact radio choices alongside the sliders and Fire, with the remaining MIRV count. Very narrow windows wrap the controls.
-- **Expand** beside Sound opens a large game window. The battlefield fits the available height, title bar and source tabs stay visible, and aiming controls keep a compact width. Scores and credits scroll within their own area. Drag its edges to resize; **Restore** or **Escape** returns to the widget. Leaving the game also restores the normal size. Escape dismisses a victory ceremony first.
-- Bots remember damage for the last **three completed battles**, fading older grudges. Anyone winning at least two of those battles draws extra fire, including bots. Revenge and leader-targeting taunts name their target. Rivalries persist with local scores; abandoned games do not count. If you lose early, the remaining bots finish offscreen to determine the actual winner, reported in the results.
+[Game rules, scoring, wind, and rivalries →](docs/artillery.md)
 
-Bots also react immediately to damage during the current fight. Higher difficulties put more weight on returning fire to whoever hurt them; Very dumb remains more scatterbrained. Repeated hits strengthen that preference. It works bot-to-bot too, keeps alternative targets possible, and adds taunts such as “Floppy, you started this shit.”
+## Something good in your ears
 
-`npm run test:expanded` verifies the expanded layout at 2200×1200, 1000×820 and 640×480, including aspect ratio, visible controls, contained scrolling, restoration and uninterrupted radio.
+### DI.FM
 
-### Chaos arenas
+**Future Synthpop · Classic Trance · Deep House · Synthwave · Progressive · Liquid DnB · Chillout · PsyChill**
 
-**Chaos** defaults to **Mixed**, and your selection persists across app launches. The setup preview shows the exact terrain and conditions used when you press Start; the next skirmish rolls a fresh arena.
+Bring your own **DI.FM Premium subscription with external-player access**. Open MattAMP's **Settings → DI.FM settings**, find your Premium listen key, paste only the key into MattAMP, save, and choose a station. Covers load from DI.FM's provider catalog.
 
-- **Off:** the original rolling hills, normal gravity and open side edges. The varied wind introduced earlier still applies.
-- **Mixed:** one of five terrain styles, plus either changed gravity or special side walls.
-- **Unhinged:** varied terrain, changed gravity and special side walls together.
+The key is encrypted when a protected system keyring is available. Otherwise it stays in memory for that session; MattAMP does not save a plaintext fallback.
 
-Terrain rotates between rolling hills, a deep valley, craggy peaks, plateaus and flatlands. Moonshot uses 0.64× normal gravity; Heavy uses 1.6×. Ricochet walls reflect shells and MIRV fragments without adding energy (solid amber sides); wraparound walls send them through the opposite edge (dashed lavender sides). The ceiling stays open. Wrapped trails break at the boundary instead of drawing a line across the map. A flight expires after 20 simulated seconds to prevent endless volleys.
+### Podcasts
 
-The conditions line stays visible during play. Conditions remain fixed for the whole match, while wind changes per turn. Bots use the same boundary/gravity calculations as live projectiles and consider indirect shots in special arenas. High scores include each match’s arena; old scores remain readable as Off / rolling hills / normal gravity / open edges. Scoring multipliers are unchanged; the local table mixes modes and labels their conditions.
+**Last Week in AI · AI for Humans · All-In · Dwarkesh Podcast · The a16z Show**
 
-`npm run test:chaos` verifies the default and saved selection, preview/start consistency, all three modes, compact and expanded layouts, Settings/audio continuity, and arena records across restart. Unit tests cover terrain spawn pads, mode combinations, gravity, wall overshoot, portal collision/trails, prediction consistency, MIRVs, flight expiry and legacy score loading.
+Choose **YouTube** for full video episodes or **Audio feed** for RSS audio. The YouTube selection filters out Shorts and clips, and starts at **1×** unless you've saved another speed. Audio gets seek, skip, speed, and resume controls. Only one radio/podcast source plays at a time.
+
+Radio and audio can follow you into the game, X, or tiny bug mode. **YouTube pauses when its player is hidden.** Some uploads block embedding; the external **YouTube** button and **Audio feed** are your alternatives.
+
+## A little signal from X
+
+**AI circle** filters X's Latest search to Boris Cherny, Peter Steinberger, Andrej Karpathy, Simon Willison, and Chamath, with AI-topic filtering. **For giggles** gives Elon his own lane. **Filters** lets you change the handles and topic restriction.
+
+Sign in on X's own page inside the app. The session stays in MattAMP. **Browser** opens the same search using your normal browser's login; Google/Apple sign-in stays there and does **not** sign in the embedded pane. See [X sign-in and limitations](docs/guide.md#xtwitter).
+
+## Make yourself at home
+
+| Control | What happens |
+| --- | --- |
+| Layout button | Switch between sidecar and stacked layouts |
+| Compact button | Trim the player down |
+| Bug button | Collapse to a draggable **56 × 56** logo; click it to restore |
+| Settings | Radio setup, live background, and other preferences |
+| Minimize **−** | Hide to the tray |
+| Close **×** | Quit MattAMP |
+| **Details** under the meters | Show memory, VRAM, and GPU temperatures |
+
+**Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
+
+CPU, memory, and network readings update every two seconds. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
+
+## The practical bits
+
+- **Local data:** settings, playback positions, X sessions, and arcade scores stay under `~/.config/workstation-deck/`. The old internal name preserves existing installs. [Storage and privacy](docs/guide.md#local-data-and-privacy)
+- **Updates:** manual. There is no auto-updater or automatic launch at login. [Update and uninstall](docs/development.md#updating-and-uninstalling)
+- **Trouble:** [launch errors, radio, YouTube feeds, X login, and missing meters](docs/guide.md#troubleshooting).
+- **Credits:** Winamp and Fractint supplied the nostalgia; Scorched Earth inspired the artillery. Bundled retro artwork and audio retain their original copyrights. This repo does **not** grant a blanket license to redistribute them. See [asset credits](assets/arcade/README.md) and [startup audio provenance](docs/guide.md#startup-audio-and-credits).
+
+A fun personal app that escaped the desktop. Bring headphones. Blame the wind.
