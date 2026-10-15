@@ -127,7 +127,7 @@ Media and X still contact their respective providers; local storage doesn't make
 
 ## Tab sound effects
 
-**Settings → Silly tab sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts and Twitter say “Meh,” SkiCams says “Send it!” in a female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
+**Settings → Silly tab sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts and Twitter say “Meh,” SkiCams says “Send it!” in a deep, full female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
 
 ## Startup audio and credits
 
