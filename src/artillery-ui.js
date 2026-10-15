@@ -136,7 +136,7 @@ class MattArcade{
    if(!this.record){
     this.record=b.record(this.initials,this.id);this.clearQuip();
     const winner=b.tanks.find(t=>t.hp>0);
-    if(winner&&!this.victory.motion.matches)this.dance={id:winner.id,elapsed:0};
+    if(winner&&!this.victory.motion.matches)this.dance={id:winner.id,elapsed:0,wheelie:Math.random()<1/3};
     if(b.result==='win')this.silence();else this.playSound('loss');
     this.render();this.draw();void this.saveScore();
     if(this.dance)this.raf=requestAnimationFrame(t=>this.tick(t));else this.finishDance();
@@ -210,8 +210,12 @@ class MattArcade{
    c.save();
    if(this.dance?.id===t.id){
     const time=this.dance.elapsed,beat=time*Math.PI*4,ease=Math.min(1,time*5,(3-time)*5);
-    c.translate(Math.sin(beat/2)*14*ease,-Math.abs(Math.sin(beat))*9*ease);
-    c.rotate(Math.sin(beat)*.2*ease);c.scale(1+Math.sin(beat)*.08*ease,1-Math.sin(beat)*.06*ease);
+    const lift=this.dance.wheelie?Math.sin(Math.PI*Math.max(0,Math.min(1,(time-.55)/1.9)))**2:0;
+    c.translate(Math.sin(beat/2)*14*ease*(1-lift*.75),-Math.abs(Math.sin(beat))*9*ease*(1-lift));
+    // Tip around the rear tread so either facing lifts its nose, then lands smoothly.
+    const facing=t.angle>90?-1:1,rear=-facing*22;
+    c.translate(rear,8);c.rotate(-facing*.68*lift);c.translate(-rear,-8);
+    c.rotate(Math.sin(beat)*.2*ease*(1-lift));c.scale(1+Math.sin(beat)*.08*ease*(1-lift),1-Math.sin(beat)*.06*ease*(1-lift));
    }
    const r=t.angle*Math.PI/180;
    if(this.assets['metal-slug-tank']){

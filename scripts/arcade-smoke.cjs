@@ -49,10 +49,11 @@ async function launch(){app=await _electron.launch({chromiumSandbox:true,args:[p
  await p.waitForFunction(()=>arcade.battle.phase==='over'&&!arcade.saving&&arcade.scores.played===2);
  assert.equal(await p.evaluate(()=>arcade.scores.rivalry.at(-1).winner),1);assert.match(await p.locator('#game-result').textContent(),/Byte took the ridge/);
  assert.equal(await p.evaluate(()=>arcade.dance?.id),1);assert.equal(await p.locator('#game-overlay').isVisible(),false);
+ await p.evaluate(()=>{arcade.dance.wheelie=true;});
  const finalBattle=await p.evaluate(()=>JSON.stringify(arcade.battle)),danceFrame=await p.locator('#game-canvas').evaluate(c=>c.toDataURL());
  await p.waitForTimeout(350);assert.notEqual(await p.locator('#game-canvas').evaluate(c=>c.toDataURL()),danceFrame,'winning sprite visibly dances');
  assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),finalBattle,'dance never changes physics or score');assert.equal(await p.evaluate(()=>arcade.scores.played),2);
- await p.screenshot({path:'/tmp/mattamp-winner-dance.png'});
+ await p.waitForFunction(()=>arcade.dance?.elapsed>1.3);await p.screenshot({path:'/tmp/mattamp-winner-wheelie.png'});
  await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>arcade.dance===null);assert.equal(await p.evaluate(()=>arcade.raf),0);assert.equal(await p.evaluate(()=>arcade.victory.active),false);
  await p.emulateMedia({reducedMotion:'no-preference'});
 

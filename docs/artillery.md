@@ -91,7 +91,7 @@ Records live in `~/.config/workstation-deck/arcade-scores.json`, using atomic wr
 
 ## The disproportionate victory ceremony
 
-The surviving tank gets a three-second side-to-side shuffle, hop, and wobble—bots included. It is purely visual and never changes the final score or tank position. Reduced motion skips the dance; leaving the game or starting another skirmish cancels it.
+The surviving tank gets a three-second side-to-side shuffle, hop, and wobble—bots included. About one in three victories adds a nose-up wheelie, balanced on the rear tread before a smooth landing. It is purely visual and never changes the final score or tank position. Reduced motion skips the dance; leaving the game or starting another skirmish cancels it.
 
 After the dance, a human victory launches nine seconds of a gold 3D tank, moving camera, lighting, 2,400 confetti pieces, and a synthesized fanfare. **Back to scores** or **Escape** skips it. Game sound off mutes the fanfare while radio continues.
 
