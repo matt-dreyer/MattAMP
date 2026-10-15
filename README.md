@@ -231,11 +231,11 @@ The bots have opinions. They can return fire, remember who hurt them across thre
 
 | Mode | What the next arena throws at you |
 | --- | --- |
-| **Off** | Rolling hills, normal gravity, open sides. Wind still varies. |
+| **Off** | Rolling hills, normal gravity, open sides. Wind stays fixed for the entire battle. |
 | **Mixed — default** | One of five terrains, plus altered gravity **or** special walls. |
 | **Unhinged** | Varied terrain, altered gravity **and** special walls. |
 
-Moonshot gravity floats your shots. Heavy gravity brings them home early. Ricochet walls bounce them back; wraparound walls send them through the other side. The preview shows the actual arena you'll play. Wind changes each turn; terrain style, gravity, and wall rules stay fixed for that match.
+Moonshot gravity floats your shots. Heavy gravity brings them home early. Ricochet walls bounce them back; wraparound walls send them through the other side. The preview shows the actual arena you'll play. With Chaos Off, wind is rolled once for the battle; Mixed and Unhinged change it each turn. Terrain style, gravity, and wall rules stay fixed for that match.
 
 **Top ten scores and lifetime wins save locally.** There is no turn timer. Radio or an audio podcast can keep playing. Leaving the game pauses the battle.
 

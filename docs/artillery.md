@@ -44,7 +44,7 @@ Radio or audio podcasts can continue. Game **Sound on/off** is independent. Swit
 
 ## Wind: sometimes a suggestion, sometimes a grudge
 
-Each turn rolls new wind, which stays constant throughout that shot. Either direction is equally likely.
+**Chaos Off is normal mode:** wind strength and direction are rolled once and stay fixed for the whole battle, so you can adjust from your previous shot. A new skirmish rolls fresh wind. **Mixed and Unhinged** reroll wind each turn; it stays constant throughout the shot. Either direction is equally likely.
 
 | Chance | Strength | Range |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ Each turn rolls new wind, which stays constant throughout that shot. Either dire
 | 30% | Strong | 31–75 |
 | 10% | Wild | 76–150 |
 
-Wild gusts are highlighted in the wind readout. These are game-strength units, not mph. Even **Chaos Off** keeps the varied wind.
+Wild gusts are highlighted in the wind readout. These are game-strength units, not mph. **Chaos Off** can still begin with strong or wild wind, but it holds steady until the battle ends.
 
 ## Chaos arenas
 
@@ -74,7 +74,7 @@ Walls:
 - **Ricochet:** solid amber sides reflect shells and MIRV fragments without adding energy.
 - **Wraparound:** dashed lavender sides send projectiles through the opposite edge.
 
-The ceiling stays open. Projectiles expire after 20 simulated seconds to prevent endless volleys. Terrain style, gravity, and wall rules stay fixed for a match, while wind changes every turn. Bots account for gravity and boundaries and consider indirect shots in special arenas.
+The ceiling stays open. Projectiles expire after 20 simulated seconds to prevent endless volleys. Terrain style, gravity, and wall rules stay fixed for a match, while wind changes every turn only in Mixed and Unhinged. Bots account for gravity and boundaries and consider indirect shots in special arenas.
 
 ## Bots remember
 

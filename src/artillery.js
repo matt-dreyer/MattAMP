@@ -53,7 +53,7 @@
   ground(x){return this.terrain[clamp(Math.round(x),0,W)];}
   newWind(){
    // Mostly playable breezes, frequent hard crosswinds, occasional ridiculous gusts.
-   // Roll once per turn; prediction and every shell/MIRV share the same wind.
+   // Off rolls once per battle; chaos modes reroll each turn. All shots share that wind.
    const roll=this.random(),[low,high]=roll<.6?[0,30]:roll<.9?[31,75]:[76,150];
    const strength=low+Math.floor(this.random()*(high-low+1));
    return strength===0?0:strength*(this.random()<.5?-1:1);
@@ -147,7 +147,8 @@
    const alive=this.tanks.filter(t=>t.hp>0);
    if(alive.length<=1){this.phase='over';this.result=alive.length===0?'draw':this.tanks[0].hp>0?'win':'loss';this.message=this.result==='win'?'Victory. The ridge is yours.':this.result==='draw'?'Mutual destruction.':alive[0].name+' took the ridge. Your tank is out.';return;}
    do{this.turn=(this.turn+1)%this.tanks.length;if(this.turn===0)this.round++;}while(this.active.hp<=0);
-   this.wind=this.newWind();this.phase='aim';this.delay=0;this.message=this.active.id===0?'Your turn. Adjust from your last shot.':this.active.name+' is lining up a shot…';
+   if(this.conditions.chaos!=='off')this.wind=this.newWind();
+   this.phase='aim';this.delay=0;this.message=this.active.id===0?'Your turn. Adjust from your last shot.':this.active.name+' is lining up a shot…';
   }
   step(dt){
    if(this.phase==='over')return;
