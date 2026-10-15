@@ -38,7 +38,7 @@
     <button type="submit" class="primary" id="game-start">Start battle</button>
    </form>
    <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
-   <section id="game-victory" aria-label="Victory celebration" hidden></section><div class="game-stage"><div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div></div>
+   <section id="game-victory" aria-label="Victory celebration" hidden></section><div class="game-stage"><div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span><span id="game-replay-hint" hidden>Click the battlefield for a new skirmish.</span></div><button id="game-again" type="button" aria-label="New skirmish" aria-describedby="game-save-status" hidden><span class="sr-only">New skirmish</span></button></div></div>
    <div class="game-console">
    <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
    <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
@@ -49,7 +49,7 @@
    </fieldset>
    </div>
    <div class="game-extras">
-   <div id="game-end" hidden><p id="game-result"></p><p id="game-save-status" role="status"></p><button id="game-save-retry" hidden>Retry saving score</button><button id="game-again">New skirmish</button></div>
+   <div id="game-end" hidden><p id="game-result"></p><p id="game-save-status" role="status"></p><button id="game-save-retry" hidden>Retry saving score</button></div>
    <div id="game-abandon" hidden><p>Leave this battle? Unfinished battles don’t score.</p><button id="game-abandon-yes">Leave battle</button><button id="game-abandon-no">Keep playing</button></div>
    <button id="game-new" class="text-button" hidden>New skirmish…</button>
    <details id="game-records"><summary>High scores <span id="game-record-summary">Local arcade records</span></summary><p id="game-totals"></p><div class="game-score-scroll"><table><caption class="sr-only">Your ten highest battle scores</caption><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Rivals</th><th>Result</th></tr></thead><tbody id="game-score-rows"></tbody></table></div><p id="game-score-empty">No scores yet. Make the first crater.</p><p class="game-hint">10 points per damage + 250 per knockout. Win: 1,000 + 5 per remaining HP. Skill and bot count multiply the total. Saved on this workstation.</p></details>

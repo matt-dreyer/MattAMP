@@ -78,3 +78,10 @@
  .game-expanded .game-roster{margin:2px 0 4px;gap:4px}
  .game-expanded .game-tank-stat{padding:2px 4px}
 }
+
+/* The finished battlefield itself is the replay target; live shots still aim. */
+#deck #game-again{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;background:transparent!important;backdrop-filter:none;box-shadow:none;cursor:pointer}
+#deck #game-again:enabled:hover{background:rgba(182,221,189,.04)!important}
+#deck #game-again:focus-visible{outline:2px solid #b6ddbd;outline-offset:-4px}
+#deck #game-again:disabled{cursor:wait}
+#game-replay-hint{margin-top:8px;color:#b6ddbd;font-size:12px}

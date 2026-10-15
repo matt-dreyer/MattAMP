@@ -14,7 +14,7 @@ class MattArcade{
   this.$('sound').onclick=()=>{this.sound=!this.sound;this.$('sound').textContent=this.sound?'Sound on':'Sound off';this.$('sound').setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.silence();};
   this.$('new').onclick=()=>{this.paused=true;this.$('abandon').hidden=false;this.sync();};
   this.$('abandon-no').onclick=()=>{this.$('abandon').hidden=true;this.paused=false;this.sync();};
-  this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>this.reset();
+  this.$('abandon-yes').onclick=()=>this.reset();this.$('again').onclick=()=>{if(this.visible&&this.battle?.phase==='over'&&!this.saving&&!this.victory.active)this.reset();};
   this.$('save-retry').onclick=()=>void this.saveScore();
   this.$('initials').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);};
   for(const details of panel.querySelectorAll('details'))details.addEventListener('toggle',onResize);
@@ -130,10 +130,10 @@ class MattArcade{
   this.raf=requestAnimationFrame(t=>this.tick(t));
  }
  async saveScore(){
-  if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('save-status').textContent='Saving your score…';
+  if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('replay-hint').textContent='Saving your score…';this.$('save-status').textContent='Saving your score…';
   try{if(!this.record.memoryResolved){this.record.memory=await this.battle.finishRivals();this.record.memoryResolved=true;const winner=this.battle.tanks.find(t=>t.id===this.record.memory.winner);if(this.record.result==='loss'&&winner)this.$('result').textContent+=' '+winner.name+' took the ridge.';}const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id);this.$('save-status').textContent=rank>=0?'Saved. #'+(rank+1)+' on your high-score table!':'Score saved. Your top ten are still standing.';}
   catch(e){this.$('save-status').textContent='Score not saved: '+e.message;this.$('save-retry').hidden=false;}
-  finally{this.saving=false;this.$('again').disabled=false;this.onResize();}
+  finally{this.saving=false;this.$('again').disabled=false;this.$('replay-hint').textContent='Click the battlefield for a new skirmish.';this.onResize();}
  }
  renderScores(){
   const data=this.scores;if(!data)return;
@@ -151,7 +151,7 @@ class MattArcade{
   this.$('overlay').hidden=!!b&&!this.paused&&!over;
   this.$('overlay-title').textContent=this.paused?'Taking five.':over?(b.result==='win'?'RIDGE CHAMPION':b.result==='draw'?'EVERYBODY LOSES':'ONE MORE ROUND?'):'A little scorched nostalgia.';
   this.$('overlay-detail').textContent=this.paused?'Resume when you’re ready.':over?this.initials+' / '+b.score.toLocaleString()+' POINTS':'One ridge. You and 3–5 bots. Three MIRVs each.';
-  this.$('end').hidden=!over;this.$('new').hidden=!b||over;
+  this.$('end').hidden=!over;this.$('again').hidden=!over;this.$('replay-hint').hidden=!over;this.$('new').hidden=!b||over;
   if(!b)return;
   this.$('result').textContent=over?b.message+' '+b.kills+' knockouts · '+b.shots+(b.shots===1?' shot.':' shots.'):'';
   const remaining=b.tanks[0].mirvs;this.$('mirv-count').textContent=remaining;this.$('weapon-mirv').setAttribute('aria-label','MIRV, '+remaining+' left');this.$('weapon-mirv').disabled=remaining===0;if(!remaining)this.$('weapon-shell').checked=true;
