@@ -1,13 +1,13 @@
 {
   "name": "workstation-deck",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "MattAMP \u2014 workstation radio, podcasts and system monitor",
+  "description": "MattAMP \u2014 radio, podcasts, mountain cams, system monitor, and arcade artillery",
   "main": "src/main.cjs",
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs && node --check src/ski-cams.cjs && node --check src/ski-cams-ui.js",
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs && node --check src/ski-cams.cjs && node --check src/ski-cams-ui.js && node --check src/platform-stats.cjs",
     "test:smoke": "node scripts/smoke.cjs",
     "test:arcade": "node scripts/arcade-smoke.cjs",
     "test:heckles": "node scripts/heckles-smoke.cjs",
@@ -18,20 +18,30 @@
     "test:podcasts": "node scripts/podcasts-smoke.cjs",
     "test:keyring-startup": "node scripts/keyring-startup-smoke.cjs",
     "test:ski-cams": "node scripts/ski-cams-smoke.cjs",
-    "test:tab-sounds": "node scripts/tab-sounds-smoke.cjs"
+    "test:tab-sounds": "node scripts/tab-sounds-smoke.cjs",
+    "pack": "electron-builder --dir --publish never",
+    "dist:linux": "electron-builder --linux --x64 --publish never",
+    "dist:win": "electron-builder --win --x64 --publish never",
+    "dist:mac": "electron-builder --mac --x64 --arm64 --publish never",
+    "checksums": "node scripts/checksums.cjs"
   },
   "dependencies": {
-    "electron": "44.7.2",
     "fast-xml-parser": "5.11.2",
     "lucide": "1.57.0",
+    "systeminformation": "5.33.15",
     "three": "0.180.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1"
+    "@playwright/test": "1.64.1",
+    "electron": "44.7.2",
+    "electron-builder": "26.15.3"
   },
   "productName": "MattAMP",
   "repository": {
     "type": "git",
     "url": "https://github.com/matt-dreyer/MattAMP.git"
-  }
+  },
+  "author": "Matt Dreyer",
+  "homepage": "https://github.com/matt-dreyer/MattAMP",
+  "desktopName": "ai.fshbwl.deck.desktop"
 }

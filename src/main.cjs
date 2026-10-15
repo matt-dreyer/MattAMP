@@ -13,7 +13,8 @@ let xFeed,skiCams;
 // Keep the internal identity stable so existing settings, keyring and dock pins survive the rename.
 app.setName('workstation-deck');
 nativeTheme.themeSource='dark';
-app.setDesktopName('ai.fshbwl.deck.desktop');
+if(process.platform==='linux')app.setDesktopName('ai.fshbwl.deck.desktop');
+if(process.platform==='win32')app.setAppUserModelId('ai.fshbwl.deck');
 if(process.env.DECK_TEST_DIR)app.setPath('userData',process.env.DECK_TEST_DIR);
 const primaryInstance=app.requestSingleInstanceLock();
 if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();win?.focus();});}

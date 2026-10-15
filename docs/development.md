@@ -4,7 +4,7 @@
 
 ## Run from source
 
-Use Linux with a graphical desktop, Git, Node.js, and npm. Install the versions pinned by `package-lock.json` rather than upgrading dependencies incidentally.
+Use Linux, Windows, or macOS with a graphical desktop, Git, Node.js 22+, and npm. Install the versions pinned by `package-lock.json` rather than upgrading dependencies incidentally.
 
 ```sh
 git clone https://github.com/matt-dreyer/MattAMP.git
@@ -81,7 +81,25 @@ Integration scripts launch temporary Electron profiles, keeping the real listen 
 
 **`test:smoke` is workstation-specific:** it expects the original two RTX cards and internet access, plays muted test media, and depends on public podcast services. It is not a portable, offline CI gate. Other rendering checks still need a suitable graphical environment. Do not disable Electron's sandbox to make a test pass.
 
-## Build a shareable Linux ZIP
+## Native release packages
+
+```sh
+npm ci
+npm run check
+npm test
+npm run dist:linux  # Linux x64: AppImage, deb, tar.gz
+npm run dist:win    # Windows x64: NSIS installer and portable ZIP
+npm run dist:mac    # macOS Intel and Apple Silicon: DMG and ZIP
+npm run checksums
+```
+
+Run each platform's build on that OS. `electron-builder.json` allowlists the app sources, assets, documentation, and production dependencies; user profiles and credentials are excluded. Electron and the build tools are development dependencies. `build/icon.png` is a 1024px raster of the existing bug SVG for native icons. Keep the internal `workstation-deck` identity and `ai.fshbwl.deck` app ID stable to preserve settings and dock integration.
+
+`.github/workflows/release.yml` builds on Linux, Windows, Intel Mac, and Apple Silicon Mac runners, checks the bundled ASAR, and uploads native artifacts. Pushing a `v*` tag matching `package.json` publishes all successful builds to GitHub Releases with SHA-256 checksums; a failed target blocks publication. Branch/PR builds only upload Actions artifacts. Windows is unsigned; macOS uses an ad-hoc signature with no notarization. Developer ID / Windows signing certificates can be added later; never commit signing credentials.
+
+The system monitor retains its Linux `/proc` implementation and uses `systeminformation` for Windows/macOS memory and network counters. GPU meters still require `nvidia-smi`; no Apple/integrated GPU utilization is claimed. Tests cover normalized portable counters and OS-specific ping timeouts; actual hardware differences still need native user testing.
+
+## Legacy shareable Linux ZIP
 
 On Linux x86-64, from a clean, committed checkout:
 

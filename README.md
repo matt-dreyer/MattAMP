@@ -10,7 +10,7 @@ Remember when your computer had a personality? Winamp was playing, Fractint was 
 
 MattAMP started with a much smaller ambition: replace a few desktop widgets and get some screen space back. Then came the radio presets. The podcasts. The glass buttons. The drifting fractals. Then somebody said “MIRVs,” and here we are.
 
-It's a small, slightly ridiculous Linux desktop app: **music, podcasts, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
+It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
 [Get running](#get-running) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
@@ -30,7 +30,21 @@ Built for a Linux workstation and a large OLED, with dark glass, muted color, an
 
 ## Get running
 
-### Just let me play
+### Install a packaged release
+
+Get the current installers and portable apps from **[GitHub Releases](https://github.com/matt-dreyer/MattAMP/releases/latest)**. No Node.js or npm required.
+
+| Your machine | Download |
+| --- | --- |
+| Ubuntu/Debian x64 | `.deb` installer; includes sandbox integration |
+| Other Linux x64 | `.AppImage` or portable `.tar.gz` |
+| Windows x64 | `windows-x64-setup.exe` or portable `win-x64.zip` |
+| Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
+| Intel Mac | `mac-x64.dmg` or `.zip` |
+
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.2.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+
+### Earlier Linux bundle
 
 **[Download the Linux x64 runtime ZIP](https://drive.google.com/file/d/1c_W4ALm0PoKuRQJ8SB-4nG0fc_SfvX7J/view)** — shared build `cb2d469`.
 
@@ -84,7 +98,7 @@ The repository is public. With Git, Node.js, and npm installed:
 git clone https://github.com/matt-dreyer/MattAMP.git
 cd MattAMP
 npm ci
-./MattAMP
+npm start
 ```
 
 A GitHub **Download ZIP** contains source only; it still needs `npm ci`. The runtime download above already includes what it needs. See the [development guide](docs/development.md) for checks, packaging, and project layout.
