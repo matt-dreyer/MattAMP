@@ -11,7 +11,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
   await p.waitForFunction(()=>typeof state!=='undefined'&&state);
   await app.evaluate(({webContents,session})=>{for(const w of webContents.getAllWebContents())w.setAudioMuted(true);session.fromPartition('mattamp-ski-cams').protocol.handle('https',()=>new Response('<html>Camera fixture</html>',{headers:{'content-type':'text/html'}}));});
   await p.evaluate(()=>{state.volume=50;stopStartup();window.voicePlays=[];tabAudio.addEventListener('play',()=>voicePlays.push(tabAudio.src));});
-  for(const [tab,clip] of [['game','hell-yeah'],['podcast','meh'],['cameras','send-it'],['radio','yeah']]){
+  for(const [tab,clip] of [['game','hell-yeah'],['podcast','meh'],['x','meh'],['cameras','send-it'],['radio','yeah']]){
    const count=await p.evaluate(()=>voicePlays.length);await p.locator('#source-'+tab).click();
    await p.waitForFunction(n=>voicePlays.length>n,count);
    await p.waitForFunction(()=>tabAudio.readyState>=2&&Number.isFinite(tabAudio.duration));

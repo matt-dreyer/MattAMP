@@ -8,7 +8,7 @@ const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
 const tabAudio=new Audio();
 tabAudio.preload='auto';
-const tabClips={radio:'yeah',podcast:'meh',cameras:'send-it',game:'hell-yeah'};
+const tabClips={radio:'yeah',podcast:'meh',x:'meh',cameras:'send-it',game:'hell-yeah'};
 function playTabSound(tab){
  tabAudio.pause();
  if(!state.tabSounds||muted||!state.volume||!tabClips[tab]||(tab==='game'&&!arcade.sound))return;
