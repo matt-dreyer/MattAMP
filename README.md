@@ -12,7 +12,7 @@ MattAMP started with a much smaller ambition: replace a few desktop widgets and 
 
 It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, SkiCams, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
-[Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
+[Screenshots](#take-a-look-around) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
 ![MattAMP's current five-tab navigation, Synthwave radio art, glass controls, wave background, and live workstation meters](docs/images/desktop.png)
 
@@ -28,6 +28,66 @@ It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **m
 | Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |
 
 Built for a Linux workstation and a large OLED, with dark glass, muted color, and enough contrast to find the window. The effects are optional. The silliness is more fundamental.
+
+## Take a look around
+
+Every tab, every size, and every background. These are captures of the running app using a fresh profile; Twitter shows its signed-out screen. Click any image for the full-size view. Animated backgrounds are frozen mid-frame here.
+
+<details>
+<summary>All five tabs — including both podcast players</summary>
+
+| DI.FM radio | Podcasts · YouTube |
+| --- | --- |
+| ![DI.FM radio with station artwork, presets, and meters](docs/images/desktop.png) | ![YouTube podcast player with a full Last Week in AI episode and show favorites](docs/images/podcasts-youtube.png) |
+| **Podcasts · Audio feed** | **Twitter · signed out** |
+| ![Audio podcast player with episode selection, seek, skip, and speed controls](docs/images/podcasts-audio.png) | ![Twitter tab with AI circle and For giggles filters above the X sign-in page](docs/images/twitter.png) |
+| **SkiCams** | **Game · widget size** |
+| ![Heavenly Top of Tram camera and automatic camera rotation](docs/images/skicams.png) | ![AMP Artillery running inside the normal widget](docs/images/game-widget.png) |
+
+</details>
+
+<details>
+<summary>Four desktop layouts, plus the expanded battlefield</summary>
+
+| Sidecar · meters alongside | Stacked · meters below |
+| --- | --- |
+| ![Sidecar layout with the radio and meters beside each other](docs/images/desktop.png) | ![Tall stacked radio layout with meters below the presets](docs/images/stacked.png) |
+| **Compact · player and a status strip** | **Bug · actual 56 × 56 size** |
+| ![Compact radio player with a single line of system statistics](docs/images/compact.png) | <img src="docs/images/bug.png" width="56" height="56" alt="Tiny draggable MattAMP bug"> |
+
+**Expanded Game** keeps the controls together while giving the battlefield more room:
+
+![Expanded artillery battlefield and aiming controls](docs/images/artillery.png)
+
+</details>
+
+<details>
+<summary>Backgrounds — particles, waves, stars, fractals, or none</summary>
+
+| Particle flow | Water waves |
+| --- | --- |
+| ![Particle flow background behind the radio and meters](docs/images/background-flow.png) | ![Water wave background behind the radio and meters](docs/images/desktop.png) |
+| **Starfield** | **Mandelbrot zoom** |
+| ![Starfield background behind the radio and meters](docs/images/background-stars.png) | ![Mandelbrot fractal background behind the radio and meters](docs/images/background-mandelbrot.png) |
+
+**Off**, when you'd rather sit still:
+
+![MattAMP with background animation switched off](docs/images/background-off.png)
+
+</details>
+
+<details>
+<summary>Make it yours — podcast and camera favorites</summary>
+
+**Your podcasts:** add YouTube or RSS links, edit favorites, and put them in your order.
+
+![Podcast settings with add, reorder, edit, and remove controls](docs/images/podcasts-settings.png)
+
+**Your SkiCams:** build your own mountain lineup.
+
+![Camera settings with the four default views and favorite-management controls](docs/images/skicams-settings.png)
+
+</details>
 
 ## Get running
 
