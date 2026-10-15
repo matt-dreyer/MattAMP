@@ -103,7 +103,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.2.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.3.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -208,7 +208,7 @@ Power now uses a gentler **1–100%** scale, starting at **50%**, so close shots
 
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 
-**New in the current source (after v0.2.0):** getting knocked out puts you in spectator mode. The bots finish their fight on-screen, and the survivor does a dumb little victory dance—occasionally a wheelie. Scores and grudges use the actual final result.
+**New in v0.3.0:** getting knocked out puts you in spectator mode. The bots finish their fight on-screen, and the survivor does a dumb little victory dance—occasionally a wheelie. Scores and grudges use the actual final result.
 
 The bots have opinions. They can return fire, remember who hurt them across three completed battles, and gang up on a repeat winner—including another bot. Good hits and spectacular misses earn dry, sarcastic cartoon heckles.
 

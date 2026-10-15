@@ -78,4 +78,4 @@ jobs:
       - name: Publish downloads
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/MattAMP-* dist/SHA256SUMS.txt --verify-tag --title "MattAMP $GITHUB_REF_NAME" --notes-file docs/release-0.2.0.md
+        run: gh release create "$GITHUB_REF_NAME" dist/MattAMP-* dist/SHA256SUMS.txt --verify-tag --title "MattAMP $GITHUB_REF_NAME" --notes-file "docs/release-${GITHUB_REF_NAME#v}.md"
