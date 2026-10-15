@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  const W=1000,H=540,DT=1/120,FLIGHT_LIMIT=20;
- const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:8,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
+ const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:0,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
  const BOT_NAMES=['Byte','Floppy','Modem','Turbo','DOS'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -129,7 +129,8 @@
      grudge+=(match.damage?.[target.id]?.[tank.id]||0)*[1,.7,.4][age];
      if(match.winner===target.id)wins++;
     });
-    const revenge=grudge>=15?Math.min(3.5,grudge/45):0,leader=wins>=2?2.5:0;
+    const memoryWeight=this.skill===0?.2:1;
+    const revenge=grudge>=15?Math.min(3.5,grudge/45)*memoryWeight:0,leader=wins>=2?2.5*memoryWeight:0;
     // Respond to actual damage in this battle, including splash and falls.
     // Smarter bots place more weight on a live threat; every rival keeps a chance.
     const retaliation=Math.min(4,this.damageLedger[target.id][tank.id]/20*SKILLS[this.skill].retaliation);
@@ -145,6 +146,12 @@
   botAim(){
    // Reputation changes target odds equally for human and bot identities, never accuracy.
    const tank=this.active,target=this.chooseTarget(),skill=SKILLS[this.skill];
+   if(this.skill===0){
+    // Beginner bots guess a lob toward a rival. No trajectory search, wind correction,
+    // or deliberate bank shots; lucky hits still use exactly the same physics.
+    const elevation=20+this.random()*65;
+    return {angle:target.x>tank.x?elevation:180-elevation,power:25+this.random()*65,weapon:tank.mirvs>0&&this.random()<.05?'mirv':'shell'};
+   }
    const targetX=clamp(target.x+(this.random()-.5)*2*skill.error,15,W-15);
    let best={angle:55,power:50,cost:Infinity};
    for(let i=0;i<skill.samples;i++){

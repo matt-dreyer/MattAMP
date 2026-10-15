@@ -8,6 +8,8 @@ Open **Game**. Enter up to three arcade initials, choose **3–5 bots**, select 
 
 It's untimed, last-tank-standing artillery. Craters persist, explosions cause splash damage, and tanks can take fall damage. Damage increases after round 12 to keep a battle moving. Bot aim is imperfect; higher skill improves the opposition without making every decision deterministic.
 
+**Very dumb** is the practice tier: bots guess their angle and power without simulating trajectories or compensating for wind, use MIRVs rarely (5% of shots while stocked), and put much less weight on old grudges and repeat winners. They can still land a lucky hit. Casual and above search for better shots; all tiers share the same health, damage, and projectile physics.
+
 Each tank is tinted to match its name, health bar and roster color, with the original sprite shading intact.
 
 Each tank receives unlimited **Shells** and **three MIRVs**. A MIRV splits into five warheads at the top of its arc. Bot and player projectiles use the same physics.
