@@ -1,5 +1,7 @@
 # MattAMP
 
+Personal repository: [matt-dreyer/MattAMP](https://github.com/matt-dreyer/MattAMP). Extracted from FBStack with the app’s commit history preserved.
+
 A local Linux desktop player and workstation monitor, built for Matt’s 49-inch OLED. Eight DI.FM presets, five podcast favorites, live network/CPU/memory readings, and both NVIDIA GPUs in one muted desktop widget.
 
 ## Open it
@@ -60,6 +62,8 @@ A loopback-only HTTP server supplies the UI, YouTube embed origin, and a radio r
 Requires Linux, Node/npm, a graphical desktop, `ping`, and NVIDIA drivers/`nvidia-smi` for GPU readings. GNOME Keyring/libsecret supplies protected secret persistence.
 
 ```sh
+git clone https://github.com/matt-dreyer/MattAMP.git
+cd MattAMP
 npm ci
 npm run check
 npm test
@@ -106,7 +110,9 @@ Wins trigger a nine-second GPU-rendered gold tank ceremony with 2,400 tumbling c
 
 - **Left/Right** turns the barrel left/right; **Up/Down** changes power; **Enter** fires. Scroll over **Angle** or **Power** (including the labels) to change that value. Scrolling over the battlefield still adjusts power.
 - **Shell / MIRV** are compact radio choices alongside the sliders and Fire, with the remaining MIRV count. Very narrow windows wrap the controls.
-- **Expand** beside Sound opens a large game window. Drag its edges to resize; **Restore** or **Escape** returns to the widget. Leaving the game also restores the normal size. Escape dismisses a victory ceremony first.
+- **Expand** beside Sound opens a large game window. The battlefield fits the available height, title bar and source tabs stay visible, and aiming controls keep a compact width. Scores and credits scroll within their own area. Drag its edges to resize; **Restore** or **Escape** returns to the widget. Leaving the game also restores the normal size. Escape dismisses a victory ceremony first.
 - Bots remember damage for the last **three completed battles**, fading older grudges. Anyone winning at least two of those battles draws extra fire, including bots. Revenge and leader-targeting taunts name their target. Rivalries persist with local scores; abandoned games do not count. If you lose early, the remaining bots finish offscreen to determine the actual winner, reported in the results.
 
 Bots also react immediately to damage during the current fight. Higher difficulties put more weight on returning fire to whoever hurt them; Very dumb remains more scatterbrained. Repeated hits strengthen that preference. It works bot-to-bot too, keeps alternative targets possible, and adds taunts such as “Floppy, you started this shit.”
+
+`npm run test:expanded` verifies the expanded layout at 2200×1200, 1000×820 and 640×480, including aspect ratio, visible controls, contained scrolling, restoration and uninterrupted radio.

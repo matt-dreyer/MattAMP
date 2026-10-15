@@ -12,7 +12,8 @@
     "test:arcade": "node scripts/arcade-smoke.cjs",
     "test:heckles": "node scripts/heckles-smoke.cjs",
     "test:victory": "node scripts/victory-smoke.cjs",
-    "test:settings-game": "node scripts/settings-game-smoke.cjs"
+    "test:settings-game": "node scripts/settings-game-smoke.cjs",
+    "test:expanded": "node scripts/expanded-smoke.cjs"
   },
   "dependencies": {
     "electron": "44.7.2",
@@ -23,5 +24,9 @@
   "devDependencies": {
     "@playwright/test": "1.64.1"
   },
-  "productName": "MattAMP"
+  "productName": "MattAMP",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matt-dreyer/MattAMP.git"
+  }
 }

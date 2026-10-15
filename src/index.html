@@ -38,7 +38,8 @@
     <button type="submit" class="primary" id="game-start">Start battle</button>
    </form>
    <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
-   <section id="game-victory" aria-label="Victory celebration" hidden></section><div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div>
+   <section id="game-victory" aria-label="Victory celebration" hidden></section><div class="game-stage"><div class="game-field"><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span></div></div></div>
+   <div class="game-console">
    <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
    <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
    <fieldset id="game-controls" disabled><legend class="sr-only">Aim and fire</legend>
@@ -46,11 +47,14 @@
     <label>Power <output id="game-power-value" for="game-power">55</output><input id="game-power" type="range" min="10" max="100" value="55"></label>
     <fieldset id="game-ammo"><legend>Ammo</legend><label><input id="game-weapon-shell" name="game-weapon" type="radio" value="shell" aria-label="Shell, unlimited" checked><span>Shell</span></label><label><input id="game-weapon-mirv" name="game-weapon" type="radio" value="mirv" aria-label="MIRV, 3 left"><span>MIRV <span id="game-mirv-count">3</span></span></label></fieldset><button id="game-fire" class="primary">Fire!</button>
    </fieldset>
+   </div>
+   <div class="game-extras">
    <div id="game-end" hidden><p id="game-result"></p><p id="game-save-status" role="status"></p><button id="game-save-retry" hidden>Retry saving score</button><button id="game-again">New skirmish</button></div>
    <div id="game-abandon" hidden><p>Leave this battle? Unfinished battles don’t score.</p><button id="game-abandon-yes">Leave battle</button><button id="game-abandon-no">Keep playing</button></div>
    <button id="game-new" class="text-button" hidden>New skirmish…</button>
    <details id="game-records"><summary>High scores <span id="game-record-summary">Local arcade records</span></summary><p id="game-totals"></p><div class="game-score-scroll"><table><caption class="sr-only">Your ten highest battle scores</caption><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Rivals</th><th>Result</th></tr></thead><tbody id="game-score-rows"></tbody></table></div><p id="game-score-empty">No scores yet. Make the first crater.</p><p class="game-hint">10 points per damage + 250 per knockout. Win: 1,000 + 5 per remaining HP. Skill and bot count multiply the total. Saved on this workstation.</p></details>
    <details class="game-credits"><summary>How to play &amp; credits</summary><p>No turn timer. Wind changes each turn. MIRVs split at their peak into five smaller warheads. Craters and falls damage tanks—including your own. After round 12, blast damage increases to break stalemates. Bots remember damage for three completed battles and are more likely to target repeat winners—even other bots. Grudges fade; abandoned battles don’t count.</p><p>Original MattAMP game. Metal Slug art: SNK; sprite sheets by Gussprint. Worms 2 effects: Team17; archive by Paul999 / PS999. Fallback art and legacy victory/defeat cues: Kenney, CC0. Victory ceremony geometry and fanfare: original MattAMP. Cormorant Garamond: SIL OFL 1.1. Three.js: MIT. Retro game assets retain their original copyrights. Inspired by the classic artillery games we grew up with.</p></details>
+   </div>
   </section>
   <section id="x-panel" aria-label="Filtered X feed" hidden>
    <div class="x-heading"><h2>X feed</h2><button id="x-back" class="text-button"><i data-lucide="music-2"></i>Player</button></div>

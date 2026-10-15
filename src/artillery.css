@@ -47,6 +47,34 @@
 @container(max-width:365px){#game-controls{grid-template-columns:1fr 1fr}#game-fire{justify-self:end;min-width:64px}}
 
 .game-heading-actions{display:flex;align-items:center;gap:6px}.game-heading-actions button{font-size:11px;min-height:32px}
-#game-panel.game-expanded{margin-inline:auto;width:min(100%,max(480px,calc((100vh - 360px)*1.85185 + 26px)))}
-.game-expanded .game-field{width:100%}.game-expanded #game-canvas{image-rendering:pixelated}
-.game-expanded .game-heading h2{font-size:28px}
+/* Expanded play is a viewport layout, never a taller scrolling widget. */
+#deck.arcade-expanded{height:100dvh;min-height:0;display:flex;flex-direction:column}
+.arcade-expanded>.titlebar{flex:none}
+#deck.arcade-expanded>.full{display:flex;flex:1;min-height:0;flex-direction:column}
+.arcade-expanded .content{display:flex;flex:1;min-height:0;flex-direction:column}
+.arcade-expanded .sourcebar{flex:none}
+.arcade-expanded #compact-status{flex:none;margin:0;padding:6px 12px;font-size:11px}
+#game-panel.game-expanded{display:flex;flex:1;min-height:0;flex-direction:column;width:100%;padding:10px 20px;gap:6px}
+.game-expanded .game-heading,.game-expanded .game-setup,.game-expanded .game-hud{flex:none;width:min(100%,1200px);margin:0 auto}
+.game-expanded .game-heading h2{font-size:26px}
+.game-expanded .game-stage{flex:1;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.game-expanded .game-field{flex:none;width:min(100%,calc((100cqh - 2px)*1000/540 + 2px))}
+.game-expanded #game-canvas{image-rendering:pixelated}
+.game-expanded .game-console{flex:none;width:min(100%,900px);margin-inline:auto}
+.game-expanded .game-turn{margin:0 0 4px}
+.game-expanded .game-roster{margin:4px 0 8px}
+.game-expanded #game-controls{grid-template-columns:minmax(100px,1fr) minmax(100px,1fr) auto 64px;gap:14px}
+.game-expanded #game-controls label,.game-expanded #game-ammo legend{font-size:13px}
+.game-expanded #game-controls input[type=range]{height:32px}
+.game-expanded #game-controls #game-ammo label,.game-expanded #game-fire{min-height:32px;height:32px}
+.game-expanded .game-extras{flex:0 1 auto;min-height:30px;max-height:90px;overflow:auto;overscroll-behavior:contain;width:min(100%,900px);margin-inline:auto;scrollbar-width:thin;scrollbar-color:#738d99 transparent}
+.game-expanded #game-records,.game-expanded .game-credits{margin-top:4px;padding-top:4px}
+.game-expanded #game-victory{min-height:0}
+@media(max-height:650px){
+ .game-expanded .game-eyebrow{display:none}
+ #game-panel.game-expanded{padding:6px 12px;gap:4px}
+ .game-expanded .game-heading h2{font-size:20px}
+ .game-expanded .game-extras{max-height:32px}
+ .game-expanded .game-roster{margin:2px 0 4px;gap:4px}
+ .game-expanded .game-tank-stat{padding:2px 4px}
+}
