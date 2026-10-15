@@ -77,7 +77,7 @@ Within a battle, damage makes retaliation more attractive. Higher difficulties w
 
 Across the **last three completed battles**, grudges fade with age. Winning at least two of those battles attracts extra attention. This applies to bots as well as you—being human isn't the reason everyone shoots at you. Rivalries save with local records; abandoned matches don't count.
 
-Heckles acknowledge revenge, leaders, kills, embarrassing misses, and self-inflicted damage. They contain sarcastic profanity. The cartoon bubbles are not a family-friendly commentary track.
+Heckles acknowledge revenge, leaders, kills, embarrassing misses, and self-inflicted damage. Expect dry sarcasm, dubious geometry, and very long memories: “You’ve been promoted to terrain,” “A warning shot to another county,” and “That crater has accrued interest.”
 
 If you're knocked out early, stay for the carnage: surviving bots keep fighting on the battlefield, with shots, explosions, and heckles intact. Aiming controls disappear while you spectate; Pause and Sound still work. The final result and replay option appear when one tank remains (or nobody survives), and the actual winner carries their reputation into the next battle.
 

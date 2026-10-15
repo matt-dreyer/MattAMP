@@ -210,7 +210,7 @@ You get unlimited shells and **three MIRVs**, each splitting into five warheads.
 
 **New in the current source (after v0.2.0):** getting knocked out puts you in spectator mode. The bots finish their fight on-screen, and the survivor does a dumb little victory dance—occasionally a wheelie. Scores and grudges use the actual final result.
 
-The bots have opinions. They can return fire, remember who hurt them across three completed battles, and gang up on a repeat winner—including another bot. Good hits and spectacular misses earn sarcastic, sometimes profane cartoon heckles.
+The bots have opinions. They can return fire, remember who hurt them across three completed battles, and gang up on a repeat winner—including another bot. Good hits and spectacular misses earn dry, sarcastic cartoon heckles.
 
 ### The controls
 
