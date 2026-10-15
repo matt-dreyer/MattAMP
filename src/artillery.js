@@ -60,7 +60,7 @@
   get score(){return Math.round((this.damage*10+this.kills*250+(this.result==='win'?1000+this.tanks[0].hp*5:0))*this.multiplier);}
   projectile(tank,angle,power,weapon){const r=angle*Math.PI/180,speed=100+power*4.7;return {x:tank.x+Math.cos(r)*18,y:tank.y-Math.sin(r)*18,vx:Math.cos(r)*speed,vy:-Math.sin(r)*speed,weapon,owner:tank.id,time:0,trail:[]};}
   fire(angle,power,weapon='shell'){
-   if(this.phase!=='aim'||!Number.isFinite(angle)||!Number.isFinite(power)||!['shell','mirv'].includes(weapon))return false;
+   if(this.phase!=='aim'||this.active.hp<=0||!Number.isFinite(angle)||!Number.isFinite(power)||!['shell','mirv'].includes(weapon))return false;
    if(weapon==='mirv'&&this.active.mirvs<=0)return false;
    this.active.angle=clamp(angle,5,175);this.active.power=clamp(power,10,100);
    if(weapon==='mirv')this.active.mirvs--;
@@ -143,7 +143,7 @@
   }
   nextTurn(){
    const alive=this.tanks.filter(t=>t.hp>0);
-   if(alive.length<=1||(!this.spectator&&this.tanks[0].hp<=0)){this.phase='over';this.result=alive.length===0?'draw':this.tanks[0].hp>0?'win':'loss';this.message=this.result==='win'?'Victory. The ridge is yours.':this.result==='draw'?'Mutual destruction.':'Your tank is out. Give it another shot.';return;}
+   if(alive.length<=1){this.phase='over';this.result=alive.length===0?'draw':this.tanks[0].hp>0?'win':'loss';this.message=this.result==='win'?'Victory. The ridge is yours.':this.result==='draw'?'Mutual destruction.':alive[0].name+' took the ridge. Your tank is out.';return;}
    do{this.turn=(this.turn+1)%this.tanks.length;if(this.turn===0)this.round++;}while(this.active.hp<=0);
    this.wind=this.newWind();this.phase='aim';this.delay=0;this.message=this.active.id===0?'Your turn. Adjust from your last shot.':this.active.name+' is lining up a shot…';
   }
@@ -169,19 +169,6 @@
    }
   }
   memory(){const alive=this.tanks.filter(t=>t.hp>0);return {winner:alive.length===1?alive[0].id:null,damage:this.damageLedger.map(row=>[...row])};}
-  async finishRivals(){
-   if(this.result!=='loss'||this.tanks.filter(t=>t.hp>0).length<=1)return this.memory();
-   // Finish surviving bots offscreen so a bot's win is earned, not guessed from HP.
-   // Work in small batches to leave playback and the desktop responsive.
-   const rest=Object.assign(Object.create(Battle.prototype),this,{spectator:true,phase:'settle',delay:0,result:null,
-    tanks:this.tanks.map(t=>({...t})),terrain:this.terrain.slice(),projectiles:[],blasts:[],lastTrails:[],damageLedger:this.damageLedger.map(row=>[...row])});
-   for(let step=0;step<20000&&rest.phase!=='over';step++){
-    rest.step(.05);
-    if(step%100===99)await new Promise(resolve=>setTimeout(resolve,0));
-   }
-   // A pathological stalemate records no winner; no synthetic championship.
-   return rest.memory();
-  }
   record(initials,id){if(this.phase!=='over')return null;return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory()};}
  }
  const api={Battle,SKILLS,COLORS,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};

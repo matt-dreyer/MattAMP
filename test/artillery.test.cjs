@@ -101,10 +101,29 @@ test('rivalry ledger attributes blast and fall damage to bots and excludes self 
  b.explode({x:target.x,y:target.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][1],100);
  const self=b.tanks[2];b.explode({x:self.x,y:self.y,owner:2,weapon:'shell'});assert.equal(b.damageLedger[2][2],0);assert.equal(b.score,0);
 });
-test('surviving bots earn an offscreen winner without changing the visible result or score',async()=>{
- const b=battle({bots:3,skill:3});b.tanks[0].hp=0;b.nextTurn();const before=JSON.stringify(b),result=await b.finishRivals();
- assert.equal(JSON.stringify(b),before);assert.ok([1,2,3].includes(result.winner));assert.ok(result.damage.flat().some(n=>n>0));
- const won=battle();won.tanks.slice(1).forEach(t=>t.hp=0);won.nextTurn();assert.equal((await won.finishRivals()).winner,0);
+test('player elimination keeps the visible battle running until the bots earn a winner',()=>{
+ const b=battle({bots:3,skill:3});b.damage=40;b.kills=1;b.shots=2;b.tanks[0].hp=0;
+ assert.equal(b.fire(90,55),false,'destroyed tanks cannot fire');
+ b.nextTurn();const score=b.score;
+ assert.equal(b.phase,'aim');assert.notEqual(b.active.id,0);assert.equal(b.result,null);
+ assert.equal(b.record('MAT','spectator-round-0001'),null,'no premature score or rivalry record');
+ let botShots=0;const fire=b.fire.bind(b);b.fire=(...args)=>{assert.notEqual(b.active.id,0);const fired=fire(...args);if(fired)botShots++;return fired;};
+ for(let i=0;i<20000&&b.phase!=='over';i++)b.step(.05);
+ assert.ok(botShots>1);assert.equal(b.phase,'over');assert.equal(b.result,'loss');assert.equal(b.score,score);assert.equal(b.shots,2);
+ const record=b.record('MAT','spectator-round-0001'),winner=b.tanks.find(t=>t.hp>0);
+ assert.ok(winner);assert.equal(record.memory.winner,winner.id);assert.match(b.message,new RegExp(winner.name+' took the ridge'));
+ assert.ok(record.memory.damage.flat().some(n=>n>0));
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-spectator-'));try{
+  const store=createArcadeStore(path.join(dir,'scores.json'));store.record(record);store.record(record);
+  assert.equal(store.read().played,1);assert.equal(store.read().rivalry[0].winner,winner.id);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('a last MIRV still resolves after its owner dies, including a final draw',()=>{
+ const b=battle({bots:3});b.wind=0;b.fire(90,45,'mirv');b.tanks[0].hp=0;
+ for(let i=0;i<1000&&b.projectiles.length!==5;i++)b.step(1/60);
+ assert.equal(b.projectiles.length,5);assert.equal(b.phase,'flight');assert.equal(b.record('MAT','spectator-mirv-0001'),null);
+ finishFlight(b);assert.notEqual(b.active.id,0);assert.equal(b.result,null);
+ b.tanks.forEach(t=>t.hp=0);b.nextTurn();assert.equal(b.result,'draw');assert.equal(b.memory().winner,null);
 });
 test('rivalry persists separately from high scores, expires and deduplicates with old saves intact',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-rivalry-'));try{

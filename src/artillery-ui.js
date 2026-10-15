@@ -134,7 +134,7 @@ class MattArcade{
  }
  async saveScore(){
   if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('replay-hint').textContent='Saving your score…';this.$('save-status').textContent='Saving your score…';
-  try{if(!this.record.memoryResolved){this.record.memory=await this.battle.finishRivals();this.record.memoryResolved=true;const winner=this.battle.tanks.find(t=>t.id===this.record.memory.winner);if(this.record.result==='loss'&&winner)this.$('result').textContent+=' '+winner.name+' took the ridge.';}const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id);this.$('save-status').textContent=rank>=0?'Saved. #'+(rank+1)+' on your high-score table!':'Score saved. Your top ten are still standing.';}
+  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id);this.$('save-status').textContent=rank>=0?'Saved. #'+(rank+1)+' on your high-score table!':'Score saved. Your top ten are still standing.';}
   catch(e){this.$('save-status').textContent='Score not saved: '+e.message;this.$('save-retry').hidden=false;}
   finally{this.saving=false;this.$('again').disabled=false;this.$('replay-hint').textContent='Click the battlefield for a new skirmish.';this.onResize();}
  }
@@ -145,14 +145,14 @@ class MattArcade{
   data.scores.forEach((s,i)=>{const tr=document.createElement('tr');for(const text of [i+1,s.initials,s.score.toLocaleString(),s.bots+' · '+MattArtillery.SKILLS[s.skill].name,s.win?'WIN':s.result==='draw'?'DRAW':'OUT',MattArtillery.describeConditions(s.conditions)]){const td=document.createElement('td');td.textContent=text;tr.append(td);}if(s.id===this.id)tr.className='game-record-current';this.$('score-rows').append(tr);});
  }
  render(){
-  const b=this.battle,over=b?.phase==='over',mine=b?.active.id===0&&b.phase==='aim'&&!this.paused;
+  const b=this.battle,over=b?.phase==='over',spectating=!!b&&b.tanks[0].hp<=0&&!over,mine=b?.active.id===0&&b.active.hp>0&&b.phase==='aim'&&!this.paused;
   this.$('conditions').textContent=MattArtillery.describeConditions((b||this.preview).conditions);
   this.$('conditions').title='Arena rules stay fixed for this battle. Ricochet reflects side-wall shots; wraparound sends them through the opposite side.';
-  this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
+  this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over||spectating;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
   this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name+' · '+b.multiplier.toFixed(2)+'×':'Last tank standing';
   const wind=Math.abs(b?.wind||0);this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+wind+(wind>=76?' · WILD GUST':wind>=31?' · Strong':''):'Wind —';this.$('wind').classList.toggle('wild-gust',!!b&&wind>=76);
   this.$('score').textContent=String(b?.score||0).padStart(6,'0');
-  this.$('status').textContent=this.paused?'Paused. Take your time.':b?.message||'Choose your rivals, then start a battle.';
+  this.$('status').textContent=this.paused?'Paused. Take your time.':spectating?'You’re out. Spectating · '+b.message:b?.message||'Choose your rivals, then start a battle.';
   this.$('overlay').hidden=!!b&&!this.paused&&!over;
   this.$('overlay-title').textContent=this.paused?'Taking five.':over?(b.result==='win'?'RIDGE CHAMPION':b.result==='draw'?'EVERYBODY LOSES':'ONE MORE ROUND?'):'A little scorched nostalgia.';
   this.$('overlay-detail').textContent=this.paused?'Resume when you’re ready.':over?this.initials+' / '+b.score.toLocaleString()+' POINTS':'One ridge. You and 3–5 bots. Three MIRVs each.';

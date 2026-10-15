@@ -71,7 +71,7 @@ Across the **last three completed battles**, grudges fade with age. Winning at l
 
 Heckles acknowledge revenge, leaders, kills, embarrassing misses, and self-inflicted damage. They contain sarcastic profanity. The cartoon bubbles are not a family-friendly commentary track.
 
-If you're knocked out early, surviving bots finish offscreen so the result names an actual winner.
+If you're knocked out early, stay for the carnage: surviving bots keep fighting on the battlefield, with shots, explosions, and heckles intact. Aiming controls disappear while you spectate; Pause and Sound still work. The final result and replay option appear when one tank remains (or nobody survives), and the actual winner carries their reputation into the next battle.
 
 ## Scores and another round
 

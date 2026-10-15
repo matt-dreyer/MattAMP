@@ -4,7 +4,7 @@ const profile=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-game-'));
 fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,alwaysOnTop:false,ambient:'stars',layout:'sidecar'}));
 const captures=path.join(profile,'captures');fs.mkdirSync(captures);
 let app;const errors=[];
-async function launch(){app=await _electron.launch({ignoreDefaultArgs:['--no-sandbox'],args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});const p=await app.firstWindow();p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();return p;}
+async function launch(){app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});const p=await app.firstWindow();p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();return p;}
 (async()=>{try{
  let p=await launch();await p.locator('#source-game').click();await p.locator('#game-sound').click();await p.waitForFunction(()=>arcade.assets['metal-slug-tank']&&arcade.assets['metal-slug-blasts']);await p.screenshot({path:path.join(captures,'mattamp-game-setup.png')});
  await p.locator('#game-initials').fill('TST');await p.locator('#game-bots').selectOption('5');await p.locator('#game-skill').selectOption('2');await p.locator('#game-start').click();assert.equal(await p.locator('.game-tank-stat').count(),6);assert.equal(await p.locator('#game-controls').isDisabled(),false);
@@ -36,7 +36,19 @@ async function launch(){app=await _electron.launch({ignoreDefaultArgs:['--no-san
  await p.locator('#game-again').click({position:{x:20,y:20}});assert.equal(await p.locator('#game-setup').isVisible(),true,'click anywhere on the finished battlefield returns to skirmish setup');assert.equal(await p.locator('#game-bots').inputValue(),'5');assert.equal(await p.locator('#game-skill').inputValue(),'2');assert.equal(await p.evaluate(()=>audio.paused),false);
  for(const clip of ['worms-fire','worms-blast-1','worms-blast-2','worms-blast-3','worms-split']){const duration=await p.evaluate(async clip=>{const a=new Audio('/arcade/'+clip+'.ogg');a.muted=true;await a.play();a.pause();return a.duration;},clip);assert.ok(duration>0);}
  await app.close();app=null;p=await launch();await p.locator('#source-game').click();await p.waitForFunction(()=>arcade.scores?.played===1);assert.equal(await p.locator('#game-initials').inputValue(),'TST');assert.equal(await p.evaluate(()=>arcade.scores.wins),1);assert.equal(await p.evaluate(()=>arcade.scores.rivalry.at(-1).winner),0);
- await p.locator('#game-start').click();await p.evaluate(()=>{arcade.battle.tanks[0].hp=0;arcade.battle.phase='settle';arcade.battle.delay=0;});await p.waitForFunction(()=>arcade.battle.phase==='over'&&!arcade.saving);await p.locator('#game-again').focus();await p.keyboard.press('Space');assert.equal(await p.locator('#game-setup').isVisible(),true,'keyboard replay works after defeat');
+ // Player death becomes visible spectator play, not an early result or a hidden simulation.
+ await p.locator('#game-start').click();await p.evaluate(()=>{arcade.battle.tanks[0].hp=0;arcade.battle.phase='settle';arcade.battle.delay=0;});
+ await p.waitForFunction(()=>arcade.battle.active.id!==0&&arcade.battle.phase==='flight');
+ assert.equal(await p.locator('#game-controls').isVisible(),false);assert.equal(await p.locator('#game-overlay').isVisible(),false);assert.equal(await p.locator('#game-again').isVisible(),false);
+ assert.match(await p.locator('#game-status').textContent(),/Spectating/);assert.equal(await p.evaluate(()=>arcade.record),null);assert.equal(await p.evaluate(()=>arcade.scores.played),1);
+ await p.locator('#game-pause').click();const spectatorSnapshot=await p.evaluate(()=>JSON.stringify(arcade.battle));await p.waitForTimeout(200);assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),spectatorSnapshot);
+ await p.locator('#game-pause').click();await p.locator('#source-radio').click();const hiddenSnapshot=await p.evaluate(()=>JSON.stringify(arcade.battle));await p.waitForTimeout(200);assert.equal(await p.evaluate(()=>JSON.stringify(arcade.battle)),hiddenSnapshot);await p.locator('#source-game').click();
+ await p.screenshot({path:'/tmp/mattamp-spectating.png'});
+ // Resolve the remaining bots deterministically and persist the visible winner exactly once.
+ await p.evaluate(()=>{arcade.battle.tanks.slice(2).forEach(t=>t.hp=0);arcade.battle.projectiles=[];arcade.battle.phase='settle';arcade.battle.delay=0;});
+ await p.waitForFunction(()=>arcade.battle.phase==='over'&&!arcade.saving&&arcade.scores.played===2);
+ assert.equal(await p.evaluate(()=>arcade.scores.rivalry.at(-1).winner),1);assert.match(await p.locator('#game-result').textContent(),/Byte took the ridge/);
+ await p.locator('#game-again').focus();await p.keyboard.press('Space');assert.equal(await p.locator('#game-setup').isVisible(),true,'keyboard replay works after the bots finish');
  await p.locator('#source-radio').click();await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===710);await p.waitForTimeout(400);await p.screenshot({path:path.join(captures,'mattamp-game-radio-regression.png')});
- assert.deepEqual(errors,[]);console.log('PASS: wheel/keyboard aim and power, compact single-row controls at 710/430, expansion/manual resize/restore, sprites, six tanks, MIRV, pause/tab switch, radio continuity, Settings, Bug mode, layouts, sound decode, saved scores across restart.');
+ assert.deepEqual(errors,[]);console.log('PASS: wheel/keyboard aim and power, compact single-row controls at 710/430, expansion/manual resize/restore, sprites, six tanks, MIRV, pause/tab switch, radio continuity, Settings, Bug mode, layouts, sound decode, spectator bot combat after player death, delayed result/replay, winner persistence, saved scores across restart.');
  }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});
