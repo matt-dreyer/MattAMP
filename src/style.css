@@ -106,3 +106,11 @@ select option{background:#25343e;color:var(--text)}
 .full>.content{grid-column:1;grid-row:2}
 .full>.system{grid-column:2;grid-row:1 / span 2}
 html{scroll-padding-top:var(--chrome-height,100px)}
+
+/* Window chrome uses bare icons; retain the full button hit areas and focus rings. */
+#deck .window-actions button,
+#deck .window-actions button:enabled:hover{
+ background:transparent!important;box-shadow:none;backdrop-filter:none;border:0;
+}
+#deck .window-actions button:enabled:hover{color:#fff}
+#deck .window-actions #quit-top:enabled:hover{color:#ffadb5}
