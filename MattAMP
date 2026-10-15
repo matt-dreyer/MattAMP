@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+mattamp_root="$(cd -- "$(dirname -- "$0")" && pwd)"
+mattamp_binary="$mattamp_root/node_modules/electron/dist/electron"
+if [[ ! -x "$mattamp_binary" ]]; then
+  echo 'MattAMP runtime is missing. Use the Linux runtime ZIP, or run npm ci in a source checkout.' >&2
+  exit 1
+fi
+exec "$mattamp_binary" "$mattamp_root" "$@"

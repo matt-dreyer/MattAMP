@@ -4,6 +4,25 @@ Personal repository: [matt-dreyer/MattAMP](https://github.com/matt-dreyer/MattAM
 
 A local Linux desktop player and workstation monitor, built for Matt’s 49-inch OLED. Eight DI.FM presets, five podcast favorites, live network/CPU/memory readings, and both NVIDIA GPUs in one muted desktop widget.
 
+## Share / install on another Linux PC
+
+The GitHub repository is **private**. A friend needs collaborator access to clone it; a ZIP can be shared directly without GitHub access. The repository includes a full setup and feature guide, but no public installer/release is currently published.
+
+**Easiest: the `MattAMP-linux-x64-<commit>.zip` runtime bundle.** It includes Electron and production dependencies; Node/npm is not required. Extract the whole folder, open a terminal there, and run `./MattAMP`. Click **Game** to play. Use `bash scripts/install.sh` for an application-menu/dock launcher. Keep that folder in place. See [START-HERE.txt](START-HERE.txt) for the short handoff guide and Ubuntu sandbox setup.
+
+This build targets **64-bit Intel/AMD Linux**, not ARM. A modern graphical desktop and Electron’s system libraries are required; distro compatibility has not been tested exhaustively. The game runs offline and needs neither NVIDIA hardware nor any media account. DI.FM Premium is only needed for radio. Missing GPU sensors appear as unavailable.
+
+The **source ZIP** is smaller but needs Node/npm and `npm ci` before running `./MattAMP`. User profiles, listen keys, X sessions, settings and scores are stored outside the app and are never packaged.
+
+To build both ZIPs from a clean committed checkout on Linux x86-64:
+
+```sh
+npm ci
+bash scripts/package-linux.sh "$HOME/Downloads"
+```
+
+The builder exports only committed source, installs clean production dependencies, copies the matching pinned Electron runtime and its license notices, and writes SHA-256 checksums. It never copies your live app profile or unrelated workspace files. Bundled third-party artwork/audio retain their documented rights and credits.
+
 ## Open it
 
 Launch **MattAMP** from the application menu, or run `~/.local/bin/mattamp`. The original `workstation-deck` command remains an alias-compatible entry point.

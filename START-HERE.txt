@@ -1,0 +1,46 @@
+MattAMP — Linux x86-64 (Intel/AMD 64-bit)
+
+1. Extract the entire ZIP into a permanent folder, such as ~/Apps/MattAMP.
+2. Open a terminal in that folder and run:
+
+   ./MattAMP
+
+3. Click Game. Chaos starts on Mixed. Pick bots/skill, then Start battle.
+
+No Node.js, npm, GitHub account, DI.FM subscription or X login is needed to
+play the game. The runtime ZIP includes Electron and runtime dependencies.
+It needs a modern Linux graphical desktop and the usual Electron system
+libraries. It does not include ARM binaries or Windows/macOS builds.
+The source ZIP is different: it requires Node/npm and npm ci first.
+
+Optional application-menu / dock launcher:
+
+   bash scripts/install.sh
+
+Keep this extracted folder in place after installing the launcher.
+
+Ubuntu sandbox launch error?
+If Ubuntu reports a user-namespace or SUID sandbox-helper error, run this
+once from the extracted folder, approve its administrator prompt, then
+try ./MattAMP again:
+
+   bash scripts/install-sandbox-profile.sh
+
+This installs a sandbox profile scoped to this folder's Electron binary.
+Rerun it if you move the folder. Do not launch the app as root or disable
+the sandbox. Other distributions may need their Electron desktop libraries
+installed through their package manager.
+
+Game controls: Left/Right = angle; Up/Down = power; Enter = fire.
+Wheel over Angle or Power changes that value. Click the sky to aim.
+Click the finished battlefield for another skirmish. Expand enlarges the
+arena; Escape restores it. Game sound has its own toggle.
+
+The game runs offline. Radio/podcasts/X need internet; DI.FM radio needs
+your own Premium listen key. NVIDIA hardware is optional—missing GPU
+readings are shown as unavailable. Scores and preferences save locally.
+No Matt account data, keys, cookies, browser sessions or scores are included.
+
+README.md has the full feature guide, troubleshooting, asset credits and
+source references. This personal build includes third-party retro assets;
+their existing credits and rights notices are retained in assets/arcade.
