@@ -160,15 +160,15 @@ class MattArcade{
  }
  async saveScore(){
   if(this.saving||!this.record)return;this.saving=true;this.$('save-retry').hidden=true;this.$('again').disabled=true;this.$('replay-hint').textContent='Saving your score…';this.$('save-status').textContent='Saving your score…';
-  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id);this.$('save-status').textContent=rank>=0?'Saved. #'+(rank+1)+' on your high-score table!':'Score saved. Your top ten are still standing.';}
+  try{const res=await window.deck.arcadeRecord(this.record);if(!res.ok)throw new Error(res.error);this.scores=res.data;this.renderScores();const rank=this.scores.scores.findIndex(s=>s.id===this.record.id&&!s.tankId);this.$('save-status').textContent=rank>=0?'Saved. You’re #'+(rank+1)+' on the high-score table!':'Scores saved. Your score didn’t make the shared top ten.';}
   catch(e){this.$('save-status').textContent='Score not saved: '+e.message;this.$('save-retry').hidden=false;}
   finally{this.saving=false;this.$('again').disabled=false;this.$('replay-hint').textContent='Click the battlefield for a new skirmish.';this.onResize();}
  }
  renderScores(){
   const data=this.scores;if(!data)return;
   this.$('record-summary').textContent=data.scores.length?'Best '+data.scores[0].score.toLocaleString():'Local arcade records';
-  this.$('totals').textContent=data.wins+' wins / '+data.played+' completed battles';this.$('score-empty').hidden=!!data.scores.length;this.$('score-rows').replaceChildren();
-  data.scores.forEach((s,i)=>{const tr=document.createElement('tr');for(const text of [i+1,s.initials,s.score.toLocaleString(),s.bots+' · '+MattArtillery.SKILLS[s.skill].name,s.win?'WIN':s.result==='draw'?'DRAW':'OUT',MattArtillery.describeConditions(s.conditions)]){const td=document.createElement('td');td.textContent=text;tr.append(td);}if(s.id===this.id)tr.className='game-record-current';this.$('score-rows').append(tr);});
+  this.$('totals').textContent='You: '+data.wins+' wins / '+data.played+' completed battles · Shared top ten';this.$('score-empty').hidden=!!data.scores.length;this.$('score-rows').replaceChildren();
+  data.scores.forEach((s,i)=>{const tr=document.createElement('tr'),name=s.tankId?MattArtillery.BOT_NAMES[s.tankId-1]+' · BOT':s.initials;for(const text of [i+1,name,s.score.toLocaleString(),s.bots+' · '+MattArtillery.SKILLS[s.skill].name,s.win?'WIN':s.result==='draw'?'DRAW':'OUT',MattArtillery.describeConditions(s.conditions)]){const td=document.createElement('td');td.textContent=text;tr.append(td);}tr.children[1].style.color=MattArtillery.COLORS[s.tankId||0];if(s.id===this.id)tr.className='game-record-current';this.$('score-rows').append(tr);});
  }
  render(){
   const b=this.battle,over=b?.phase==='over',spectating=!!b&&b.tanks[0].hp<=0&&!over,mine=b?.active.id===0&&b.active.hp>0&&b.phase==='aim'&&!this.paused;

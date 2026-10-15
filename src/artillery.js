@@ -4,6 +4,7 @@
  const W=1000,H=540,DT=1/120,FLIGHT_LIMIT=20;
  const SKILLS=[{name:'Very dumb',error:200,retaliation:.15,samples:8,multiplier:1},{name:'Casual',error:110,retaliation:.65,samples:28,multiplier:1.35},{name:'Sharp',error:55,retaliation:1.3,samples:90,multiplier:1.8},{name:'Human-ish',error:28,retaliation:2,samples:160,multiplier:2.2}];
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
+ const BOT_NAMES=['Byte','Floppy','Modem','Turbo','DOS'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
  // Fine control for nearby shots; retain the old maximum for long lobs and wild wind.
  const launchSpeed=power=>40+530*(clamp(power,1,100)/100)**2;
@@ -44,7 +45,7 @@
    }
    const slots=Array.from({length:this.bots+1},(_,i)=>70+i*860/this.bots);
    const playerSlot=Math.floor(random()*slots.length);
-   this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':['Byte','Floppy','Modem','Turbo','DOS'][i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,angle:x<W/2?55:125,power:50,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
+   this.tanks=slots.map((x,i)=>({id:i===playerSlot?0:i<playerSlot?i+1:i,name:i===playerSlot?'YOU':BOT_NAMES[i<playerSlot?i:i-1],x,y:this.ground(x)-8,hp:100,mirvs:3,damage:0,kills:0,shots:0,angle:x<W/2?55:125,power:50,color:COLORS[i===playerSlot?0:i<playerSlot?i+1:i]})).sort((a,b)=>a.id-b.id);
    for(const tank of this.tanks)for(let x=Math.round(tank.x)-18;x<=tank.x+18;x++)this.terrain[x]=tank.y+8;
    this.turn=0;this.round=1;this.shots=0;this.kills=0;this.damage=0;this.phase='aim';this.projectiles=[];this.blasts=[];this.lastTrails=[];this.wind=this.newWind();this.delay=0;this.result=null;
    this.message='Your turn. Pick an angle and power.';
@@ -59,14 +60,18 @@
    return strength===0?0:strength*(this.random()<.5?-1:1);
   }
   get multiplier(){return SKILLS[this.skill].multiplier*(1+(this.bots-3)*.15);}
-  get score(){return Math.round((this.damage*10+this.kills*250+(this.result==='win'?1000+this.tanks[0].hp*5:0))*this.multiplier);}
+  get damage(){return this.tanks[0].damage;}set damage(value){this.tanks[0].damage=value;}
+  get kills(){return this.tanks[0].kills;}set kills(value){this.tanks[0].kills=value;}
+  get shots(){return this.tanks[0].shots;}set shots(value){this.tanks[0].shots=value;}
+  scoreFor(tank){return Math.round((tank.damage*10+tank.kills*250+(this.phase==='over'&&tank.hp>0?1000+tank.hp*5:0))*this.multiplier);}
+  get score(){return this.scoreFor(this.tanks[0]);}
   projectile(tank,angle,power,weapon){const r=angle*Math.PI/180,speed=launchSpeed(power);return {x:tank.x+Math.cos(r)*18,y:tank.y-Math.sin(r)*18,vx:Math.cos(r)*speed,vy:-Math.sin(r)*speed,weapon,owner:tank.id,time:0,trail:[]};}
   fire(angle,power,weapon='shell'){
    if(this.phase!=='aim'||this.active.hp<=0||!Number.isFinite(angle)||!Number.isFinite(power)||!['shell','mirv'].includes(weapon))return false;
    if(weapon==='mirv'&&this.active.mirvs<=0)return false;
    this.active.angle=clamp(angle,5,175);this.active.power=clamp(power,1,100);
    if(weapon==='mirv')this.active.mirvs--;
-   if(this.active.id===0)this.shots++;
+   this.active.shots++;
    this.projectiles=[this.projectile(this.active,this.active.angle,this.active.power,weapon)];this.lastTrails=[];this.phase='flight';this.message=this.active.name+' fired '+(weapon==='mirv'?'a MIRV.':'a shell.');return true;
   }
   move(p,dt){
@@ -122,6 +127,11 @@
    }
    return {angle:best.angle,power:best.power,weapon:tank.mirvs>0&&this.random()<.35?'mirv':'shell'};
   }
+  creditDamage(owner,tank,before){
+   const attacker=this.tanks.find(t=>t.id===owner);if(!attacker||owner===tank.id)return;
+   const damage=before-tank.hp;this.damageLedger[owner][tank.id]+=damage;attacker.damage+=damage;
+   if(before>0&&tank.hp===0)attacker.kills++;
+  }
   explode(p){
    if(p.x<0||p.x>W)return;
    const radius=p.weapon==='child'?42:62,damage=(p.weapon==='child'?46:78)*(this.round>12?1.5:1);
@@ -130,8 +140,7 @@
     if(tank.hp<=0)continue;
     const before=tank.hp,d=Math.hypot(tank.x-p.x,tank.y-p.y);
     tank.hp=Math.max(0,tank.hp-Math.round(d<radius?damage*(1-d/radius):0));
-    if(p.owner!==tank.id&&this.damageLedger[p.owner])this.damageLedger[p.owner][tank.id]+=before-tank.hp;
-    if(p.owner===0&&tank.id!==0){this.damage+=before-tank.hp;if(before>0&&tank.hp===0)this.kills++;}
+    this.creditDamage(p.owner,tank,before);
    }
    for(let x=Math.max(0,Math.floor(p.x-radius));x<=Math.min(W,Math.ceil(p.x+radius));x++){
     const depth=Math.sqrt(Math.max(0,radius*radius-(x-p.x)**2));
@@ -140,7 +149,7 @@
    for(const tank of this.tanks){
     const drop=Math.max(0,this.ground(tank.x)-8-tank.y),before=tank.hp;
     tank.y=this.ground(tank.x)-8;
-    if(before>0){tank.hp=Math.max(0,tank.hp-Math.round(Math.max(0,drop-18)*.65));if(p.owner!==tank.id&&this.damageLedger[p.owner])this.damageLedger[p.owner][tank.id]+=before-tank.hp;if(p.owner===0&&tank.id!==0){this.damage+=before-tank.hp;if(tank.hp===0)this.kills++;}}
+    if(before>0){tank.hp=Math.max(0,tank.hp-Math.round(Math.max(0,drop-18)*.65));this.creditDamage(p.owner,tank,before);}
    }
   }
   nextTurn(){
@@ -172,8 +181,12 @@
    }
   }
   memory(){const alive=this.tanks.filter(t=>t.hp>0);return {winner:alive.length===1?alive[0].id:null,damage:this.damageLedger.map(row=>[...row])};}
-  record(initials,id){if(this.phase!=='over')return null;return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory()};}
+  record(initials,id){
+   if(this.phase!=='over')return null;
+   const botScores=this.tanks.slice(1).map(t=>({tankId:t.id,score:this.scoreFor(t),kills:t.kills,shots:t.shots,win:t.hp>0,result:t.hp>0?'win':this.result==='draw'?'draw':'loss'}));
+   return {id,initials,score:this.score,win:this.result==='win',result:this.result,bots:this.bots,skill:this.skill,kills:this.kills,shots:this.shots,conditions:{...this.conditions},memory:this.memory(),botScores};
+  }
  }
- const api={Battle,launchSpeed,SKILLS,COLORS,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
+ const api={Battle,launchSpeed,SKILLS,COLORS,BOT_NAMES,W,H,CHAOS,TERRAINS,GRAVITY,WALLS,rollConditions,validateConditions,describeConditions};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.MattArtillery=api;
 })(typeof window==='object'?window:globalThis);

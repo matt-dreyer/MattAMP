@@ -90,7 +90,9 @@ If you're knocked out early, stay for the carnage: surviving bots keep fighting 
 
 Completed matches save automatically. Once saving finishes, click the battlefield for another skirmish, or focus it with Tab and press Enter/Space. Disk failures show a retry control. Leaving an unfinished match records no result.
 
-The local table keeps the **top ten**, initials, difficulty, bot count, result, and arena conditions, plus lifetime wins/completed battles. Rivalries persist too.
+The local table keeps the **top ten scores across humans and bots**, with names, difficulty, bot count, result, and arena conditions. Bot names carry a BOT label and their tank color. Your lifetime wins/completed battles remain human totals. Rivalries persist too.
+
+Every participant in a completed battle earns points by the same rules below, including damage from craters and falls. Self-damage earns no points. The survivor gets the victory bonus; draws award none. Existing human records remain eligible, and bot records begin with newly completed battles—old bot scores are not reconstructed.
 
 Score before difficulty/bot-count multipliers:
 
