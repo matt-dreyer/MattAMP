@@ -17,7 +17,8 @@
     "test:chaos": "node scripts/chaos-smoke.cjs",
     "test:podcasts": "node scripts/podcasts-smoke.cjs",
     "test:keyring-startup": "node scripts/keyring-startup-smoke.cjs",
-    "test:ski-cams": "node scripts/ski-cams-smoke.cjs"
+    "test:ski-cams": "node scripts/ski-cams-smoke.cjs",
+    "test:tab-sounds": "node scripts/tab-sounds-smoke.cjs"
   },
   "dependencies": {
     "electron": "44.7.2",

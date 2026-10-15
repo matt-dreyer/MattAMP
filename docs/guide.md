@@ -125,6 +125,10 @@ A loopback-only HTTP server serves the UI, supplies a YouTube embed origin, and 
 
 Media and X still contact their respective providers; local storage doesn't make those services offline or private from their operators. Podcasts and system metrics need no MattAMP hosted backend, recurring service fee, or API key.
 
+## Tab sound effects
+
+**Settings → Silly tab sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts says “Meh,” SkiCams says “Send it!” in a female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
+
 ## Startup audio and credits
 
 `assets/startup.mp3` is DJ Mike Llama's original **“Llama Whippin' Intro” (Winamp 2.91)**, preserved in [Webamp's example](https://github.com/captbaritone/webamp/blob/master/examples/minimal/index.html). [Pinned audio source](https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82cfe0e37286dbbe0666072dc3190a83bc/mp3/llama-2.91.mp3).
