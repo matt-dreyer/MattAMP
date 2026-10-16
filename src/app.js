@@ -2,17 +2,18 @@
 const $=id=>document.getElementById(id);
 const root=$('deck'),audio=$('audio');
 const ambient=new MattAmbient($('ambient'));
+const retro=new MattRetro(root,audio);
 let appHidden=false;
-function syncAmbient(){if(state)ambient.configure(state.ambient,appHidden||mode==='bug');}
+function syncAmbient(){if(state){ambient.configure(state.retro?'off':state.ambient,appHidden||mode==='bug');retro.configure(state.retro,!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
 const tabAudio=new Audio();
 tabAudio.preload='auto';
-const tabClips={radio:'yeah',podcast:'meh',x:'meh',cameras:'send-it',game:'hell-yeah'};
+const tabClips={radio:'yeah',podcast:'meh',x:'meh',cameras:'send-it',game:'hell-yeah',retro:'modem'};
 function playTabSound(tab){
  tabAudio.pause();
  if(!state.tabSounds||muted||!state.volume||!tabClips[tab]||(tab==='game'&&!arcade.sound))return;
- stopStartup();tabAudio.src='/tab-sounds/'+tabClips[tab]+'.mp3';tabAudio.volume=Math.min(.65,state.volume/100);tabAudio.muted=false;
+ stopStartup();tabAudio.src='/tab-sounds/'+tabClips[tab]+(tab==='retro'?'.wav':'.mp3');tabAudio.volume=Math.min(.65,state.volume/100);tabAudio.muted=false;
  void tabAudio.play().catch(()=>{});
 }
 function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
@@ -51,7 +52,7 @@ let radioServers=[],radioIndex=0,radioEpoch=0,saveTimer,lastSize='',resizeQueued
 const catalogs=new Map();
 const formatTime=value=>{const n=Math.max(0,Math.floor(Number(value)||0));return (n>=3600?Math.floor(n/3600)+':':'')+String(Math.floor(n/60)%60).padStart(n>=3600?2:1,'0')+':'+String(n%60).padStart(2,'0');};
 const pct=value=>Number.isFinite(value)?Math.round(value)+'%':'—';
-const gib=value=>(value/1024**3).toFixed(1);
+const mib=value=>Math.round(value/1024**2).toLocaleString();
 function icons(){lucide.createIcons({attrs:{width:16,height:16,'aria-hidden':'true'}});}
 function icon(name){return '<i data-lucide="'+name+'" aria-hidden="true"></i>';}
 async function unwrap(promise){const result=await promise;if(!result.ok)throw new Error(result.error);return result.data;}
@@ -75,12 +76,13 @@ function snapshot(){
  const n=isVideo()&&yt?yt.getCurrentTime?.():audio.currentTime;
  if(Number.isFinite(n)&&n>=0)state.positions[key]=n;
 }
-async function persist(){if(!state)return;try{await unwrap(window.deck.save({layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,gameShotReadouts:state.gameShotReadouts,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
+async function persist(){if(!state)return;try{await unwrap(window.deck.save({retro:state.retro,layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,gameShotReadouts:state.gameShotReadouts,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
-function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+2);const expanded=arcade.expanded&&playingGame;const game=playingGame?(mode==='bug'?'bug':settings?'settings':'play'):'';const key=[mode,state.layout,h,settings,expanded,game].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h,expanded,game).then(syncXBounds);});}
+function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+parseFloat(getComputedStyle(root).borderTopWidth)+parseFloat(getComputedStyle(root).borderBottomWidth));const expanded=arcade.expanded&&playingGame;const game=playingGame?(mode==='bug'?'bug':settings?'settings':'play'):'';const key=[mode,state.layout,h,settings,expanded,game].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h,expanded,game).then(syncXBounds);});}
 function render(){
+ root.classList.toggle('retro',state.retro);$('retro-mode').checked=state.retro;
  const podcast=state.source==='podcast',video=isVideo();
  renderX();syncAmbient();syncGame();
  root.classList.toggle('arcade-expanded',(arcade.expanded||arcade.maximized)&&playingGame&&!settings&&mode==='full');
@@ -88,11 +90,11 @@ function render(){
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
  $('source-cameras').setAttribute('aria-pressed',String(watchingCams));
  $('source-radio').setAttribute('aria-pressed',String(!watchingCams&&!readingX&&!playingGame&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!watchingCams&&!readingX&&!playingGame&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
- $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;$('manage-podcasts').hidden=!podcast;
+ $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('retro-prev').disabled=podcast;$('retro-next').disabled=podcast;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;$('manage-podcasts').hidden=!podcast;
  $('provider').textContent=podcast?'PODCAST / AUDIO':'DI.FM / RADIO';
  $('now-title').textContent=podcast?(activeShow()?.name||'Your podcasts'):activeStation()?.name;
  $('now-detail').textContent=podcast?(current?.title||'Select an episode.'):state.hasDiKey?'Live radio · Premium':state.hasSavedDiKey?'Unlock your saved listen key in Settings.':'Add your Premium listen key in Settings.';
- $('volume').value=state.volume;$('volume-value').textContent=muted?'0':state.volume;$('mute').setAttribute('aria-pressed',String(muted));$('mute').setAttribute('aria-label',muted?'Unmute':'Mute');$('mute').innerHTML=icon(muted?'volume-x':'volume-2');
+ $('volume').value=state.volume;$('volume').style.setProperty('--volume-fill',state.volume+'%');$('volume-value').textContent=muted?'0':state.volume;$('mute').setAttribute('aria-pressed',String(muted));$('mute').setAttribute('aria-label',muted?'Unmute':'Mute');$('mute').innerHTML=icon(muted?'volume-x':'volume-2');
  $('podcast-type').querySelector('[value=youtube]').disabled=!activeShow()?.playlist;$('podcast-type').querySelector('[value=audio]').disabled=!activeShow()?.feed;$('podcast-type').disabled=!shows.length;
  $('play').disabled=podcast&&!shows.length;$('open-video').disabled=!activeShow()?.playlist;
  $('speed').value=String(state.speed);$('podcast-type').value=state.podcastType;$('audio-timeline').hidden=video;$('open-video').hidden=!video;
@@ -111,7 +113,7 @@ function stopAll(stopIntro=true){
  if(yt){try{yt.pauseVideo();}catch{}}
  setStatus('Stopped');return epoch;
 }
-function pause(){stopStartup();if(isVideo()){yt?.pauseVideo();}else audio.pause();snapshot();setStatus('Paused');queueSave();}
+function pause(){stopStartup();if(isVideo()){yt?.pauseVideo?.();}else audio.pause();snapshot();setStatus('Paused');queueSave();}
 async function apiReady(){
  if(window.YT?.Player)return;
  if(!ytApi)ytApi=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{ytApi=null;reject(new Error('YouTube could not load. Try Audio feed or open the episode on YouTube.'));},12000);window.onYouTubeIframeAPIReady=()=>{clearTimeout(timeout);resolve();};const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.onerror=()=>{clearTimeout(timeout);ytApi=null;reject(new Error('YouTube is unreachable. Try Audio feed.'));};document.head.append(script);});
@@ -174,18 +176,19 @@ function seekBy(delta){if(state.source!=='podcast'||!current)return;error();if(i
 function setMode(next){if(next==='bug')tabAudio.pause();if(next==='compact'){readingX=false;playingGame=false;watchingCams=false;}if(next==='bug'){restoreMode=mode;if(isVideo())pause();settings=false;}mode=next;render();}
 function setMeter(element,value,detail){const track=element.querySelector('.track');element.querySelector('b').textContent=pct(value);track.firstElementChild.style.width=Number.isFinite(value)?Math.min(100,Math.max(0,value))+'%':'0%';if(Number.isFinite(value))track.setAttribute('aria-valuenow',String(Math.round(value)));else track.removeAttribute('aria-valuenow');track.setAttribute('aria-valuetext',Number.isFinite(value)?pct(value):'Unavailable');element.querySelector('small').textContent=detail||'Unavailable';}
 function renderMetrics(data){
+ retro.sample(data.error?null:data.cpu);
  metrics=data;if(data.error){$('sample-status').textContent=data.error;return;}
  const n=data.network,online=n.status==='online';const labels={online:'Internet online',checking:'Checking network',disconnected:'Disconnected','upstream-unreachable':'Internet unreachable',unreachable:'Network unreachable'};
  $('network-status').textContent=labels[n.status]||'Status unavailable';$('network-toggle').style.color=online?'#9ccab0':n.status==='checking'?'#a8b9c7':'#dfb574';$('network-latency').textContent=n.internet?.reachable&&n.internet.ms!=null?Math.round(n.internet.ms)+' ms':'—';
  $('interface').textContent=n.iface||'No default route';$('router').textContent=n.router?(n.router.reachable?'Reachable · '+(n.router.ms??'—')+' ms':'No ping response'):'—';$('internet').textContent=n.internet?(n.internet.reachable?'Reachable'+(n.internet.via?' · '+n.internet.via:''):'No probe response'):'—';$('checked').textContent=n.checked?new Date(n.checked).toLocaleTimeString():'Checking…';
- $('down').textContent=Number.isFinite(n.down)?n.down.toFixed(1):'—';$('up').textContent=Number.isFinite(n.up)?n.up.toFixed(1):'—';
- setMeter($('cpu-meter'),data.cpu,'Total CPU utilization');setMeter($('memory-meter'),data.memory?.percent,data.memory?gib(data.memory.used)+' / '+gib(data.memory.total)+' GiB in use':null);
+ $('down').textContent=Number.isFinite(n.down)?(n.down*1000).toFixed(1):'—';$('up').textContent=Number.isFinite(n.up)?(n.up*1000).toFixed(1):'—';
+ setMeter($('cpu-meter'),data.cpu,'Total CPU utilization');setMeter($('memory-meter'),data.memory?.percent,data.memory?mib(data.memory.used)+' / '+mib(data.memory.total)+' MiB in use':null);
  const signature=data.gpus.map(g=>g.uuid).join(',');
  if($('gpus').dataset.signature!==signature||!$('gpus').children.length){$('gpus').dataset.signature=signature;$('gpus').replaceChildren();for(const gpu of data.gpus){const el=document.createElement('div');el.className='meter gpu';const name=document.createElement('span');name.textContent=gpu.name.replace('NVIDIA GeForce ','').replace('NVIDIA ','');name.title=gpu.name;const track=document.createElement('div');track.className='track';track.role='meter';track.setAttribute('aria-label',gpu.name+' utilization');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.append(document.createElement('span'));el.append(name,track,document.createElement('b'),document.createElement('small'));$('gpus').append(el);}}
- [...$('gpus').children].forEach((el,i)=>{const g=data.gpus[i];setMeter(el,g.load,'VRAM '+(g.used==null?'—':(g.used/1024).toFixed(1))+' / '+(g.total==null?'—':(g.total/1024).toFixed(1))+' GiB · '+(g.temp??'—')+'°C');});
+ [...$('gpus').children].forEach((el,i)=>{const g=data.gpus[i];setMeter(el,g.load,'VRAM '+(g.used==null?'—':Math.round(g.used).toLocaleString())+' / '+(g.total==null?'—':Math.round(g.total).toLocaleString())+' MiB · '+(g.temp??'—')+'°C');});
  if(data.gpuError)$('gpus').textContent='GPU readings unavailable';
  $('sample-status').textContent=data.gpuError?'GPU probe unavailable':'Live · every 2 seconds';
- $('compact-status').textContent=(online?'Online':labels[n.status]||'Unknown')+' · ↓'+$('down').textContent+' ↑'+$('up').textContent+' Mbps\nCPU '+pct(data.cpu)+' · RAM '+pct(data.memory?.percent)+' · GPUs '+data.gpus.map(g=>pct(g.load)).join(' / ');
+ $('compact-status').textContent=(online?'Online':labels[n.status]||'Unknown')+' · ↓'+$('down').textContent+' ↑'+$('up').textContent+' Kbps\nCPU '+pct(data.cpu)+' · RAM '+pct(data.memory?.percent)+' · GPUs '+data.gpus.map(g=>pct(g.load)).join(' / ');
  updateBug();icons();resize();
 }
 let editingPodcast=null,removedPodcast=null,libraryBusy=false;
@@ -290,7 +293,7 @@ async function init(){
  window.deck.onXStatus(message=>{$('x-status').textContent=message;resize();});
  window.deck.onShown(()=>{appHidden=false;syncAmbient();syncGame();requestAnimationFrame(syncXBounds);});
  window.addEventListener('resize',syncXBounds);window.addEventListener('scroll',syncXBounds);
- document.addEventListener('visibilitychange',()=>{syncXBounds();syncGame();});
+ document.addEventListener('visibilitychange',()=>{syncXBounds();syncGame();syncAmbient();});
  $('source-game').onclick=()=>{watchingCams=false;playingGame=true;readingX=false;mode='full';settings=false;if(isVideo())pause();render();};
  $('source-x').onclick=()=>toggleX(true);$('source-radio').onclick=()=>{toggleX(false);void switchSource('radio');};$('source-podcast').onclick=()=>{toggleX(false);void switchSource('podcast');};$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
  for(const tab of ['radio','podcast','cameras','game','x'])$('source-'+tab).addEventListener('click',()=>playTabSound(tab));
@@ -320,6 +323,9 @@ async function init(){
  $('bug').onpointerup=()=>{const moved=drag?.moved;drag=null;if(!moved)setMode(restoreMode);};
  $('bug').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();setMode(restoreMode);}};
  $('settings-open').onclick=()=>{if(isVideo())pause();settings=!settings;render();};$('settings-close').onclick=()=>{settings=false;render();};
+ $('retro-mode').onchange=e=>{state.retro=e.target.checked;render();if(state.retro)playTabSound('retro');else if(tabAudio.src.endsWith('/modem.wav'))tabAudio.pause();void persist();};
+ for(const [id,delta] of [['retro-prev',-1],['retro-next',1]])$(id).onclick=()=>{const index=stations.findIndex(s=>s.id===state.station);document.querySelectorAll('[data-station]')[(index+delta+stations.length)%stations.length]?.click();};
+ retro.setupMenus();
  $('ambient-mode').onchange=e=>{state.ambient=e.target.value;syncAmbient();queueSave();};
  $('tab-sounds').onchange=e=>{state.tabSounds=e.target.checked;if(!state.tabSounds)tabAudio.pause();void persist();};
  $('bot-shot-readouts').onchange=e=>{state.gameShotReadouts=e.target.checked;arcade.setShotReadouts(state.gameShotReadouts);void persist();};

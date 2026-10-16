@@ -282,7 +282,7 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 
 **A lighter navigation bar:** DI.FM, Podcasts, Twitter, SkiCams, and Game are icons and text, with a soft hover highlight and mint for the active tab. The strip is 70% opaque with a subtle blur, so the live background can show through. It stays pinned as you scroll, along with the bare title-bar icons. Keyboard focus rings and full click targets remain.
 
-This navigation refresh is in the current source and CI builds; the published v0.3.0 installers have the earlier styling.
+This navigation refresh and the Retro skin below are in current source builds; the published v0.3.0 installers have the earlier styling.
 
 | Control | What happens |
 | --- | --- |
@@ -295,11 +295,24 @@ This navigation refresh is in the current source and CI builds; the published v0
 | Close **×** | Quit MattAMP |
 | **Details** under the meters | Show memory, VRAM, and GPU temperatures |
 
-**Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly tab sound effects** off in Settings whenever civilization requires it.
+**Retro mode:** flip **Settings → Retro mode** for dark metal trim, lime-green displays, numbered station rows, brushed-silver transport buttons, a green volume rail with a metal fader, and segmented CPU/memory/GPU meters. The radio spectrum reacts to the actual audio; the lower display shows the last two minutes of CPU samples. Classic menus handle Settings, layout, playback, and station hopping. Help knows where your MP3 collection went.
+
+Switching it on plays a short, original synthesized modem handshake. It respects volume, mute, and **Silly sound effects**; restoring a saved Retro preference at launch does not replay it. The toggle is saved locally and leaves audio playback and battles intact. Retro temporarily hides the ambient background; switching back restores your chosen effect. The spectrum is radio-only, rests when playback stops, and pauses when hidden or under reduced motion. YouTube and remote podcast audio keep their usual playback path.
+
+<details>
+<summary>Back to 1997</summary>
+
+![Retro MattAMP with beveled controls, numbered station playlist, live audio spectrum, and segmented system meters](docs/images/retro.png)
+
+Preview from an isolated demo profile; the spectrum is driven by test audio.
+
+</details>
+
+**Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
 **Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
 
-CPU, memory, and network readings update every two seconds. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
+CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 
 ## The practical bits
 

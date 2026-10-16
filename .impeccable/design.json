@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T03:51:59.996198+00:00",
+  "title": "MattAMP \u2014 optional Retro variant",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "retro-shell-rim",
+        "value": "inset 0 0 0 2px #05070a",
+        "purpose": "Optional Retro shell only."
+      },
+      {
+        "name": "retro-menu",
+        "value": "3px 4px 8px #0009",
+        "purpose": "Optional Retro open menus only."
+      },
+      {
+        "name": "retro-brushed-transport",
+        "value": "inset 0 1px 0 #f3f3ec,inset 1px 0 0 #d5dadb,0 2px 3px #0008",
+        "purpose": "Optional Retro aluminum transport keys."
+      },
+      {
+        "name": "retro-volume-thumb",
+        "value": "1px 2px 3px #0009",
+        "purpose": "Optional Retro rectangular metal volume thumb."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "retro-menu-wrap",
+        "value": "700px"
+      },
+      {
+        "name": "retro-stack-margins",
+        "value": "550px"
+      },
+      {
+        "name": "retro-source-stack",
+        "value": "380px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Optional Retro brushed transport",
+      "kind": "button",
+      "description": "Retro only. Brushed metal transport with live hover, focus and pressed states.",
+      "html": "<div class=\"ds-retro\"><div class=\"ds-transport\"><button aria-label=\"Stop\">\u25a0</button></div></div>",
+      "css": ".ds-retro{color:#d4d9df;font:12px \"Courier New\",monospace}.ds-transport{display:flex;align-items:center;border:3px groove}.ds-retro button{padding:5px;border-radius:1px}.ds-volume-wrap{display:flex}.ds-retro button:focus-visible,.ds-retro input:focus-visible{outline:2px solid #e6bd68;outline-offset:2px}\n.ds-retro .ds-transport{gap:5px;padding:5px;background:linear-gradient(#28313d,#111720);border-color:#7c8797}\n.ds-retro .ds-transport button:not(.ds-mute){\n min-width:34px;min-height:32px;color:#15191f;border:2px solid;\n border-color:#e0e3e5 #565d67 #444a53 #b8c0c7;\n background:repeating-linear-gradient(0deg,#ffffff0c 0 1px,#0000000a 1px 2px),linear-gradient(#c5c9cb 0%,#9aa2aa 43%,#7b848e 49%,#aab0b5 100%);\n box-shadow:inset 0 1px 0 #f3f3ec,inset 1px 0 0 #d5dadb,0 2px 3px #0008;\n}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:hover{background:repeating-linear-gradient(0deg,#ffffff12 0 1px,#00000008 1px 2px),linear-gradient(#e0e2e2,#a1acb6 50%,#c0c7ca);color:#080c10}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:active{border-color:#48515a #aeb6bd #cbd1d6 #505962;box-shadow:inset 1px 2px 3px #18202b88}\n.ds-retro .ds-transport button.ds-play{min-width:46px;color:#142d08;border-color:#c6e997 #527333 #344d20 #a2bd77;background:repeating-linear-gradient(0deg,#ffffff0a 0 1px,#0000000a 1px 2px),linear-gradient(#a1cc62,#77a93d 46%,#5e8c2c 51%,#8dbb4d);box-shadow:inset 0 1px 0 #dcf1b4,0 2px 3px #0008}\n.ds-retro .ds-transport button.ds-play:enabled:hover{background:linear-gradient(#b2db73,#7da940 50%,#a4c965)}\n.ds-retro .ds-volume-wrap{align-self:stretch;align-items:center;gap:5px;padding:0 5px 0 2px;min-width:0;background:linear-gradient(#151d28,#202b38);border:2px inset #586373}\n.ds-retro .ds-volume-wrap .ds-mute{border:0;box-shadow:none;background:transparent;color:#c6cbd0;min-width:23px;padding:2px}\n.ds-retro .ds-volume-wrap .ds-mute:enabled:hover{color:#fff}\n.ds-retro .ds-volume{appearance:none;-webkit-appearance:none;width:78px;height:24px;background:transparent;cursor:pointer;flex:1 1 78px;min-width:40px}\n.ds-retro .ds-volume::-webkit-slider-runnable-track{height:6px;border:1px inset #606b79;border-radius:0;background:linear-gradient(to right,#8ce430 0 var(--volume-fill,35%),#0b1118 var(--volume-fill,35%) 100%);box-shadow:0 1px 0 #45505c}\n.ds-retro .ds-volume::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:21px;margin-top:-8px;border:2px outset #c5c9ca;border-radius:1px;background:linear-gradient(90deg,#c9cdcd,#7a8490 45%,#2a333f 46% 57%,#9aa4ab 58%,#d1d2d0);box-shadow:1px 2px 3px #0009}\n.ds-retro .ds-volume-value{min-width:21px;color:#c4cbd3}\n@media(max-width:380px){.ds-retro .ds-transport{gap:3px}.ds-retro .ds-transport button:not(.ds-mute){min-width:29px;padding:4px}.ds-retro .ds-transport button.ds-play{min-width:35px}.ds-retro .ds-volume-wrap{gap:2px;padding-right:3px}.ds-retro .ds-volume{width:55px}}\n"
+    },
+    {
+      "name": "Optional Retro primary playback",
+      "kind": "button",
+      "description": "Retro only. Brushed metal transport with live hover, focus and pressed states.",
+      "html": "<div class=\"ds-retro\"><div class=\"ds-transport\"><button class=\"ds-play\" aria-label=\"Play\">\u25b6</button></div></div>",
+      "css": ".ds-retro{color:#d4d9df;font:12px \"Courier New\",monospace}.ds-transport{display:flex;align-items:center;border:3px groove}.ds-retro button{padding:5px;border-radius:1px}.ds-volume-wrap{display:flex}.ds-retro button:focus-visible,.ds-retro input:focus-visible{outline:2px solid #e6bd68;outline-offset:2px}\n.ds-retro .ds-transport{gap:5px;padding:5px;background:linear-gradient(#28313d,#111720);border-color:#7c8797}\n.ds-retro .ds-transport button:not(.ds-mute){\n min-width:34px;min-height:32px;color:#15191f;border:2px solid;\n border-color:#e0e3e5 #565d67 #444a53 #b8c0c7;\n background:repeating-linear-gradient(0deg,#ffffff0c 0 1px,#0000000a 1px 2px),linear-gradient(#c5c9cb 0%,#9aa2aa 43%,#7b848e 49%,#aab0b5 100%);\n box-shadow:inset 0 1px 0 #f3f3ec,inset 1px 0 0 #d5dadb,0 2px 3px #0008;\n}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:hover{background:repeating-linear-gradient(0deg,#ffffff12 0 1px,#00000008 1px 2px),linear-gradient(#e0e2e2,#a1acb6 50%,#c0c7ca);color:#080c10}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:active{border-color:#48515a #aeb6bd #cbd1d6 #505962;box-shadow:inset 1px 2px 3px #18202b88}\n.ds-retro .ds-transport button.ds-play{min-width:46px;color:#142d08;border-color:#c6e997 #527333 #344d20 #a2bd77;background:repeating-linear-gradient(0deg,#ffffff0a 0 1px,#0000000a 1px 2px),linear-gradient(#a1cc62,#77a93d 46%,#5e8c2c 51%,#8dbb4d);box-shadow:inset 0 1px 0 #dcf1b4,0 2px 3px #0008}\n.ds-retro .ds-transport button.ds-play:enabled:hover{background:linear-gradient(#b2db73,#7da940 50%,#a4c965)}\n.ds-retro .ds-volume-wrap{align-self:stretch;align-items:center;gap:5px;padding:0 5px 0 2px;min-width:0;background:linear-gradient(#151d28,#202b38);border:2px inset #586373}\n.ds-retro .ds-volume-wrap .ds-mute{border:0;box-shadow:none;background:transparent;color:#c6cbd0;min-width:23px;padding:2px}\n.ds-retro .ds-volume-wrap .ds-mute:enabled:hover{color:#fff}\n.ds-retro .ds-volume{appearance:none;-webkit-appearance:none;width:78px;height:24px;background:transparent;cursor:pointer;flex:1 1 78px;min-width:40px}\n.ds-retro .ds-volume::-webkit-slider-runnable-track{height:6px;border:1px inset #606b79;border-radius:0;background:linear-gradient(to right,#8ce430 0 var(--volume-fill,35%),#0b1118 var(--volume-fill,35%) 100%);box-shadow:0 1px 0 #45505c}\n.ds-retro .ds-volume::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:21px;margin-top:-8px;border:2px outset #c5c9ca;border-radius:1px;background:linear-gradient(90deg,#c9cdcd,#7a8490 45%,#2a333f 46% 57%,#9aa4ab 58%,#d1d2d0);box-shadow:1px 2px 3px #0009}\n.ds-retro .ds-volume-value{min-width:21px;color:#c4cbd3}\n@media(max-width:380px){.ds-retro .ds-transport{gap:3px}.ds-retro .ds-transport button:not(.ds-mute){min-width:29px;padding:4px}.ds-retro .ds-transport button.ds-play{min-width:35px}.ds-retro .ds-volume-wrap{gap:2px;padding-right:3px}.ds-retro .ds-volume{width:55px}}\n"
+    },
+    {
+      "name": "Optional Retro select",
+      "kind": "input",
+      "description": "Retro only. Native select retains keyboard behavior.",
+      "html": "<label class=\"ds-retro-label\">Playback <select class=\"ds-retro-select\"><option>Audio</option><option>Video</option></select></label>",
+      "css": ".ds-retro-label{font:12px system-ui;color:#abb5bd}.ds-retro-select{font:12px 'Courier New',monospace;color:#d4d9df;border-radius:1px;border:2px outset #75808e;background:linear-gradient(#414b58,#242c36);padding:5px;}.ds-retro-select:focus-visible{outline:2px solid #e6bd68;outline-offset:2px}"
+    },
+    {
+      "name": "Optional Retro source navigation",
+      "kind": "nav",
+      "description": "Retro only. Selected source retains a clear green state.",
+      "html": "<nav aria-label=\"Sources\"><button class=\"ds-retro-source\" aria-pressed=\"true\">DI.FM</button> <button class=\"ds-retro-source\" aria-pressed=\"false\">Podcasts</button></nav>",
+      "css": ".ds-retro-source{font:11px system-ui;color:#abb5bd;border:2px outset #737e8b;border-radius:1px;padding:5px 2px;min-height:35px;background:linear-gradient(#37414f,#141b26)}.ds-retro-source[aria-pressed=true]{background:linear-gradient(#2f641e,#15300f);border-color:#bdc852;color:#bcf47a}.ds-retro-source:hover{background:#354b35;color:#d9f8b7}.ds-retro-source:active{border-style:inset}.ds-retro-source:focus-visible{outline:2px solid #e6bd68;outline-offset:2px}"
+    },
+    {
+      "name": "Optional Retro recessed display",
+      "kind": "card",
+      "refersTo": "retro-display",
+      "description": "Retro only. Recessed radio screen; station artwork and actual status accompany this typography in the app.",
+      "html": "<section class=\"ds-retro-display\"><span>DI.FM / RADIO</span><h2>Future Synthpop</h2><p>Ready when you are.</p></section>",
+      "css": ".ds-retro-display{background:#070d0e;color:#a4e55e;border:3px groove #65707d;border-radius:0;padding:9px;font:11px \"Courier New\",monospace}.ds-retro-display h2{font:bold 23px/1.1 \"Courier New\",monospace;letter-spacing:0;margin:6px 0}.ds-retro-display p{margin:6px 0;line-height:1.35}"
+    },
+    {
+      "name": "Optional Retro volume fader",
+      "kind": "input",
+      "description": "Retro only. Native volume fader preview at 35%; the app binds rail fill to the current volume value.",
+      "html": "<div class=\"ds-retro\"><div class=\"ds-volume-wrap\"><input class=\"ds-volume\" type=\"range\" min=\"0\" max=\"100\" value=\"35\" aria-label=\"Volume\" style=\"--volume-fill:35%\"><output class=\"ds-volume-value\">35</output></div></div>",
+      "css": ".ds-retro{color:#d4d9df;font:12px \"Courier New\",monospace}.ds-transport{display:flex;align-items:center;border:3px groove}.ds-retro button{padding:5px;border-radius:1px}.ds-volume-wrap{display:flex}.ds-retro button:focus-visible,.ds-retro input:focus-visible{outline:2px solid #e6bd68;outline-offset:2px}\n.ds-retro .ds-transport{gap:5px;padding:5px;background:linear-gradient(#28313d,#111720);border-color:#7c8797}\n.ds-retro .ds-transport button:not(.ds-mute){\n min-width:34px;min-height:32px;color:#15191f;border:2px solid;\n border-color:#e0e3e5 #565d67 #444a53 #b8c0c7;\n background:repeating-linear-gradient(0deg,#ffffff0c 0 1px,#0000000a 1px 2px),linear-gradient(#c5c9cb 0%,#9aa2aa 43%,#7b848e 49%,#aab0b5 100%);\n box-shadow:inset 0 1px 0 #f3f3ec,inset 1px 0 0 #d5dadb,0 2px 3px #0008;\n}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:hover{background:repeating-linear-gradient(0deg,#ffffff12 0 1px,#00000008 1px 2px),linear-gradient(#e0e2e2,#a1acb6 50%,#c0c7ca);color:#080c10}\n.ds-retro .ds-transport button:not(.ds-mute):enabled:active{border-color:#48515a #aeb6bd #cbd1d6 #505962;box-shadow:inset 1px 2px 3px #18202b88}\n.ds-retro .ds-transport button.ds-play{min-width:46px;color:#142d08;border-color:#c6e997 #527333 #344d20 #a2bd77;background:repeating-linear-gradient(0deg,#ffffff0a 0 1px,#0000000a 1px 2px),linear-gradient(#a1cc62,#77a93d 46%,#5e8c2c 51%,#8dbb4d);box-shadow:inset 0 1px 0 #dcf1b4,0 2px 3px #0008}\n.ds-retro .ds-transport button.ds-play:enabled:hover{background:linear-gradient(#b2db73,#7da940 50%,#a4c965)}\n.ds-retro .ds-volume-wrap{align-self:stretch;align-items:center;gap:5px;padding:0 5px 0 2px;min-width:0;background:linear-gradient(#151d28,#202b38);border:2px inset #586373}\n.ds-retro .ds-volume-wrap .ds-mute{border:0;box-shadow:none;background:transparent;color:#c6cbd0;min-width:23px;padding:2px}\n.ds-retro .ds-volume-wrap .ds-mute:enabled:hover{color:#fff}\n.ds-retro .ds-volume{appearance:none;-webkit-appearance:none;width:78px;height:24px;background:transparent;cursor:pointer;flex:1 1 78px;min-width:40px}\n.ds-retro .ds-volume::-webkit-slider-runnable-track{height:6px;border:1px inset #606b79;border-radius:0;background:linear-gradient(to right,#8ce430 0 var(--volume-fill,35%),#0b1118 var(--volume-fill,35%) 100%);box-shadow:0 1px 0 #45505c}\n.ds-retro .ds-volume::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:21px;margin-top:-8px;border:2px outset #c5c9ca;border-radius:1px;background:linear-gradient(90deg,#c9cdcd,#7a8490 45%,#2a333f 46% 57%,#9aa4ab 58%,#d1d2d0);box-shadow:1px 2px 3px #0009}\n.ds-retro .ds-volume-value{min-width:21px;color:#c4cbd3}\n@media(max-width:380px){.ds-retro .ds-transport{gap:3px}.ds-retro .ds-transport button:not(.ds-mute){min-width:29px;padding:4px}.ds-retro .ds-transport button.ds-play{min-width:35px}.ds-retro .ds-volume-wrap{gap:2px;padding-right:3px}.ds-retro .ds-volume{width:55px}}\n"
+    }
+  ],
+  "narrative": {
+    "northStar": "Classic metal and green LED player",
+    "overview": "The user-approved Winamp reference supplies dark metal bevels, green inset screens and segmented LED meters. This is an optional material and typography variant of MattAMP's existing desktop layouts. Modern remains the default; the Settings checkbox is off for a new installation and saves the user's choice.\n\nRetro uses opaque metal and inset surfaces. While enabled, it temporarily suppresses the ambient background without replacing the saved ambient choice. Switching the skin preserves playback and media state.",
+    "keyCharacteristics": [
+      "Dark metal edges, recessed screens and nearly square controls.",
+      "Green monospace radio labels, numbered artwork playlist and LED telemetry.",
+      "Existing Sidecar, Stack, compact, Settings, Game and Bug behavior."
+    ],
+    "rules": [
+      {
+        "name": "The Scoped Skin Rule",
+        "body": "Apply Retro tokens only while Retro mode is enabled; retain the modern palette and glass treatment otherwise.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep Retro optional, persisted and off by default.",
+      "Do preserve media playback, current layout, provider content and the saved ambient choice when switching skins.",
+      "Do label live audio analysis and CPU history separately and expose unavailable readings honestly."
+    ],
+    "donts": [
+      "Don't apply these tokens or bevels to the modern default.",
+      "Don't animate fabricated spectrum data or run active spectrum work while hidden or under reduced motion.",
+      "Don't replace actual menu actions or station controls with decorative imitations."
+    ]
+  }
+}

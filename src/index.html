@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/ski-cams-ui.js"></script><script defer src="/app.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/ski-cams-ui.js"></script><link rel="stylesheet" href="/retro.css"><script defer src="/retro.js"></script><script defer src="/app.js"></script></head>
 <body>
 <main id="deck" class="sidecar">
  <canvas id="ambient" aria-hidden="true" hidden></canvas>
- <header class="titlebar"><span class="brand">MattAMP</span><div class="window-actions">
+ <header class="titlebar"><span class="brand"><i class="retro-only" data-lucide="zap"></i>MattAMP</span><nav id="retro-menus" class="retro-only" aria-label="Classic menus"></nav><div class="window-actions">
   <button id="layout" aria-label="Switch to stacked layout" title="Switch layout"><i data-lucide="columns-2"></i></button>
   <button id="compact" aria-label="Toggle compact view" title="Compact view"><i data-lucide="panel-top-close"></i></button>
   <button id="bug-toggle" aria-label="Minimize to desktop bug" title="Bug mode"><i data-lucide="audio-lines"></i></button>
@@ -17,10 +17,10 @@
    <div class="sourcebar" role="group" aria-label="Content"><button id="source-radio" aria-pressed="true"><i data-lucide="radio"></i><span>DI.FM</span></button><button id="source-podcast" aria-pressed="false"><i data-lucide="headphones"></i><span>Podcasts</span></button><button id="source-x" aria-label="X / Twitter feed" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l7.2-8.3L1 2h6.5l4.4 6.7L18.9 2Zm-1.1 18h1.7L6.6 3.9H4.8L17.8 20Z"/></svg><span>Twitter</span></button><button id="source-cameras" aria-pressed="false"><i data-lucide="mountain-snow"></i><span>SkiCams</span></button><button id="source-game" aria-pressed="false"><i data-lucide="gamepad-2"></i><span>Game</span></button><span id="play-status" class="sr-only" role="status">Stopped</span></div>
   <div class="content">
   <section class="media" aria-label="Player">
-   <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p></div></div>
+   <div id="radio-display" class="display"><img id="station-art" alt="" hidden><div class="now-copy"><span id="provider">DI.FM / RADIO</span><h1 id="now-title">Future Synthpop</h1><p id="now-detail">Ready when you are.</p><figure id="retro-spectrum" class="retro-only"><canvas width="320" height="48" aria-label="Live audio spectrum"></canvas><figcaption>Audio spectrum · idle</figcaption></figure></div></div>
    <div id="youtube-box" hidden><div id="youtube-player"></div><div id="youtube-placeholder">Choose a show to load its full episodes.</div></div>
    <p id="error" role="alert" hidden></p>
-   <div id="transport" class="transport"><button id="play" class="primary"><i data-lucide="play"></i><span>Play</span></button><button id="stop" aria-label="Stop playback"><i data-lucide="square"></i></button><div class="volume-wrap"><button id="mute" aria-label="Mute" aria-pressed="false"><i data-lucide="volume-2"></i></button><input id="volume" aria-label="Volume" type="range" min="0" max="100" value="35"><output id="volume-value">35</output></div></div>
+   <div id="transport" class="transport"><button id="play" class="primary"><i data-lucide="play"></i><span>Play</span></button><button id="stop" aria-label="Stop playback"><i data-lucide="square"></i></button><button id="retro-prev" class="retro-only" aria-label="Previous station" title="Previous station"><i data-lucide="skip-back"></i></button><button id="retro-next" class="retro-only" aria-label="Next station" title="Next station"><i data-lucide="skip-forward"></i></button><div class="volume-wrap"><button id="mute" aria-label="Mute" aria-pressed="false"><i data-lucide="volume-2"></i></button><input id="volume" aria-label="Volume" type="range" min="0" max="100" value="35"><output id="volume-value">35</output></div></div>
    <div id="podcast-tools" hidden>
     <div class="podcast-mode"><label>Player<select id="podcast-type" aria-label="Podcast player"><option value="youtube">YouTube</option><option value="audio">Audio feed</option></select></label><button id="open-video" class="text-button" title="Open on YouTube"><i data-lucide="external-link"></i>YouTube</button></div>
     <label class="episode-label" for="episode">Episode <span id="feed-status"></span></label><div class="episode-row"><select id="episode" aria-label="Episode"><option>Loading…</option></select><button id="refresh" aria-label="Refresh episodes"><i data-lucide="refresh-cw"></i></button></div>
@@ -81,14 +81,16 @@
   <section id="system" class="system" aria-label="System monitor">
    <div class="network"><button id="network-toggle" class="text-button" aria-expanded="false"><span class="led"></span><span id="network-status">Checking network</span><i data-lucide="chevron-down"></i></button><span id="network-latency">—</span></div>
    <div id="network-detail" hidden><div><span>Interface</span><b id="interface">—</b></div><div><span>Router</span><b id="router">—</b></div><div><span>Internet probe</span><b id="internet">—</b></div><div><span>Last checked</span><b id="checked">—</b></div></div>
-   <div class="traffic"><span><i data-lucide="arrow-down"></i><b id="down">—</b> Mbps</span><span><i data-lucide="arrow-up"></i><b id="up">—</b> Mbps</span></div>
+   <div class="traffic"><span><i data-lucide="arrow-down"></i><b id="down">—</b> Kbps</span><span><i data-lucide="arrow-up"></i><b id="up">—</b> Kbps</span></div>
    <div id="meters"><div class="meter" id="cpu-meter"><span>CPU</span><div class="track" role="meter" aria-label="CPU utilization" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div class="meter" id="memory-meter"><span>Memory</span><div class="track" role="meter" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div id="gpus"></div></div>
    <footer><span id="sample-status">Waiting for readings</span><button id="details" class="text-button" aria-expanded="false">Details<i data-lucide="chevron-down"></i></button></footer>
+   <figure id="retro-history" class="retro-only"><figcaption>CPU history · last 2 minutes</figcaption><canvas width="320" height="80" aria-label="CPU utilization history"></canvas></figure>
   </section>
   <div id="compact-status" aria-live="off">Waiting for readings…</div>
  </div>
  <section id="settings" hidden aria-label="MattAMP settings">
   <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
+  <label class="check retro-setting"><input id="retro-mode" type="checkbox">Retro mode</label><p class="hint">Metal trim, green LEDs, and a live radio spectrum. Welcome back to 1997.</p>
   <section id="podcast-settings" aria-labelledby="podcasts-heading">
    <div class="podcasts-heading"><h2 id="podcasts-heading">Your podcasts</h2><button id="podcast-add" type="button"><i data-lucide="plus"></i>Add show</button></div>
    <p class="hint">Your lineup, in your order. Add a YouTube link, an audio RSS feed, or both.</p>
@@ -119,7 +121,7 @@
    <div class="podcast-feedback"><p id="camera-settings-status" role="status"></p><button id="camera-undo" type="button" hidden>Undo removal</button></div>
   </section>
   <form id="key-form"><label for="listen-key">DI.FM Premium listen key</label><input id="listen-key" type="password" autocomplete="off" placeholder="Paste your listen key"><div class="settings-row"><button type="submit">Save key</button><button type="button" id="clear-key" class="text-button">Forget key</button><button type="button" id="key-help" class="text-button">DI.FM settings<i data-lucide="external-link"></i></button></div><p id="key-status"></p><button type="button" id="retry-key" hidden>Retry saved key</button></form>
-  <label class="check"><input id="tab-sounds" type="checkbox">Silly tab sound effects</label>
+  <label class="check"><input id="tab-sounds" type="checkbox">Silly sound effects</label>
   <label class="check"><input id="always-top" type="checkbox">Keep MattAMP above other windows</label>
   <div class="ambient-setting"><label for="ambient-mode">Live background</label><select id="ambient-mode"><option value="off">Off</option><option value="flow">Particle flow</option><option value="waves">Water waves</option><option value="stars">Starfield</option><option value="mandelbrot">Mandelbrot zoom</option></select><p class="hint">Slow, dim motion. Pauses when hidden or in Bug mode; respects reduced-motion settings.</p></div>
   <section aria-labelledby="game-settings-heading"><h2 id="game-settings-heading">Game</h2><label class="check"><input id="bot-shot-readouts" type="checkbox">Show bot shot angle and power</label></section>

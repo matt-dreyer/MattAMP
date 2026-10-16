@@ -8,3 +8,6 @@ userData/
 coverage/
 arcade-scores.json
 dist/
+
+# Local UI review captures; curated README images live in docs/images.
+.impeccable/review/
