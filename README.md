@@ -282,7 +282,7 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 
 **A lighter navigation bar:** DI.FM, Podcasts, Twitter, SkiCams, and Game are icons and text, with a soft hover highlight and mint for the active tab. The strip is 70% opaque with a subtle blur, so the live background can show through. It stays pinned as you scroll, along with the bare title-bar icons. Keyboard focus rings and full click targets remain.
 
-This navigation refresh and the Retro skin below are in current source builds; the published v0.3.0 installers have the earlier styling.
+This navigation refresh and the Retro skin below are staged for [MattAMP 1.0.0](docs/release-1.0.0.md); the published v0.3.0 installers have the earlier styling.
 
 | Control | What happens |
 | --- | --- |
