@@ -2,7 +2,8 @@
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
 const runtime=process.argv[2];
 if(!runtime)throw new Error('Usage: node extras/apple-iie/check.cjs /path/to/jsbasic/basic.js');
-const context=vm.createContext({console,Math});vm.runInContext(fs.readFileSync(runtime,'utf8'),context);
+const testMath=Object.create(Math);testMath.random=()=>.42;
+const context=vm.createContext({console,Math:testMath});vm.runInContext(fs.readFileSync(runtime,'utf8'),context);
 const basic=context.basic,source=fs.readFileSync(path.join(__dirname,'MATTAMP.bas'),'utf8');
 let previous=-1;
 for(const line of source.trim().split('\n')){
@@ -42,5 +43,6 @@ for(let i=0;i<500&&!rounds;i++){
 assert.equal(rounds,1,'battle finishes even if the player loses');
 assert.match(controls.transcript,/TAKES A SHOT/);assert.match(controls.transcript,/SCORE/);assert.ok(controls.plots>1000);
 controls.feed('N');controls.run();assert.match(controls.screen,/HP 100/);controls.feed('QQ');assert.equal(controls.run(),'ended');
-const spectator=machine();spectator.feed('2'+'A'.repeat(40)+'S'.repeat(30)+' ');spectator.run(1000000);assert.match(spectator.transcript,/YOU ARE OUT/);assert.match(spectator.screen,/N NEW BATTLE/);
+const spectator=machine();spectator.feed('2'+'A'.repeat(9)+'S'.repeat(30));spectator.run();for(let i=0;i<100&&!spectator.screen.includes('N NEW BATTLE');i++){spectator.feed(' ');spectator.run(1000000);}assert.match(spectator.transcript,/YOU ARE OUT/);assert.match(spectator.screen,/N NEW BATTLE/);
+const dialogue=machine();dialogue.feed('1');dialogue.run(100000);assert.match(dialogue.transcript,/MOM, I'M ONLINE/);assert.match(dialogue.transcript,/HAVRE, MONTANA -> BOSTON/);assert.match(dialogue.transcript,/THE PHONE BILL IS NOT/);dialogue.feed('QQ');assert.equal(dialogue.run(),'ended');
 console.log('PASS: Applesoft compile, input limits, menu/about/quit, station selection, volume bounds, aim/power bounds, full battle, bot turns, replay, graphics bounds.');

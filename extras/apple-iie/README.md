@@ -35,6 +35,7 @@ For physical hardware, transfer the listing using your existing disk/serial work
 
 - A menu, initials, and a session-best score.
 - Eight familiar station names with a colorful mountain and animated demonstration spectrum. The volume number is also a simulation; no radio audio plays.
+- A rotating modem monologue: “Mom, I'm online!” → Havre, Montana to Boston → a long-distance pirate BBS call → “That's not a problem… right?” → “The software is free. The phone bill is not.”
 - `1250000 BPS = 4167 OLD MODEMS!` — a deliberately fictional bandwidth readout, rounded against 300 bps.
 - Four-tank skirmishes: you and three bots, random rolling terrain, fixed wind per battle, ballistic shells, splash damage, craters, and a few dry remarks.
 - Bots target any living rival. The battle continues after your tank dies.
@@ -59,13 +60,13 @@ Angles run from 5° (right) to 175° (left), with 90° straight up. Power runs f
 | Lines | Purpose |
 | --- | --- |
 | 10–330 | Setup, initials, menu, quit |
-| 1000–1440 | Color radio demo and keyboard polling |
+| 1000–1510 | Color radio demo and keyboard polling |
 | 3000–4110 | Battlefield setup, turn order, controls, bot decisions |
 | 4500–5250 | Flight, impact, damage, craters |
 | 6000–6110 | Results, best score, replay |
 | 7100–7210 | Terrain and tank rendering |
 | 8000–8110 | About screen |
-| 9000–9010 | Station names |
+| 9000–9040 | Station names and modem dialogue |
 
 ## Reproduce the compatibility check
 
