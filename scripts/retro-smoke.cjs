@@ -11,7 +11,7 @@ const wav=Buffer.alloc(44+48000*2);wav.write('RIFF');wav.writeUInt32LE(wav.lengt
 p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').first().waitFor();
  const bandwidth=await p.evaluate(()=>{const saved=metrics,fixture={...(metrics||{}),network:{status:'online',down:1.25,up:.004},cpu:10,memory:{percent:20,used:1536*1024**2,total:32768*1024**2},gpus:[{uuid:'fixture',name:'Test GPU',load:10,used:2048,total:16384,temp:40}]};renderMetrics(fixture);const values=[document.getElementById('down').textContent,document.getElementById('up').textContent,document.getElementById('compact-status').textContent,document.querySelector('#memory-meter small').textContent,document.querySelector('#gpus small').textContent];if(saved)renderMetrics(saved);return values;});assert.deepEqual(bandwidth.slice(0,2),['1250.0','4.0']);assert.match(bandwidth[2],/1250\.0.*4\.0 Kbps/);assert.equal(bandwidth[3].replaceAll(',',''),'1536 / 32768 MiB in use');assert.equal(bandwidth[4].replaceAll(',',''),'VRAM 2048 / 16384 MiB · 40°C');
  assert.equal(await p.locator('#deck').evaluate(e=>e.classList.contains('retro')),false);
- await p.locator('#settings-open').click();await p.locator('#retro-mode').check();await p.locator('#settings-close').click();
+ await p.locator('#settings-open').click();await p.locator('#appearance').selectOption('retro');await p.locator('#settings-close').click();
  await p.waitForFunction(()=>document.getElementById('deck').classList.contains('retro'));
  await p.locator('#volume').fill('35');await p.locator('#volume').dispatchEvent('input');assert.equal(await p.locator('#volume').evaluate(e=>e.style.getPropertyValue('--volume-fill')),'35%');
  await p.route('**/retro-test.wav',r=>r.fulfill({status:200,contentType:'audio/wav',body:wav}));
@@ -20,18 +20,18 @@ p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').
  await p.waitForFunction(()=>{retro.analyser.getByteFrequencyData(retro.bins);return retro.bins.some(n=>n>20);});
  assert.equal(await p.locator('#retro-spectrum figcaption').textContent(),'Live audio spectrum');
  await p.locator('#station-art').waitFor({state:'visible',timeout:20000}).catch(()=>{});await p.waitForFunction(()=>Number.isFinite(metrics?.cpu)&&retro.history.filter(n=>n!==null).length>=3&&metrics.network.status!=='checking');await capture('retro-desktop.png');
- await p.locator('#settings-open').click();await p.locator('#retro-mode').uncheck();await p.locator('#settings-close').click();
+ await p.locator('#settings-open').click();await p.locator('#appearance').selectOption('modern');await p.locator('#settings-close').click();
  assert.equal(await p.evaluate(()=>audio.paused),false,'skin toggle does not stop audio');
  assert.equal(await p.evaluate(()=>retro.source===null),true,'capture released');
  await capture('retro-modern.png');
- await p.locator('#settings-open').click();await p.locator('#tab-sounds').check();await p.locator('#retro-mode').check();
+ await p.locator('#settings-open').click();await p.locator('#tab-sounds').check();await p.locator('#appearance').selectOption('retro');
  await p.waitForFunction(()=>tabAudio.currentSrc.endsWith('/modem.wav')&&!tabAudio.paused&&tabAudio.readyState>=2);
  assert.equal(await p.evaluate(()=>tabAudio.volume),.35);assert.equal(await p.evaluate(()=>audio.paused),false);assert.equal(await p.evaluate(()=>Math.round(tabAudio.duration*10)),64);
- await p.locator('#retro-mode').uncheck();await p.waitForFunction(()=>tabAudio.paused);
- await p.evaluate(()=>{muted=true;});await p.locator('#retro-mode').check();assert.equal(await p.evaluate(()=>tabAudio.paused),true,'muted modem remains silent');await p.locator('#retro-mode').uncheck();await p.evaluate(()=>{muted=false;});
- await p.locator('#retro-mode').check();await p.waitForFunction(()=>!tabAudio.paused);await p.locator('#tab-sounds').uncheck();await p.waitForFunction(()=>tabAudio.paused);
- await p.locator('#retro-mode').uncheck();await p.locator('#settings-close').click();
- await p.locator('#settings-open').click();await p.locator('#retro-mode').check();await p.locator('#settings-close').click();
+ await p.locator('#appearance').selectOption('modern');await p.waitForFunction(()=>tabAudio.paused);
+ await p.evaluate(()=>{muted=true;});await p.locator('#appearance').selectOption('retro');assert.equal(await p.evaluate(()=>tabAudio.paused),true,'muted modem remains silent');await p.locator('#appearance').selectOption('modern');await p.evaluate(()=>{muted=false;});
+ await p.locator('#appearance').selectOption('retro');await p.waitForFunction(()=>!tabAudio.paused);await p.locator('#tab-sounds').uncheck();await p.waitForFunction(()=>tabAudio.paused);
+ await p.locator('#appearance').selectOption('modern');await p.locator('#settings-close').click();
+ await p.locator('#settings-open').click();await p.locator('#appearance').selectOption('retro');await p.locator('#settings-close').click();
  await p.locator('#layout').click();await p.waitForTimeout(500);
  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal overflow at 430px');
  await capture('retro-stacked.png');
@@ -43,11 +43,11 @@ p.on('pageerror',e=>errors.push(e.message));await p.locator('#stations button').
  await p.emulateMedia({reducedMotion:'no-preference'});await p.waitForFunction(()=>retro.source!==null);
  await p.evaluate(()=>audio.pause());await p.waitForFunction(()=>retro.source===null);
  await p.locator('#source-game').click();await p.locator('#game-start').click();
- await p.waitForTimeout(500);await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(430,850));await p.waitForTimeout(300);const before=await p.locator('#game-round').textContent();await p.locator('#settings-open').click();await p.locator('#retro-mode').uncheck();await p.locator('#retro-mode').check();await p.locator('#settings-close').click();await p.waitForTimeout(400);assert.equal(await p.locator('#game-round').textContent(),before);
+ await p.waitForTimeout(500);await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(430,850));await p.waitForTimeout(300);const before=await p.locator('#game-round').textContent();await p.locator('#settings-open').click();await p.locator('#appearance').selectOption('modern');await p.locator('#appearance').selectOption('retro');await p.locator('#settings-close').click();await p.waitForTimeout(400);assert.equal(await p.locator('#game-round').textContent(),before);
  await capture('retro-game.png');
  await p.locator('#source-radio').click();await p.waitForTimeout(400);
  assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'state.json'),'utf8')).retro,true,'setting saved');
- await p.reload();await p.locator('#stations button').first().waitFor();assert.equal(await p.locator('#retro-mode').isChecked(),true,'setting restored');
+ await p.reload();await p.locator('#stations button').first().waitFor();assert.equal(await p.locator('#appearance').inputValue(),'retro','setting restored');
  // Native views are kept mocked; this check covers only local shell layout.
  await p.locator('#source-podcast').click();await capture('retro-podcast.png');
  await p.locator('#settings-open').click();await p.waitForTimeout(400);await capture('retro-settings.png');

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/retro.js && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs && node --check src/ski-cams.cjs && node --check src/ski-cams-ui.js && node --check src/platform-stats.cjs",
+    "check": "node --check src/main.cjs && node --check src/services.cjs && node --check src/youtube-playlist.cjs && node --check src/preload.cjs && node --check src/retro.js && node --check src/app.js && node --check src/radio-relay.cjs && node --check src/x-feed.cjs && node --check src/ambient.js && node --check src/artillery.js && node --check src/artillery-ui.js && node --check src/victory.js && node --check src/arcade-store.cjs && node --check src/podcast-library.cjs && node --check src/ski-cams.cjs && node --check src/ski-cams-ui.js && node --check src/platform-stats.cjs && node --check src/apple2.js && node --check src/appearance.cjs && node --check src/station-image.cjs",
     "test:smoke": "node scripts/smoke.cjs",
     "test:arcade": "node scripts/arcade-smoke.cjs",
     "test:heckles": "node scripts/heckles-smoke.cjs",
@@ -28,7 +28,9 @@
     "test:maximize": "node scripts/maximize-smoke.cjs",
     "test:bot-scores": "node scripts/bot-scores-smoke.cjs",
     "test:retro": "node scripts/retro-smoke.cjs",
-    "test:sticky-chrome": "node scripts/sticky-chrome-smoke.cjs"
+    "test:sticky-chrome": "node scripts/sticky-chrome-smoke.cjs",
+    "test:apple2": "node scripts/apple2-smoke.cjs",
+    "test:window-order": "node scripts/window-order-smoke.cjs"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

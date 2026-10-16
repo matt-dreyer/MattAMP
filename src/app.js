@@ -3,17 +3,18 @@ const $=id=>document.getElementById(id);
 const root=$('deck'),audio=$('audio');
 const ambient=new MattAmbient($('ambient'));
 const retro=new MattRetro(root,audio);
+const apple2=new MattApple2();
 let appHidden=false;
-function syncAmbient(){if(state){ambient.configure(state.retro?'off':state.ambient,appHidden||mode==='bug');retro.configure(state.retro,!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
+function syncAmbient(){if(state){ambient.configure(state.appearance!=='modern'?'off':state.ambient,appHidden||mode==='bug');retro.configure(state.appearance!=='modern',!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
 const tabAudio=new Audio();
 tabAudio.preload='auto';
-const tabClips={radio:'yeah',podcast:'meh',x:'meh',cameras:'send-it',game:'hell-yeah',retro:'modem'};
+const tabClips={radio:'yeah',podcast:'meh',x:'meh',cameras:'send-it',game:'hell-yeah',retro:'modem',apple2:'apple2'};
 function playTabSound(tab){
  tabAudio.pause();
  if(!state.tabSounds||muted||!state.volume||!tabClips[tab]||(tab==='game'&&!arcade.sound))return;
- stopStartup();tabAudio.src='/tab-sounds/'+tabClips[tab]+(tab==='retro'?'.wav':'.mp3');tabAudio.volume=Math.min(.65,state.volume/100);tabAudio.muted=false;
+ stopStartup();tabAudio.src='/tab-sounds/'+tabClips[tab]+(['retro','apple2'].includes(tab)?'.wav':'.mp3');tabAudio.volume=Math.min(.65,state.volume/100);tabAudio.muted=false;
  void tabAudio.play().catch(()=>{});
 }
 function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
@@ -61,12 +62,14 @@ function report(err){error(err?.message||'Unable to complete this action. Try ag
 function activeShow(){return shows.find(s=>s.id===state.show);}
 function activeStation(){return stations.find(s=>s.id===state.station);}
 function applyArtwork(){
- const url=state.source==='radio'?artwork[state.station]:null,img=$('station-art');
- img.hidden=!url||img.dataset.failed===url;if(url&&img.getAttribute('src')!==url)img.src=url;
- for(const button of document.querySelectorAll('[data-station]')){
-  const thumb=button.querySelector('img'),src=artwork[button.dataset.station];
-  thumb.hidden=!src||thumb.dataset.failed===src;if(src&&thumb.getAttribute('src')!==src)thumb.src=src;
- }
+ const apply=(img,url)=>{
+  img.hidden=!url||img.dataset.failed===url;img.dataset.original=url||'';
+  if(!url)return;
+  if(state.appearance==='apple2')void apple2.image(url).then(src=>{if(state.appearance==='apple2'&&img.dataset.original===url){if(img.getAttribute('src')!==src)img.src=src;img.dataset.pixelated=String(src.startsWith('data:'));}});
+  else{delete img.dataset.pixelated;if(img.getAttribute('src')!==url)img.src=url;}
+ };
+ apply($('station-art'),state.source==='radio'?artwork[state.station]:null);
+ for(const button of document.querySelectorAll('[data-station]'))apply(button.querySelector('img'),artwork[button.dataset.station]);
 }
 
 function isVideo(){return state.source==='podcast'&&state.podcastType==='youtube';}
@@ -76,13 +79,17 @@ function snapshot(){
  const n=isVideo()&&yt?yt.getCurrentTime?.():audio.currentTime;
  if(Number.isFinite(n)&&n>=0)state.positions[key]=n;
 }
-async function persist(){if(!state)return;try{await unwrap(window.deck.save({retro:state.retro,layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,gameShotReadouts:state.gameShotReadouts,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
+async function persist(){if(!state)return;try{await unwrap(window.deck.save({appearance:state.appearance,scanlines:state.scanlines,layout:state.layout,source:state.source,station:state.station,show:state.show,podcastType:state.podcastType,volume:state.volume,speed:state.speed,alwaysOnTop:state.alwaysOnTop,tabSounds:state.tabSounds,gameShotReadouts:state.gameShotReadouts,details:state.details,ambient:state.ambient,chaos:state.chaos,xAccounts:state.xAccounts,xAiOnly:state.xAiOnly,positions:state.positions,selected:state.selected}));}catch(err){console.warn('Preferences could not be saved.');}}
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
 function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+parseFloat(getComputedStyle(root).borderTopWidth)+parseFloat(getComputedStyle(root).borderBottomWidth));const expanded=arcade.expanded&&playingGame;const game=playingGame?(mode==='bug'?'bug':settings?'settings':'play'):'';const key=[mode,state.layout,h,settings,expanded,game].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h,expanded,game).then(syncXBounds);});}
 function render(){
- root.classList.toggle('retro',state.retro);$('retro-mode').checked=state.retro;
+ root.classList.toggle('retro',state.appearance!=='modern');root.classList.toggle('apple2',state.appearance==='apple2');root.classList.toggle('scanlines',state.appearance==='apple2'&&state.scanlines);
+ $('appearance').value=state.appearance;$('scanlines').checked=state.scanlines;$('scanlines-setting').hidden=state.appearance!=='apple2';
+ $('brand-name').textContent=state.appearance==='apple2'?'MattAMP //e':'MattAMP';
+ $('appearance-hint').textContent=state.appearance==='apple2'?'Color pixels, green outlines, and an optional robotic greeting. Silly sound effects controls the greeting.':state.appearance==='retro'?'Metal trim, green LEDs, and a modem greeting. Welcome back to 1997.':'Dark glass and your chosen live background.';
+ renderBandwidth();
  const podcast=state.source==='podcast',video=isVideo();
  renderX();syncAmbient();syncGame();
  root.classList.toggle('arcade-expanded',(arcade.expanded||arcade.maximized)&&playingGame&&!settings&&mode==='full');
@@ -175,20 +182,28 @@ async function play(){stopStartup();error();if(playing){pause();return;}if(state
 function seekBy(delta){if(state.source!=='podcast'||!current)return;error();if(isVideo()&&yt){yt.seekTo(Math.max(0,(yt.getCurrentTime()||0)+delta),true);}else if(Number.isFinite(audio.duration)){audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+delta));}snapshot();queueSave();}
 function setMode(next){if(next==='bug')tabAudio.pause();if(next==='compact'){readingX=false;playingGame=false;watchingCams=false;}if(next==='bug'){restoreMode=mode;if(isVideo())pause();settings=false;}mode=next;render();}
 function setMeter(element,value,detail){const track=element.querySelector('.track');element.querySelector('b').textContent=pct(value);track.firstElementChild.style.width=Number.isFinite(value)?Math.min(100,Math.max(0,value))+'%':'0%';if(Number.isFinite(value))track.setAttribute('aria-valuenow',String(Math.round(value)));else track.removeAttribute('aria-valuenow');track.setAttribute('aria-valuetext',Number.isFinite(value)?pct(value):'Unavailable');element.querySelector('small').textContent=detail||'Unavailable';}
+function renderBandwidth(){
+ const n=metrics?.network,old=state?.appearance==='apple2',unit=old?'bps':'Kbps',scale=old?1e6:1000;
+ for(const key of ['down','up'])$(key).textContent=Number.isFinite(n?.[key])?(old?Math.round(n[key]*scale).toLocaleString():(n[key]*scale).toFixed(1)):'—';
+ document.querySelectorAll('.bandwidth-unit').forEach(el=>el.textContent=unit);
+ const ratio=Number.isFinite(n?.down)?Math.round(n.down*1e6/300).toLocaleString():null;
+ $('modem-comparison').textContent=ratio===null?'Waiting for bandwidth…':ratio+' × YOUR 300-BPS MODEM · DOWNLOAD';
+ if(metrics&&!metrics.error){const online=n.status==='online';$('compact-status').textContent=(online?'Online':n.status)+' · ↓'+$('down').textContent+' ↑'+$('up').textContent+' '+unit+'\nCPU '+pct(metrics.cpu)+' · RAM '+pct(metrics.memory?.percent)+' · GPUs '+metrics.gpus.map(g=>pct(g.load)).join(' / ');}
+}
 function renderMetrics(data){
  retro.sample(data.error?null:data.cpu);
- metrics=data;if(data.error){$('sample-status').textContent=data.error;return;}
+ metrics=data;renderBandwidth();if(data.error){$('sample-status').textContent=data.error;return;}
  const n=data.network,online=n.status==='online';const labels={online:'Internet online',checking:'Checking network',disconnected:'Disconnected','upstream-unreachable':'Internet unreachable',unreachable:'Network unreachable'};
  $('network-status').textContent=labels[n.status]||'Status unavailable';$('network-toggle').style.color=online?'#9ccab0':n.status==='checking'?'#a8b9c7':'#dfb574';$('network-latency').textContent=n.internet?.reachable&&n.internet.ms!=null?Math.round(n.internet.ms)+' ms':'—';
  $('interface').textContent=n.iface||'No default route';$('router').textContent=n.router?(n.router.reachable?'Reachable · '+(n.router.ms??'—')+' ms':'No ping response'):'—';$('internet').textContent=n.internet?(n.internet.reachable?'Reachable'+(n.internet.via?' · '+n.internet.via:''):'No probe response'):'—';$('checked').textContent=n.checked?new Date(n.checked).toLocaleTimeString():'Checking…';
- $('down').textContent=Number.isFinite(n.down)?(n.down*1000).toFixed(1):'—';$('up').textContent=Number.isFinite(n.up)?(n.up*1000).toFixed(1):'—';
+
  setMeter($('cpu-meter'),data.cpu,'Total CPU utilization');setMeter($('memory-meter'),data.memory?.percent,data.memory?mib(data.memory.used)+' / '+mib(data.memory.total)+' MiB in use':null);
  const signature=data.gpus.map(g=>g.uuid).join(',');
  if($('gpus').dataset.signature!==signature||!$('gpus').children.length){$('gpus').dataset.signature=signature;$('gpus').replaceChildren();for(const gpu of data.gpus){const el=document.createElement('div');el.className='meter gpu';const name=document.createElement('span');name.textContent=gpu.name.replace('NVIDIA GeForce ','').replace('NVIDIA ','');name.title=gpu.name;const track=document.createElement('div');track.className='track';track.role='meter';track.setAttribute('aria-label',gpu.name+' utilization');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.append(document.createElement('span'));el.append(name,track,document.createElement('b'),document.createElement('small'));$('gpus').append(el);}}
  [...$('gpus').children].forEach((el,i)=>{const g=data.gpus[i];setMeter(el,g.load,'VRAM '+(g.used==null?'—':Math.round(g.used).toLocaleString())+' / '+(g.total==null?'—':Math.round(g.total).toLocaleString())+' MiB · '+(g.temp??'—')+'°C');});
  if(data.gpuError)$('gpus').textContent='GPU readings unavailable';
  $('sample-status').textContent=data.gpuError?'GPU probe unavailable':'Live · every 2 seconds';
- $('compact-status').textContent=(online?'Online':labels[n.status]||'Unknown')+' · ↓'+$('down').textContent+' ↑'+$('up').textContent+' Kbps\nCPU '+pct(data.cpu)+' · RAM '+pct(data.memory?.percent)+' · GPUs '+data.gpus.map(g=>pct(g.load)).join(' / ');
+
  updateBug();icons();resize();
 }
 let editingPodcast=null,removedPodcast=null,libraryBusy=false;
@@ -323,13 +338,16 @@ async function init(){
  $('bug').onpointerup=()=>{const moved=drag?.moved;drag=null;if(!moved)setMode(restoreMode);};
  $('bug').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();setMode(restoreMode);}};
  $('settings-open').onclick=()=>{if(isVideo())pause();settings=!settings;render();};$('settings-close').onclick=()=>{settings=false;render();};
- $('retro-mode').onchange=e=>{state.retro=e.target.checked;render();if(state.retro)playTabSound('retro');else if(tabAudio.src.endsWith('/modem.wav'))tabAudio.pause();void persist();};
+ $('appearance').onchange=e=>{const next=e.target.value;if(!['modern','retro','apple2'].includes(next))return;const old=state.appearance;state.appearance=next;state.retro=next==='retro';tabAudio.pause();render();retro.refresh();if(next!==old&&next!=='modern')playTabSound(next);void persist();};
+ $('scanlines').onchange=e=>{state.scanlines=e.target.checked;render();void persist();};
+ $('modem-joke').onclick=()=>{$('modem-joke').textContent=apple2.next();resize();};
+
  for(const [id,delta] of [['retro-prev',-1],['retro-next',1]])$(id).onclick=()=>{const index=stations.findIndex(s=>s.id===state.station);document.querySelectorAll('[data-station]')[(index+delta+stations.length)%stations.length]?.click();};
  retro.setupMenus();
  $('ambient-mode').onchange=e=>{state.ambient=e.target.value;syncAmbient();queueSave();};
  $('tab-sounds').onchange=e=>{state.tabSounds=e.target.checked;if(!state.tabSounds)tabAudio.pause();void persist();};
  $('bot-shot-readouts').onchange=e=>{state.gameShotReadouts=e.target.checked;arcade.setShotReadouts(state.gameShotReadouts);void persist();};
- $('always-top').onchange=e=>{state.alwaysOnTop=e.target.checked;queueSave();};
+ $('always-top').onchange=e=>{state.alwaysOnTop=e.target.checked;void persist();};
  window.deck.onKeyStatus(result=>{for(const key of ['hasDiKey','keyring','hasSavedDiKey','keyringPending'])state[key]=result[key];render();});
  $('retry-key').onclick=async()=>{const b=$('retry-key');b.disabled=true;b.textContent='Checking keyring…';try{const result=await unwrap(window.deck.retryKey());for(const key of ['hasDiKey','keyring','hasSavedDiKey','keyringPending'])state[key]=result[key];render();}catch(err){$('settings-message').textContent=err.message;}finally{b.disabled=false;b.textContent='Retry saved key';resize();}};
  $('key-help').onclick=()=>void window.deck.external('di-settings');
@@ -363,3 +381,5 @@ async function init(){
 }
 window.deck.onMetrics(renderMetrics);
 init().catch(err=>{error(err.message);});
+
+document.fonts.ready.then(()=>{lastSize='';resize();syncChrome();});

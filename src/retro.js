@@ -47,7 +47,8 @@ class MattRetro {
   const {ctx,width,height}=this.surface(canvas),step=width/values.length,rows=Math.floor(height/4);
   for(let i=0;i<values.length;i++)for(let j=0;j<rows;j++){
    const lit=values[i]!=null&&j<Math.round(values[i]*rows);
-   ctx.fillStyle=lit?(j/rows>.84?'#efa84d':j/rows>.65?'#d3db46':'#8ede42'):'#14231b';
+   const color=this.root.classList.contains('apple2')?(j/rows>.84?'#dd723b':j/rows>.65?'#d5cb77':j/rows>.35?'#63c563':'#329ad1'):(j/rows>.84?'#efa84d':j/rows>.65?'#d3db46':'#8ede42');
+   ctx.fillStyle=lit?color:'#14231b';
    ctx.fillRect(Math.floor(i*step),height-(j+1)*4,Math.max(1,Math.floor(step)-2),2);
   }
  }
@@ -71,7 +72,7 @@ class MattRetro {
  setupMenus(){
   const nav=document.getElementById('retro-menus');
   const click=id=>()=>document.getElementById(id)?.click();
-  const menus={File:[['Settings…',click('settings-open')],['Hide to tray',click('hide')],['Quit MattAMP',click('quit-top')]],View:[['Switch layout',click('layout')],['Compact / full',click('compact')],['Desktop bug',click('bug-toggle')]],Options:[['Playback / pause',click('play')],['Stop playback',click('stop')],['Return to modern',()=>{const check=document.getElementById('retro-mode');check.checked=false;check.dispatchEvent(new Event('change'));}]],Presets:[['Previous station',click('retro-prev')],['Next station',click('retro-next')]],Help:[['Where is my MP3 folder?',()=>{document.getElementById('retro-joke').textContent='Still on that 80 GB hard drive. Next to final_mix_FINAL_v7.mp3.';}]]};
+  const menus={File:[['Settings…',click('settings-open')],['Hide to tray',click('hide')],['Quit MattAMP',click('quit-top')]],View:[['Switch layout',click('layout')],['Compact / full',click('compact')],['Desktop bug',click('bug-toggle')]],Options:[['Playback / pause',click('play')],['Stop playback',click('stop')],['Return to modern',()=>{const choice=document.getElementById('appearance');choice.value='modern';choice.dispatchEvent(new Event('change'));}]],Presets:[['Previous station',click('retro-prev')],['Next station',click('retro-next')]],Help:[['Where is my MP3 folder?',()=>{document.getElementById('retro-joke').textContent='Still on that 80 GB hard drive. Next to final_mix_FINAL_v7.mp3.';}]]};
   for(const [name,commands] of Object.entries(menus)){
    const details=document.createElement('details'),summary=document.createElement('summary'),panel=document.createElement('div');summary.textContent=name;panel.className='retro-menu-panel';
    for(const [label,action] of commands){const button=document.createElement('button');button.textContent=label;button.type='button';button.onclick=()=>{if(name!=='Help')this.closeMenus(true);action();};panel.append(button);}

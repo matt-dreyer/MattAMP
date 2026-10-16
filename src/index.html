@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/ski-cams-ui.js"></script><link rel="stylesheet" href="/retro.css"><script defer src="/retro.js"></script><script defer src="/app.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MattAMP</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/artillery.css"><script defer src="/lucide.js"></script><script defer src="/ambient.js"></script><script defer src="/artillery.js"></script><script defer src="/victory.js"></script><script defer src="/artillery-ui.js"></script><script defer src="/ski-cams-ui.js"></script><link rel="stylesheet" href="/retro.css"><script defer src="/retro.js"></script><link rel="stylesheet" href="/apple2.css"><script defer src="/apple2.js"></script><script defer src="/app.js"></script></head>
 <body>
 <main id="deck" class="sidecar">
  <canvas id="ambient" aria-hidden="true" hidden></canvas>
- <header class="titlebar"><span class="brand"><i class="retro-only" data-lucide="zap"></i>MattAMP</span><nav id="retro-menus" class="retro-only" aria-label="Classic menus"></nav><div class="window-actions">
+ <header class="titlebar"><span class="brand"><i class="retro-only" data-lucide="zap"></i><span id="brand-name">MattAMP</span></span><nav id="retro-menus" class="retro-only" aria-label="Classic menus"></nav><div class="window-actions">
   <button id="layout" aria-label="Switch to stacked layout" title="Switch layout"><i data-lucide="columns-2"></i></button>
   <button id="compact" aria-label="Toggle compact view" title="Compact view"><i data-lucide="panel-top-close"></i></button>
   <button id="bug-toggle" aria-label="Minimize to desktop bug" title="Bug mode"><i data-lucide="audio-lines"></i></button>
@@ -81,16 +81,19 @@
   <section id="system" class="system" aria-label="System monitor">
    <div class="network"><button id="network-toggle" class="text-button" aria-expanded="false"><span class="led"></span><span id="network-status">Checking network</span><i data-lucide="chevron-down"></i></button><span id="network-latency">—</span></div>
    <div id="network-detail" hidden><div><span>Interface</span><b id="interface">—</b></div><div><span>Router</span><b id="router">—</b></div><div><span>Internet probe</span><b id="internet">—</b></div><div><span>Last checked</span><b id="checked">—</b></div></div>
-   <div class="traffic"><span><i data-lucide="arrow-down"></i><b id="down">—</b> Kbps</span><span><i data-lucide="arrow-up"></i><b id="up">—</b> Kbps</span></div>
+   <div class="traffic"><span><i data-lucide="arrow-down"></i><b id="down">—</b> <span class="bandwidth-unit">Kbps</span></span><span><i data-lucide="arrow-up"></i><b id="up">—</b> <span class="bandwidth-unit">Kbps</span></span></div>
    <div id="meters"><div class="meter" id="cpu-meter"><span>CPU</span><div class="track" role="meter" aria-label="CPU utilization" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div class="meter" id="memory-meter"><span>Memory</span><div class="track" role="meter" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100"><span></span></div><b>—</b><small></small></div><div id="gpus"></div></div>
    <footer><span id="sample-status">Waiting for readings</span><button id="details" class="text-button" aria-expanded="false">Details<i data-lucide="chevron-down"></i></button></footer>
    <figure id="retro-history" class="retro-only"><figcaption>CPU history · last 2 minutes</figcaption><canvas width="320" height="80" aria-label="CPU utilization history"></canvas></figure>
+   <div class="apple2-console apple2-only"><p id="modem-comparison">Waiting for bandwidth…</p><button id="modem-joke" type="button" title="Next modem message" aria-label="Next modem message">LET'S GET SERIAL.</button></div>
   </section>
   <div id="compact-status" aria-live="off">Waiting for readings…</div>
  </div>
  <section id="settings" hidden aria-label="MattAMP settings">
   <div class="settings-title"><h2>Settings</h2><button id="settings-close" aria-label="Close settings"><i data-lucide="x"></i></button></div>
-  <label class="check retro-setting"><input id="retro-mode" type="checkbox">Retro mode</label><p class="hint">Metal trim, green LEDs, and a live radio spectrum. Welcome back to 1997.</p>
+  <label for="appearance">Appearance</label><select id="appearance"><option value="modern">Modern</option><option value="retro">’90s</option><option value="apple2">//e — even more retro</option></select>
+  <p id="appearance-hint" class="hint">Your player, your decade.</p>
+  <label id="scanlines-setting" class="check" hidden><input id="scanlines" type="checkbox">Subtle scanlines</label>
   <section id="podcast-settings" aria-labelledby="podcasts-heading">
    <div class="podcasts-heading"><h2 id="podcasts-heading">Your podcasts</h2><button id="podcast-add" type="button"><i data-lucide="plus"></i>Add show</button></div>
    <p class="hint">Your lineup, in your order. Add a YouTube link, an audio RSS feed, or both.</p>

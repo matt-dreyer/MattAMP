@@ -1,7 +1,7 @@
 ---
 name: MattAMP
-description: Approved modern desktop design with an optional classic metal and green LED variant.
-# Retro-prefixed tokens apply only when Retro mode is enabled.
+description: Approved modern desktop design with optional classic metal and color-computer appearances.
+# Retro-prefixed tokens describe the ’90s appearance; apple2-prefixed tokens override only //e.
 # The existing modern design below remains authoritative and unchanged.
 colors:
   retro-shell: "#14191f"
@@ -12,7 +12,37 @@ colors:
   retro-green: "#a4e55e"
   retro-amber: "#e6bd68"
   retro-volume-fill: "#8ce430"
+  apple2-black: "#000"
+  apple2-edge: "#32684c"
+  apple2-text: "#e6e6da"
+  apple2-muted: "#a4b6a7"
+  apple2-mint: "#74c7ae"
+  apple2-amber: "#d5cb77"
+  apple2-blue: "#193c83"
+  apple2-cyan: "#329ad1"
+  apple2-green: "#63c563"
+  apple2-play: "#176744"
+  apple2-orange: "#dd723b"
+  apple2-hover: "#122b1b"
+  apple2-track: "#09120d"
 typography:
+  apple2-body:
+    fontFamily: "MattPixel, monospace"
+    fontSize: "18px"
+    lineHeight: 1.15
+  apple2-title:
+    fontFamily: "MattPixel, monospace"
+    fontSize: "28px"
+    lineHeight: 1
+    letterSpacing: "0"
+  apple2-support:
+    fontFamily: "MattPixel, monospace"
+    fontSize: "16px"
+    lineHeight: 1.2
+  apple2-source-label:
+    fontFamily: "MattPixel, monospace"
+    fontSize: "17px"
+    lineHeight: 1
   retro-body:
     fontFamily: "'Courier New', ui-monospace, monospace"
   retro-title:
@@ -25,13 +55,36 @@ typography:
     fontFamily: "system-ui, sans-serif"
     fontSize: "11px"
 rounded:
+  apple2-square: "0"
   retro-control: "1px"
   retro-shell: "3px"
   retro-screen: "0"
 spacing:
+  apple2-gap: "5px"
+  apple2-panel-margin: "6px"
   retro-gap: "4px"
   retro-panel-margin: "6px"
 components:
+  apple2-display:
+    backgroundColor: "{colors.apple2-black}"
+    textColor: "{colors.apple2-text}"
+    typography: "{typography.apple2-body}"
+    rounded: "{rounded.apple2-square}"
+    padding: "9px"
+  apple2-play:
+    backgroundColor: "{colors.apple2-play}"
+    textColor: "{colors.apple2-text}"
+    rounded: "{rounded.apple2-square}"
+  apple2-playlist-selected:
+    backgroundColor: "{colors.apple2-blue}"
+    textColor: "{colors.apple2-text}"
+    rounded: "{rounded.apple2-square}"
+    padding: "2px 6px"
+  apple2-volume-thumb:
+    backgroundColor: "{colors.apple2-text}"
+    rounded: "{rounded.apple2-square}"
+    width: "10px"
+    height: "19px"
   retro-display:
     backgroundColor: "{colors.retro-screen}"
     textColor: "{colors.retro-green}"
@@ -73,13 +126,13 @@ The artillery setup includes a compact Chaos select (Off / Mixed / Unhinged), de
 
 # Optional Retro variant
 
-The sections below apply only to the saved **Retro mode** setting. They do not replace any modern design guidance above. Sources: `src/retro.css`, `src/retro.js`, and the theme integration in `src/app.js` and `src/index.html`.
+The sections below describe **’90s** in the saved **Appearance** selector (`retro` internally). The //e section overrides only its own optional appearance. They do not replace any modern design guidance above. Sources: `src/retro.css`, `src/retro.js`, and the theme integration in `src/app.js` and `src/index.html`.
 
 ## Overview
 
 **Creative North Star: "Classic metal and green LED player"**
 
-The user-approved Winamp reference supplies dark metal bevels, green inset screens and segmented LED meters. This is an optional material and typography variant of MattAMP's existing desktop layouts. Modern remains the default; the Settings checkbox is off for a new installation and saves the user's choice.
+The user-approved Winamp reference supplies dark metal bevels, green inset screens and segmented LED meters. This is an optional material and typography variant of MattAMP's existing desktop layouts. Modern remains the default; the Settings Appearance selector offers Modern, ’90s and //e — even more retro, and saves the user's choice.
 
 Retro uses opaque metal and inset surfaces. While enabled, it temporarily suppresses the ambient background without replacing the saved ambient choice. Switching the skin preserves playback and media state.
 
@@ -118,7 +171,7 @@ Use the Retro shell, control and screen radii from the frontmatter. Artwork is s
 
 General metal buttons and selects retain the dark outset bevel; buttons brighten on hover and recess when pressed. Transport keys use brushed aluminum with fine horizontal grain, asymmetric lit edges and dark icons. Play retains the same tactile treatment in green. Keep the separate mute button quiet inside the volume housing. Keyboard focus remains a visible amber outline (2px, offset 2px); menu summaries place the outline inside their bounds.
 
-The volume fader sits in a recessed dark metal faceplate with four small domed silver rivets, one in each corner. The rivets stay outside the slider hit area and never intercept input. Its thin rectangular rail (6px high) fills with the Retro volume-fill color to the current volume value; the remainder stays dark. A narrow rectangular metal thumb uses the frontmatter dimensions and a central dark grip. Preserve native range interaction and the numeric volume display; mute continues to show zero without erasing the saved volume setting. The Settings checkbox is labeled **Retro mode**.
+The volume fader sits in a recessed dark metal faceplate with four small domed silver rivets, one in each corner. The rivets stay outside the slider hit area and never intercept input. Its thin rectangular rail (6px high) fills with the Retro volume-fill color to the current volume value; the remainder stays dark. A narrow rectangular metal thumb uses the frontmatter dimensions and a central dark grip. Preserve native range interaction and the numeric volume display; mute continues to show zero without erasing the saved volume setting. The Settings **Appearance** selector labels this variant **’90s**. Legacy `retro: true` preferences migrate to it.
 
 Enabling Retro explicitly plays a short original synthesized modem handshake (6.4 seconds) through the existing tab-sound channel. Respect volume, mute and **Silly sound effects**; cap the cue volume at 65%. Disabling Retro, hiding the app or entering Bug mode stops the cue. Restoring a saved Retro preference at startup does not replay it.
 
@@ -134,7 +187,7 @@ Use a single vertical list with two-digit row numbers, official station artwork 
 
 The audio spectrum uses actual same-origin radio audio analysis, with 40 LED columns and a maximum drawing rate of 20 fps. It observes playback without replacing the audio output. Label live, idle, unavailable, radio-only and reduced-motion states honestly. Hidden, Settings, Bug and reduced-motion states stop active spectrum work; unavailable or paused audio never receives invented animated levels.
 
-CPU history is a separate, explicitly labeled measurement chart: 60 samples from the existing two-second telemetry cadence, covering the last two minutes. Missing readings remain unlit. Hardware meters retain real CPU, memory and GPU values; their segmented treatment is visual only. Shared telemetry units apply to both themes: bandwidth uses Kbps, including compact status, and RAM/GPU memory amounts use MiB. Keep the unit beside the amount; utilization remains a percentage.
+CPU history is a separate, explicitly labeled measurement chart: 60 samples from the existing two-second telemetry cadence, covering the last two minutes. Missing readings remain unlit. Hardware meters retain real CPU, memory and GPU values; their segmented treatment is visual only. Modern and ’90s bandwidth use Kbps, including compact status; //e uses bps. RAM/GPU memory amounts use MiB across appearances. Keep the unit beside the amount; utilization remains a percentage.
 
 ## Do's and Don'ts
 
@@ -147,3 +200,73 @@ CPU history is a separate, explicitly labeled measurement chart: 60 samples from
 - **Don't** apply these tokens or bevels to the modern default.
 - **Don't** animate fabricated spectrum data or run active spectrum work while hidden or under reduced motion.
 - **Don't** replace actual menu actions or station controls with decorative imitations.
+
+
+# Optional //e variant
+
+The following scoped extension applies only to **//e — even more retro** (`apple2` internally). It preserves the Modern and ’90s guidance above. Implementation sources: `src/apple2.css`, `src/apple2.js`, `src/app.js`, `src/retro.js`, `src/appearance.cjs` and `src/main.cjs`.
+
+## Overview
+
+**Creative North Star: "Color-computer radio desk"**
+
+The user-approved color Apple IIe homage adds a third optional appearance without replacing Modern or ’90s. Black surfaces, subdued green outlines, off-white bitmap-inspired type and blue selection keep the utility readable while coarse color artwork supplies the period character. This is a visual homage, not hardware emulation.
+
+Both classic appearances suspend the saved ambient effect. //e keeps the established desktop layouts, live readings, playback and provider rendering. Its static scanlines are an independent saved option, off by default.
+
+**Key Characteristics:**
+- Black panels and subdued green rules; off-white labels and blue selected rows.
+- Locally bundled bitmap-inspired type and ordered-dithered color station art.
+- Real multicolor segmented telemetry, optional static scanlines and a user-triggered original greeting.
+
+## Colors
+
+The `apple2-` frontmatter tokens are normative for this appearance. Black grounds the surfaces; Edge provides subdued green structural rules. Text and Muted separate primary and supporting copy. Blue marks selected sources and playlist rows, with Cyan outlining selection; Mint carries provider labels and utility actions. Amber carries focus and measurements. Blue/cyan, Green, Amber and Orange form the live meter progression; Play supplies the green transport action.
+
+Station images use the distinct 16-entry display-inspired palette in `src/apple2.js`. Its two gray entries intentionally match. A 4×4 ordered-dither matrix quantizes a 64×64 image before pixelated enlargement; this is not a composite-video simulation. Keep the interface tokens separate from the image palette.
+
+**The Green Rule Rule.** //e structure uses subdued green rules; off-white belongs to readable text and the volume thumb, not bright panel outlines.
+
+## Typography
+
+MattPixel is the local CSS alias for VT323, bundled under the SIL Open Font License in `assets/fonts/VT323-OFL.txt`. Use the frontmatter body, title, support and source-label roles. The brand uses 22px type; spectrum captions use 15px, Settings prose uses 17px, and game support labels use the 16px support role. The redundant game eyebrow is hidden only in //e. Do not shrink support text to imitate low-resolution hardware at the expense of reading it.
+
+## Layout
+
+Preserve Sidecar, Stack, compact, Settings, Game and Bug behavior. //e hides the ’90s menu row and brand icon, retaining the title controls and source navigation. The radio display has a 6px margin and 9px padding; main artwork displays at 100px square, playlist artwork at 24px, and compact artwork at 72px. At widths up to 380px, source icons hide, labels use 16px, artwork becomes 80px and the title becomes 25px. Embedded providers keep native rendering; the game canvas and its behavior remain intact.
+
+## Elevation & Depth
+
+Use flat opaque black panels, square edges and thin green rules. Remove metal bevels, rivets, shadows and backdrop blur from //e chrome. The shell has a 2px border; panels and controls generally have 1px borders. Optional scanlines are a static three-pixel repeating overlay at 0.35 opacity, never animated; they do not receive pointer events and disappear in Bug mode.
+
+## Shapes
+
+Use square controls, artwork and scrollbar thumbs. Meter tracks are rectangular, 12px high, with three-pixel lit segments separated by two-pixel black gaps. Keep the native range interaction; the volume thumb uses the frontmatter dimensions and a black border, over a cyan fill.
+
+## Components
+
+### Controls and selection
+
+Controls use black fills and green borders; hover uses the dark green Hover token. Selected sources, playlist rows, podcast/X choices and ammunition use Blue, with off-white text. Play and Fire use Play green. Keyboard focus uses a 2px Amber outline with a 1px offset. Preserve text labels, keyboard controls and accessible names. The Appearance selector saves one of Modern, ’90s and //e; it replaces the former Retro checkbox.
+
+### Station artwork and meters
+
+Use coarse ordered-dithered station art only while //e is active; retain original artwork for other appearances and fall back to it on conversion failure. The spectrum and CPU history retain the existing real-data sources and honest idle/unavailable labels. Spectrum work remains suspended while hidden, in Settings/Bug or under reduced motion. The multicolor segments are visual styling of actual values, not synthetic signal activity.
+
+### Modem console and sound
+
+Show measured bandwidth in bps, including compact status. The comparison uses the current actual download rate divided by 300 bps, rounded to an integer multiplier; it is not a speed-test maximum. Missing data says it is waiting. The clickable message cycles original “Let's get serial,” Havre, Montana–Boston pirate-BBS and RadioShack phone-bill jokes.
+
+Explicit selection of //e may play the original coupler-inspired cue and robotic greeting, governed by Silly sound effects, volume and mute, with the existing 65% volume cap. Startup preference restoration never replays it. Appearance changes, hiding and Bug mode stop the cue. Do not describe the sound as Apple speech-hardware or modem emulation.
+
+## Do's and Don'ts
+
+### Do:
+- **Do** scope //e styling and artwork conversion to the apple2 appearance.
+- **Do** preserve clear focus, readable support text, native provider rendering and actual measurement states.
+- **Do** keep scanlines off by default and restore the saved ambient choice on returning to Modern.
+
+### Don't:
+- **Don't** replace green rules with bright white outlines or turn the entire interface monochrome green.
+- **Don't** fabricate live spectrum or bandwidth data, replay the greeting on preference restore, or claim hardware emulation.
+- **Don't** apply //e typography or artwork processing to Modern, ’90s or embedded provider content.
