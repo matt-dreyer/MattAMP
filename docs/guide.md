@@ -83,7 +83,7 @@ Animation stops when Off, hidden, in bug mode, or under reduced motion. Reduced 
 
 ## Workstation meters
 
-- **CPU / RAM / network:** Linux counters every two seconds. Network traffic is the default-route interface's Mbps.
+- **CPU / RAM / network:** Linux counters every two seconds. Network traffic is the default-route interface's Kbps (kilobits per second). RAM and GPU memory capacities display in MiB.
 - **GPU:** NVIDIA utilization, VRAM, and temperature via `nvidia-smi`, for detected cards. NVIDIA hardware is optional; these are not general AMD/Intel GPU sensors.
 - **Details:** expanded memory/VRAM/temperature readings.
 - **Network status:** router and public-internet probes every ten seconds. ICMP failure falls back to HTTPS connectivity checks; a missing ping response alone doesn't establish an outage.
@@ -127,7 +127,7 @@ Media and X still contact their respective providers; local storage doesn't make
 
 ## Tab sound effects
 
-**Settings → Silly tab sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts and Twitter say “Meh,” SkiCams says “Send it!” in a deep, full female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
+**Settings → Silly sound effects** turns the four navigation voice clips on or off (on by default): DI.FM says “Yeeeeah,” Podcasts and Twitter say “Meh,” SkiCams says “Send it!” in a deep, full female voice, and Game says “Hell yeah!” in a male voice. The choice is saved. These bundled clips work offline, follow the player volume/mute, and replace each other when you switch tabs quickly. The game greeting also respects Game’s Sound off button. Automatic camera cycling is silent. These are synthetic stock voices, not recordings or imitations of a named person.
 
 ## Startup audio and credits
 

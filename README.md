@@ -12,7 +12,7 @@ MattAMP started with a much smaller ambition: replace a few desktop widgets and 
 
 It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, SkiCams, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
-[Screenshots](#take-a-look-around) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
+[Screenshots](#take-a-look-around) · [Retro mode](#back-to-1997) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
 ![MattAMP's icon-and-text tabs on a translucent bar, Synthwave radio art, wave background, and live workstation meters](docs/images/desktop.png)
 
@@ -26,12 +26,13 @@ It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **m
 | A filtered X/Twitter pane | Ricochet walls, wraparound shots, and occasional absurd wind |
 | Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, and Mandelbrot glides |
 | Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |
+| Optional Retro skin with real audio spectrum and LED meters | Brushed aluminum, corner rivets, and a modem greeting |
 
 Built for a Linux workstation and a large OLED, with dark glass, muted color, and enough contrast to find the window. The effects are optional. The silliness is more fundamental.
 
 ## Take a look around
 
-Every tab, every size, and every background. These are captures of the running app using a fresh profile; Twitter shows its signed-out screen. Click any image for the full-size view. Animated backgrounds are frozen mid-frame here.
+Browse the tabs, layouts, and backgrounds below, or jump to the new [Retro previews](#back-to-1997). These are captures of the running app using isolated profiles; Twitter shows its signed-out screen. Click any image for the full-size view. Animated backgrounds are frozen mid-frame here.
 
 <details>
 <summary>All five tabs — including both podcast players</summary>
@@ -103,7 +104,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.3.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.0.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -282,7 +283,7 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 
 **A lighter navigation bar:** DI.FM, Podcasts, Twitter, SkiCams, and Game are icons and text, with a soft hover highlight and mint for the active tab. The strip is 70% opaque with a subtle blur, so the live background can show through. It stays pinned as you scroll, along with the bare title-bar icons. Keyboard focus rings and full click targets remain.
 
-This navigation refresh is in the current source and CI builds; the published v0.3.0 installers have the earlier styling.
+The navigation refresh and optional Retro skin are included in [MattAMP 1.0.0](docs/release-1.0.0.md). Upgrading from v0.3.0 preserves your saved settings and scores.
 
 | Control | What happens |
 | --- | --- |
@@ -295,11 +296,30 @@ This navigation refresh is in the current source and CI builds; the published v0
 | Close **×** | Quit MattAMP |
 | **Details** under the meters | Show memory, VRAM, and GPU temperatures |
 
-**Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly tab sound effects** off in Settings whenever civilization requires it.
+### Back to 1997
+
+**New for [MattAMP 1.0.0](docs/release-1.0.0.md): Settings → Retro mode.** The modern glass skin remains the default. Flip the toggle for dark beveled metal, lime-green displays, numbered station rows, and the kind of controls that look like they ought to weigh something.
+
+![Retro MattAMP with numbered radio presets, an active audio spectrum, segmented system meters, and CPU history](docs/images/retro.png)
+
+Brushed-aluminum transport keys, a green volume rail, a rectangular metal fader, and four tiny corner rivets. Yes, we spent time on the rivets.
+
+![Close-up of Retro playback controls and the recessed volume faceplate with four metallic corner rivets](docs/images/retro-controls.png)
+
+- **Meters with a job:** the radio spectrum follows actual audio. CPU, memory, and GPU segments show real utilization; the lower chart tracks the last two minutes of CPU samples. Network speeds read in **Kbps**, and RAM/VRAM capacities in **MiB**.
+- **Menus that do things:** File, View, Options, and Presets provide Settings, layout, playback, and station shortcuts. Help has opinions about your missing MP3 folder.
+- **The sound of getting online:** enabling Retro plays an original synthesized modem handshake. It obeys volume, mute, and **Silly sound effects**. Loading a saved Retro preference at startup does not replay it.
+- **A skin change, mid-session:** your music and battle continue. The preference is saved locally; switching back restores your chosen live background.
+
+The spectrum is radio-only and rests when playback stops. It pauses when hidden or under reduced motion; YouTube and remote podcast audio keep their usual playback path. These two previews use an isolated demo profile with synthetic test audio to exercise the real spectrum and live workstation readings. No Premium key or personal account is included.
+
+### More ways to make it yours
+
+**Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
 **Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
 
-CPU, memory, and network readings update every two seconds. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
+CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 
 ## The practical bits
 
