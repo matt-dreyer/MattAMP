@@ -321,6 +321,12 @@ The spectrum is radio-only and rests when playback stops. It pauses when hidden 
 
 CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 
+## Bonus disk: the 300 bps edition
+
+There is now an actual [Applesoft BASIC companion](extras/apple-iie/README.md) in the repo: a colorful, silent radio/modem demo and a playable four-tank artillery game. Green borders, chunky graphics, three bots, and `1250000 BPS = 4167 OLD MODEMS!`
+
+[Load the BASIC listing](extras/apple-iie/MATTAMP.bas) in a browser interpreter or transfer it to your Apple II setup. This is a separate offline adaptation; the modern app and its streaming features stay right here in the present.
+
 ## The practical bits
 
 - **Local data:** settings, playback positions, X sessions, and arcade scores stay under `~/.config/workstation-deck/`. The old internal name preserves existing installs. [Storage and privacy](docs/guide.md#local-data-and-privacy)
