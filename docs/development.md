@@ -146,3 +146,14 @@ To remove menu/dock integration, remove these app-owned files:
 Unpin any stale dock entry and remove the extracted app/source folder if no longer needed. If you installed the Ubuntu AppArmor profile, `/etc/apparmor.d/mattamp` is also app-specific and can be removed with your system's profile-management tools.
 
 Keep `~/.config/workstation-deck/` to retain settings, sessions, and scores for reinstall. Deleting it removes those too. Other desktop monitors are independent of MattAMP.
+
+### Appearance integration checks
+
+`npm run test:retro` checks the ’90s skin and `npm run test:apple2` checks //e,
+including legacy preference migration, persistence, muted/disabled entry cues,
+bandwidth units, artwork dithering, uninterrupted radio output and retained game
+state. Both launch sandboxed Electron with temporary profiles and muted output;
+they do not use your listen key or X login. The //e check also fetches public
+station art and podcast metadata, so it needs network access. Review captures
+are written to the ignored `.impeccable/review/` folder. Remote provider surfaces
+are not covered by the shell screenshots.

@@ -1,0 +1,113 @@
+/* //e is an optional color-computer homage, not a hardware emulator. */
+@font-face{font-family:MattPixel;src:url('/apple2-font.ttf') format('truetype');font-display:swap}
+.apple2-only{display:none!important}
+#deck.retro.apple2{
+ --shell:#000;--panel:#000;--edge:#32684c;--text:#e6e6da;--muted:#a4b6a7;--mint:#74c7ae;--amber:#d5cb77;
+ border:2px solid var(--edge);border-radius:0;background:#000;box-shadow:none;font:18px/1.15 MattPixel,monospace;
+}
+#deck.retro.apple2 .apple2-only{display:block!important}
+#deck.retro.apple2 .titlebar{background:#000;border-bottom:1px solid var(--edge);padding:5px 8px;gap:4px;flex-wrap:nowrap}
+#deck.retro.apple2 .brand{font:22px/1 MattPixel,monospace;letter-spacing:0;color:#e6e6da;white-space:nowrap}
+#deck.retro.apple2 .brand svg,#deck.retro.apple2 #retro-menus{display:none!important}
+#deck.retro.apple2 button,#deck.retro.apple2 select,#deck.retro.apple2 input:not([type=range]){
+ background:#000;border:1px solid var(--edge);border-radius:0;box-shadow:none;backdrop-filter:none;font:inherit;color:var(--text);
+}
+#deck.retro.apple2 button:enabled:hover{background:#122b1b;color:#e6e6da;border-color:#63c563;box-shadow:none}
+#deck.retro.apple2 button:enabled:active{background:#1e365f;border-style:solid}
+#deck.retro.apple2 button:focus-visible,#deck.retro.apple2 input:focus-visible,#deck.retro.apple2 select:focus-visible{outline:2px solid #d5cb77;outline-offset:1px}
+#deck.retro.apple2 .window-actions button{background:#000!important;border:0;min-width:24px;min-height:28px;padding:3px;color:#a4b6a7}
+#deck.retro.apple2 .window-actions button:enabled:hover{background:#122b1b!important;color:#e6e6da}
+#deck.retro.apple2 .sourcebar{padding:6px;gap:2px;background:#000;border-bottom:1px solid var(--edge)}
+#deck.retro.apple2 .sourcebar button{font:17px/1 MattPixel,monospace;background:#000!important;border:1px solid transparent;min-height:34px;padding:5px 2px;text-transform:uppercase;color:#a4b6a7;gap:3px;flex-direction:row}
+#deck.retro.apple2 .sourcebar button svg{width:13px;height:13px}
+#deck.retro.apple2 .sourcebar button:enabled:hover{background:#122b1b!important;color:#e6e6da;border-color:var(--edge)}
+#deck.retro.apple2 .sourcebar button[aria-pressed=true]{background:#193c83!important;color:#e6e6da;border-color:#329ad1}
+#deck.retro.apple2 .display{margin:6px;padding:9px;border:1px solid var(--edge);background:#000;min-height:156px;gap:12px}
+#deck.retro.apple2 #station-art{width:100px;height:100px;border:0;image-rendering:pixelated;filter:none}
+#deck.retro.apple2 #provider{font:16px/1 MattPixel,monospace;color:#74c7ae}
+#deck.retro.apple2 h1{font:28px/1 MattPixel,monospace;color:#e6e6da;letter-spacing:0;margin:6px 0}
+#deck.retro.apple2 #now-detail{font:16px/1.1 MattPixel,monospace;color:#a4b6a7}
+#deck.retro.apple2 #retro-spectrum{margin-top:10px}
+#deck.retro.apple2 #retro-spectrum canvas{height:40px}
+#deck.retro.apple2 #retro-spectrum figcaption,#deck.retro.apple2 #retro-history figcaption{font:15px/1.1 MattPixel,monospace;color:#a4b6a7}
+#deck.retro.apple2 .transport{background:#000;border:1px solid var(--edge);padding:5px;gap:5px}
+#deck.retro.apple2 .transport button:not(#mute){background:#000;color:#e6e6da;border:1px solid var(--edge);box-shadow:none;min-width:32px;min-height:32px}
+#deck.retro.apple2 .transport button#play{background:#176744;color:#e6e6da;min-width:44px;border-color:#63c563;box-shadow:none}
+#deck.retro.apple2 .transport button:not(#mute):enabled:hover{background:#193c83;border-color:#329ad1;color:#e6e6da}
+#deck.retro.apple2 .volume-wrap{padding:2px 4px;border:0;box-shadow:none;background:#000;gap:5px}
+#deck.retro.apple2 .volume-wrap::before{display:none}
+#deck.retro.apple2 .volume-wrap #mute{background:#000;border:0;color:#a4b6a7}
+#deck.retro.apple2 #volume{width:78px}
+#deck.retro.apple2 #volume::-webkit-slider-runnable-track{height:9px;border:1px solid var(--edge);background:linear-gradient(to right,#329ad1 0 var(--volume-fill,35%),#09120d var(--volume-fill,35%) 100%);box-shadow:none}
+#deck.retro.apple2 #volume::-webkit-slider-thumb{width:10px;height:19px;margin-top:-6px;background:#e6e6da;border:2px solid #000;border-radius:0;box-shadow:none}
+#deck.retro.apple2 #volume-value{font:18px MattPixel,monospace;color:#d5cb77}
+#deck.retro.apple2 .presets{border:1px solid var(--edge);background:#000;padding:2px}
+#deck.retro.apple2 .presets button{font:18px/1 MattPixel,monospace;color:#e6e6da;background:#000;min-height:29px;border:0;border-bottom:1px solid #132c1e;padding:2px 6px}
+#deck.retro.apple2 .presets button::before{color:#74c7ae;border-right:1px solid var(--edge);width:23px}
+#deck.retro.apple2 .presets button img{image-rendering:pixelated;width:24px;height:24px}
+#deck.retro.apple2 .presets button:enabled:hover{background:#122b1b}
+#deck.retro.apple2 .presets button[aria-pressed=true]{background:#193c83;outline:1px solid #329ad1;color:#e6e6da}
+#deck.retro.apple2 .system{background:#000;border:1px solid var(--edge);padding:8px}
+#deck.retro.apple2 .network,#deck.retro.apple2 .traffic,#deck.retro.apple2 .meter{border-bottom:1px solid var(--edge)}
+#deck.retro.apple2 .network{font:17px MattPixel,monospace;gap:3px}
+#deck.retro.apple2 .network button{border:0;font:inherit;background:#000;padding:3px 0;color:#74c7ae}
+#deck.retro.apple2 .network #network-latency{font:16px MattPixel,monospace}
+#deck.retro.apple2 .traffic{font:17px MattPixel,monospace;gap:10px;flex-wrap:wrap;color:#74c7ae}
+#deck.retro.apple2 .traffic b{font-weight:400}
+#deck.retro.apple2 .meter{font:18px MattPixel,monospace;grid-template-columns:88px minmax(20px,1fr) 32px;padding:11px 0;gap:6px}
+#deck.retro.apple2 .meter>b{font-weight:400;color:#d5cb77}
+#deck.retro.apple2 .meter small{font:16px/1.2 MattPixel,monospace;color:#a4b6a7}
+#deck.retro.apple2 .track{height:12px;background:#09120d;border:1px solid #244735}
+#deck.retro.apple2 .track>span{background:linear-gradient(90deg,#329ad1 0 25%,#63c563 25% 60%,#d5cb77 60% 85%,#dd723b 85%)}
+#deck.retro.apple2 .track::after{background:repeating-linear-gradient(90deg,transparent 0 3px,#000 3px 5px)}
+#deck.retro.apple2 .system footer{font:16px MattPixel,monospace;gap:4px}
+#deck.retro.apple2 #retro-history{background:#000;border:1px solid var(--edge);padding:7px;margin-top:8px;gap:6px}
+#deck.retro.apple2 #retro-history canvas{height:58px}
+#deck.retro.apple2 .apple2-console{margin-top:10px;border-top:1px solid var(--edge);padding-top:8px;font:16px/1.15 MattPixel,monospace}
+#deck.retro.apple2 #modem-comparison{color:#d5cb77;margin:0 0 5px}
+#deck.retro.apple2 #modem-joke{border:0;background:#000;padding:3px 0;text-align:left;color:#74c7ae;width:100%;white-space:normal;min-height:28px}
+#deck.retro.apple2 #modem-joke:hover{color:#e6e6da;background:#122b1b}
+#deck.retro.apple2 #settings,#deck.retro.apple2 .game-heading{background:#000}
+#deck.retro.apple2 #settings{font:18px/1.2 MattPixel,monospace}
+#deck.retro.apple2 #settings h2{font:26px MattPixel,monospace}
+#deck.retro.apple2 #settings h3{font:21px MattPixel,monospace;color:#74c7ae}
+#deck.retro.apple2 #settings .hint,#deck.retro.apple2 #settings p,#deck.retro.apple2 #settings small{font:17px/1.2 MattPixel,monospace}
+#deck.retro.apple2 #settings label{font-size:18px}
+#deck.retro.apple2 .game-heading h2,#deck.retro.apple2 .x-heading h2,#deck.retro.apple2 .camera-heading h2{font:28px MattPixel,monospace}
+#deck.retro.apple2 .shows button[aria-pressed=true],#deck.retro.apple2 .x-lanes button[aria-pressed=true]{background:#193c83;color:#e6e6da}
+#deck.retro.apple2 .compact-status{font:15px MattPixel,monospace}
+#deck.retro.apple2.compact #station-art{width:72px;height:72px}
+#deck.retro.apple2.compact .display{min-height:124px}
+#deck.retro.apple2.scanlines::after{content:'';position:absolute;inset:0;z-index:35;pointer-events:none;background:repeating-linear-gradient(0deg,#0000 0 2px,#0003 2px 3px);opacity:.35}
+#deck.retro.apple2.bug-mode{background:transparent;border:0}
+#deck.retro.apple2.bug-mode::after{display:none}
+@media(max-width:380px){
+ #deck.retro.apple2 .brand{font-size:20px}
+ #deck.retro.apple2 .titlebar{padding-inline:5px}
+ #deck.retro.apple2 .window-actions{gap:0}
+ #deck.retro.apple2 .window-actions button{min-width:23px;width:23px}
+ #deck.retro.apple2 .sourcebar button{font-size:16px;gap:2px}
+ #deck.retro.apple2 .sourcebar button svg{display:none}
+ #deck.retro.apple2 #station-art{width:80px;height:80px}
+ #deck.retro.apple2 .display{gap:8px}
+ #deck.retro.apple2 h1{font-size:25px}
+ #deck.retro.apple2 #volume{width:60px}
+}
+/* Keep secondary labels readable in the bitmap face, including loading states. */
+#deck.retro.apple2 .sourcebar button[aria-pressed=true]:enabled:hover{background:#193c83!important;border-color:#74c7ae;color:#e6e6da}
+#deck.retro.apple2 .podcast-mode label,#deck.retro.apple2 .skip-row label,#deck.retro.apple2 .episode-label,#deck.retro.apple2 #youtube-placeholder,#deck.retro.apple2 #x-summary,#deck.retro.apple2 #x-status,#deck.retro.apple2 #camera-status,#deck.retro.apple2 #camera-viewport .hint,#deck.retro.apple2 #x-viewport p{font:16px/1.2 MattPixel,monospace}
+#deck.retro.apple2 #settings strong{font:19px/1.1 MattPixel,monospace}
+#deck.retro.apple2 #settings textarea{font:18px/1.2 MattPixel,monospace;background:#000;border:1px solid var(--edge);border-radius:0;color:var(--text)}
+#deck.retro.apple2 #network-detail{background:#000;border:1px solid var(--edge);border-radius:0}
+#deck.retro.apple2 #network-detail>div{font:16px MattPixel,monospace}
+#deck.retro.apple2 #compact-status{font:15px/1.25 MattPixel,monospace}
+#deck.retro.apple2 #game-ammo label{border-radius:0;border:1px solid var(--edge);box-shadow:none;backdrop-filter:none;background:#000}
+#deck.retro.apple2 #game-ammo label:has(input:checked){background:#193c83;color:#e6e6da}
+#deck.retro.apple2 #game-fire{background:#176744;color:#e6e6da}
+#deck.retro.apple2 ::selection{background:#193c83;color:#e6e6da}
+#deck.retro.apple2 input{caret-color:#74c7ae}
+#deck.retro.apple2 ::-webkit-scrollbar-thumb{background:#32684c;border-radius:0}
+#deck.retro.apple2 ::-webkit-scrollbar-track{background:#000}
+/* //e support text needs enough pixels to retain the bitmap letterforms. */
+#deck.retro.apple2 .game-eyebrow{display:none}
+#deck.retro.apple2 .game-setup label,#deck.retro.apple2 #game-controls label,#deck.retro.apple2 #game-ammo legend,#deck.retro.apple2 #game-controls output,#deck.retro.apple2 .game-turn p,#deck.retro.apple2 #game-conditions,#deck.retro.apple2 #game-overlay span,#deck.retro.apple2 #game-panel summary,#deck.retro.apple2 .game-hint,#deck.retro.apple2 .game-credits p,#deck.retro.apple2 #game-totals,#deck.retro.apple2 #game-score-empty,#deck.retro.apple2 #game-save-status{font:16px/1.2 MattPixel,monospace}

@@ -1,0 +1,45 @@
+const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'amp-apple2-'));
+fs.writeFileSync(path.join(dir,'state.json'),JSON.stringify({retro:true,volume:0,tabSounds:false,alwaysOnTop:false,layout:'sidecar',details:true,ambient:'waves'}));
+const shots=path.resolve('.impeccable/review');fs.mkdirSync(shots,{recursive:true});
+// Deterministic same-origin sound exercises real capture without a DI.FM credential.
+const wav=Buffer.alloc(44+48000*2);wav.write('RIFF');wav.writeUInt32LE(wav.length-8,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(48000,24);wav.writeUInt32LE(96000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(wav.length-44,40);for(let i=0;i<48000;i++)wav.writeInt16LE(Math.round(8000*Math.sin(i*2*Math.PI*440/48000)+3000*Math.sin(i*2*Math.PI*2200/48000)),44+i*2);
+(async()=>{let app;try{
+ app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:dir}});
+ const p=await app.firstWindow(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].webContents.setAudioMuted(true));
+ const capture=async name=>{await p.waitForTimeout(700);const png=await app.evaluate(async({BrowserWindow})=>{const w=BrowserWindow.getAllWindows()[0],{width,height}=w.getContentBounds();return(await w.webContents.capturePage({x:0,y:0,width,height})).toPNG().toString('base64');});fs.writeFileSync(path.join(shots,name),Buffer.from(png,'base64'));};
+ await p.locator('#stations button').first().waitFor();assert.equal(await p.locator('#appearance').inputValue(),'retro','legacy migration');
+ await p.locator('#settings-open').press('Enter');await p.locator('#appearance').selectOption('apple2');await p.locator('#scanlines').check();await p.locator('#settings-close').click();
+ assert.equal(await p.evaluate(()=>tabAudio.paused),true,'disabled cue remains silent');
+ await p.evaluate(()=>document.fonts.ready);
+ const values=await p.evaluate(()=>{const saved=metrics;renderMetrics({network:{status:'online',down:1.25,up:.004},cpu:10,memory:{percent:20,used:1536*1024**2,total:32768*1024**2},gpus:[]});const v=[$('down').textContent,$('up').textContent,$('modem-comparison').textContent,$('compact-status').textContent];if(saved)renderMetrics(saved);else metrics=null;return v;});
+ assert.equal(values[0].replaceAll(',',''),'1250000');assert.equal(values[1].replaceAll(',',''),'4000');assert.match(values[2].replaceAll(',',''),/4167 × YOUR 300-BPS/);assert.match(values[3],/bps/);
+ // Deterministic image exercises the actual pixel conversion, even when the CDN is offline.
+ await p.evaluate(async()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='#e96d37';x.fillRect(0,0,64,64);const src=await apple2.image(c.toDataURL());if(!src.startsWith('data:image/png'))throw Error('Dithering failed');});
+ await p.locator('#volume').fill('35');await p.locator('#volume').dispatchEvent('input');
+ await p.route('**/retro-test.wav',r=>r.fulfill({status:200,contentType:'audio/wav',body:wav}));
+ await p.evaluate(async()=>{audio.loop=true;audio.src=location.origin+'/retro-test.wav';await audio.play();});await p.waitForFunction(()=>retro.source&&retro.context.state==='running');
+ await p.waitForFunction(()=>{retro.analyser.getByteFrequencyData(retro.bins);return retro.bins.some(n=>n>20);});
+ await p.waitForFunction(()=>$('station-art').dataset.pixelated==='true'&&metrics?.network?.status==='online'&&metrics.network.checked,{},{timeout:25000});await capture('apple2-sidecar.png');
+ await p.locator('#modem-joke').click();assert.equal(await p.locator('#modem-joke').textContent(),"MOM, I'M ONLINE!");
+ await p.locator('#settings-open').press('Enter');await capture('apple2-settings.png');
+ await p.locator('#tab-sounds').check();await p.locator('#appearance').selectOption('modern');await p.locator('#appearance').selectOption('apple2');await p.waitForFunction(()=>tabAudio.currentSrc.endsWith('apple2.wav')&&!tabAudio.paused&&tabAudio.readyState>=2);
+ assert.equal(await p.evaluate(()=>tabAudio.volume),.35);assert.equal(await p.evaluate(()=>audio.paused),false,'playback survives theme change');
+ await p.locator('#appearance').selectOption('modern');assert.equal(await p.evaluate(()=>tabAudio.paused),true);
+ await p.evaluate(()=>{muted=true;});await p.locator('#appearance').selectOption('apple2');assert.equal(await p.evaluate(()=>tabAudio.paused),true);await p.evaluate(()=>{muted=false;});
+ await p.locator('#tab-sounds').uncheck();await p.locator('#settings-close').click();
+ await p.locator('#layout').press('Enter');await capture('apple2-stack.png');assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await p.locator('#compact').press('Enter');await capture('apple2-compact.png');await p.locator('#compact').press('Enter');
+ await p.locator('#source-game').click();await p.locator('#game-start').click();const round=await p.locator('#game-round').textContent();
+ await p.locator('#settings-open').press('Enter');await p.locator('#appearance').selectOption('retro');await p.locator('#appearance').selectOption('apple2');await p.locator('#settings-close').click();assert.equal(await p.locator('#game-round').textContent(),round);await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(430,920));await capture('apple2-game.png');
+ await app.evaluate(({BrowserWindow,ipcMain})=>{ipcMain.removeHandler('deck:resize');ipcMain.handle('deck:resize',()=>{});BrowserWindow.getAllWindows()[0].setSize(340,920);});await capture('apple2-game-narrow.png');assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'340px game controls fit');await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(430,1100));
+ await p.locator('#source-podcast').click();await p.waitForFunction(()=>!episodeBusy,{},{timeout:45000});await capture('apple2-podcast.png');
+ await p.locator('#source-cameras').click();await p.waitForTimeout(1200);await capture('apple2-cams.png');
+ await p.locator('#source-x').click();await capture('apple2-x.png');
+ await p.locator('#source-radio').click();await p.evaluate(()=>audio.pause());
+ await p.reload();await p.locator('#stations button').first().waitFor();assert.equal(await p.locator('#appearance').inputValue(),'apple2');assert.equal(await p.locator('#scanlines').isChecked(),true);assert.equal(await p.evaluate(()=>tabAudio.paused),true,'restore does not play greeting');
+ await app.evaluate(({BrowserWindow,ipcMain})=>{ipcMain.removeHandler('deck:resize');ipcMain.handle('deck:resize',()=>{});BrowserWindow.getAllWindows()[0].setSize(340,920);});
+ await p.waitForFunction(()=>Number.isFinite(metrics?.cpu));await capture('apple2-narrow.png');assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'340px overflow');
+ assert.deepEqual(errors,[]);console.log('PASS //e: migration, persistence, real audio capture, theme changes, bps, dithering, sound controls, game preservation and layouts.');
+ }finally{if(app)await app.close();fs.rmSync(dir,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

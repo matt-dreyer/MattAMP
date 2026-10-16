@@ -1,8 +1,11 @@
 const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme}=require('electron');
+const {APPEARANCES,appearance}=require('./appearance.cjs');
+const {createStationImages}=require('./station-image.cjs');
 const path=require('node:path');
 const fs=require('node:fs');
 const http=require('node:http');
 const {STATIONS,Monitor,radioUrls,episodes,videoId,stationArtwork,fetchText}=require('./services.cjs');
+const stationImage=createStationImages({stations:STATIONS,lookup:stationArtwork});
 const {normalizeLibrary,resolveShow,selection,youtubeUrl}=require('./podcast-library.cjs');
 const {createRadioRelay}=require('./radio-relay.cjs');
 const radioRelay=createRadioRelay();
@@ -21,7 +24,7 @@ if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();
 let lastResizeArgs,maximizeRestore,restoredWindowKey;
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:true,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -55,7 +58,10 @@ function update(patch){
  if(['youtube','audio'].includes(patch.podcastType))state.podcastType=patch.podcastType;
  if(Number.isFinite(patch.volume))state.volume=Math.min(100,Math.max(0,patch.volume));
  if([1,1.25,1.5,1.75,2].includes(patch.speed))state.speed=patch.speed;
- for(const key of ['alwaysOnTop','details','tabSounds','gameShotReadouts','retro'])if(typeof patch[key]==='boolean')state[key]=patch[key];
+ if(APPEARANCES.includes(patch.appearance))state.appearance=patch.appearance;
+ else if(typeof patch.retro==='boolean')state.appearance=patch.retro?'retro':'modern';
+ state.retro=state.appearance==='retro';
+ for(const key of ['alwaysOnTop','details','tabSounds','gameShotReadouts','scanlines'])if(typeof patch[key]==='boolean')state[key]=patch[key];
  if(patch.selected&&typeof patch.selected==='object')for(const [key,value]of Object.entries(patch.selected)){if(state.podcasts.some(s=>key===s.id+':youtube'||key===s.id+':audio')&&typeof value==='string'&&value.length<2048)state.selected[key]=value;}
  if(patch.positions&&typeof patch.positions==='object'){
   for(const [key,value]of Object.entries(patch.positions)){if(key.length<2048&&Number.isFinite(value)&&value>=0&&value<86400)state.positions[key]=value;}
@@ -108,10 +114,12 @@ function resize(view,height,expanded=false,game=''){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/apple2.js':'apple2.js','/apple2.css':'apple2.css','/apple2-font.ttf':'../assets/fonts/VT323-Regular.ttf','/tab-sounds/apple2.wav':'../assets/tab-sounds/apple2.wav','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg','metal-slug-tank.png','metal-slug-blasts.png','worms-fire.ogg','worms-split.ogg',...Array.from({length:3},(_,i)=>'worms-blast-'+(i+1)+'.ogg'),...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  for(const name of ['hell-yeah','send-it','meh','yeah'])routes['/tab-sounds/'+name+'.mp3']='../assets/tab-sounds/'+name+'.mp3';
  server=http.createServer((req,res)=>{
+  const artId=/^\/station-art\/([a-z0-9]+)$/.exec(req.url||'')?.[1];
+  if(artId&&req.method==='GET'){void stationImage(artId).then(({buffer,type})=>{res.writeHead(200,{'Content-Type':type,'X-Content-Type-Options':'nosniff'});res.end(buffer);}).catch(()=>{res.writeHead(404);res.end();});return;}
   if(req.url?.startsWith('/radio/')){void radioRelay.handle(req,res);return;}
   const file=routes[req.url?.split('?')[0]];if(!file||req.method!=='GET'){res.writeHead(404);res.end();return;}
   const ext=path.extname(file);res.setHeader('Content-Type',ext==='.html'?'text/html; charset=utf-8':ext==='.css'?'text/css':ext==='.mp3'?'audio/mpeg':ext==='.wav'?'audio/wav':ext==='.ogg'?'audio/ogg':ext==='.png'?'image/png':ext==='.ttf'?'font/ttf':'text/javascript');
@@ -122,11 +130,12 @@ async function startServer(){
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;
 }
 if(primaryInstance)app.whenReady().then(async()=>{
- try{const loaded=JSON.parse(fs.readFileSync(stateFile(),'utf8'));if(loaded&&typeof loaded==='object')state={...state,...loaded};}catch{}
+ try{const loaded=JSON.parse(fs.readFileSync(stateFile(),'utf8'));if(loaded&&typeof loaded==='object')state={...state,...loaded,appearance:appearance(loaded)};}catch{}
  if(!['off','mixed','unhinged'].includes(state.chaos))state.chaos='mixed';
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
- state.retro=state.retro===true;
+ state.appearance=appearance(state);state.retro=state.appearance==='retro';state.scanlines=state.scanlines===true;
+ state.alwaysOnTop=state.alwaysOnTop===true;
  state.tabSounds=state.tabSounds!==false;
  state.gameShotReadouts=state.gameShotReadouts!==false;
  state.cameraCycle=state.cameraCycle===true;
@@ -171,7 +180,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  });
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
- handle('deck:artwork',stationArtwork);
+ handle('deck:artwork',async()=>Object.fromEntries(Object.keys(await stationArtwork()).filter(id=>STATIONS.some(station=>station.id===id)).map(id=>[id,'/station-art/'+id])));
  handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup,maximized:win.isMaximized()};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());

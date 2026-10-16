@@ -12,7 +12,7 @@ MattAMP started with a much smaller ambition: replace a few desktop widgets and 
 
 It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **music, podcasts, SkiCams, a filtered X feed, system stats, and an artillery game with bots that hold grudges.** It even does the llama intro.
 
-[Screenshots](#take-a-look-around) · [Retro mode](#back-to-1997) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
+[Screenshots](#take-a-look-around) · [Retro modes](#even-more-retro-e) · [Get running](#get-running) · [SkiCams](#skicams-send-it) · [Play artillery](#tiny-tanks-questionable-decisions) · [Music & podcasts](#something-good-in-your-ears) · [Controls](#make-yourself-at-home) · [Troubleshooting](docs/guide.md#troubleshooting) · [Development](docs/development.md)
 
 ![MattAMP's icon-and-text tabs on a translucent bar, Synthwave radio art, wave background, and live workstation meters](docs/images/desktop.png)
 
@@ -104,7 +104,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.0.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -298,7 +298,7 @@ The navigation refresh and optional Retro skin are included in [MattAMP 1.0.0](d
 
 ### Back to 1997
 
-**New for [MattAMP 1.0.0](docs/release-1.0.0.md): Settings → Retro mode.** The modern glass skin remains the default. Flip the toggle for dark beveled metal, lime-green displays, numbered station rows, and the kind of controls that look like they ought to weigh something.
+**Introduced in [MattAMP 1.0.0](docs/release-1.0.0.md); now choose Settings → Appearance → ’90s** (the 1.0 release calls it Retro mode). The modern glass skin remains the default. Choose ’90s for dark beveled metal, lime-green displays, numbered station rows, and the kind of controls that look like they ought to weigh something.
 
 ![Retro MattAMP with numbered radio presets, an active audio spectrum, segmented system meters, and CPU history](docs/images/retro.png)
 
@@ -313,13 +313,38 @@ Brushed-aluminum transport keys, a green volume rail, a rectangular metal fader,
 
 The spectrum is radio-only and rests when playback stops. It pauses when hidden or under reduced motion; YouTube and remote podcast audio keep their usual playback path. These two previews use an isolated demo profile with synthetic test audio to exercise the real spectrum and live workstation readings. No Premium key or personal account is included.
 
+### Even more retro: //e
+
+**New in [MattAMP 1.1.0](docs/release-1.1.0.md): Settings → Appearance → //e — even more retro.**
+The Apple IIe-inspired sibling to ’90s mode: black screen, green outlines,
+bitmap lettering, blue selections, and station artwork dithered into a
+16-entry display palette. No floppy swapping required.
+
+![MattAMP //e with green outlines, dithered station artwork, blue selected preset, and colorful live meters](docs/images/apple2.png)
+
+Bandwidth reads in **bps**, with your download speed compared against a
+**300-bps acoustic-coupler modem**. The numbers are still real. Click the modem
+message for a little Havre-to-Boston BBS nostalgia: the software is free;
+the phone bill is not.
+
+Choosing //e plays a short original coupler-inspired chirp and robotic
+“MattAMP ready. Let's get serial.” greeting. **Silly sound effects**, mute,
+and volume control it; restarting in a saved theme does not replay it.
+**Subtle scanlines** is a separate, optional setting, off by default.
+
+This is a usable modern player wearing an old computer's colors, not an Apple II
+or Echo II+ emulator. Video, camera and X content keep their native rendering.
+The radio spectrum observes real audio; CPU history is separately labeled.
+The screenshot uses an isolated profile with synthetic test audio and actual
+workstation telemetry. Install version 1.1.0 or later to use //e.
+
 ### More ways to make it yours
 
 **Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
 **Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
 
-CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
+CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), or bps in //e mode, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 
 ## Bonus disk: the 300 bps edition
 

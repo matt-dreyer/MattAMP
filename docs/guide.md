@@ -143,3 +143,25 @@ Winamp and the sample belong to their respective rights holders; Webamp's code l
 - [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
 - [YouTube embedded-player requirements](https://developers.google.com/youtube/terms/required-minimum-functionality)
 - [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage)
+
+## //e appearance (1.1.0+)
+
+Open Settings → Appearance → **//e — even more retro**. Modern and ’90s
+remain available, and old Retro preferences migrate to ’90s automatically.
+Toggle **Subtle scanlines** separately; leave it off for the cleanest text.
+The optional robotic modem greeting obeys **Silly sound effects**, mute and
+volume. It plays when selecting the skin, not on restart. Click the modem
+message below the system readings for the next BBS joke.
+
+Artwork uses a small cached, 16-entry palette conversion; unavailable artwork
+falls back gracefully. The palette evokes a color Apple II display; it does
+not emulate analog artifact colors. Network rates are shown in bits per second
+and compared against 300 bps. All metrics and the radio spectrum remain real.
+Remote YouTube, X and ski-camera content is not recolored or downsampled.
+
+### Normal window stacking
+
+MattAMP follows normal desktop window ordering by default. To keep it visible
+above other apps, enable **Settings → Keep MattAMP above other windows**.
+Unchecking it takes effect immediately and persists after restarting. Existing
+explicit pin preferences are preserved when upgrading.
