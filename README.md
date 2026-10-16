@@ -295,7 +295,7 @@ This navigation refresh and the Retro skin below are staged for [MattAMP 1.0.0](
 | Close **×** | Quit MattAMP |
 | **Details** under the meters | Show memory, VRAM, and GPU temperatures |
 
-**Retro mode:** flip **Settings → Retro mode** for dark metal trim, lime-green displays, numbered station rows, brushed-silver transport buttons, a green volume rail with a metal fader, and segmented CPU/memory/GPU meters. The radio spectrum reacts to the actual audio; the lower display shows the last two minutes of CPU samples. Classic menus handle Settings, layout, playback, and station hopping. Help knows where your MP3 collection went.
+**Retro mode:** flip **Settings → Retro mode** for dark metal trim, lime-green displays, numbered station rows, brushed-silver transport buttons, a riveted volume panel with a green rail and metal fader, and segmented CPU/memory/GPU meters. The radio spectrum reacts to the actual audio; the lower display shows the last two minutes of CPU samples. Classic menus handle Settings, layout, playback, and station hopping. Help knows where your MP3 collection went.
 
 Switching it on plays a short, original synthesized modem handshake. It respects volume, mute, and **Silly sound effects**; restoring a saved Retro preference at launch does not replay it. The toggle is saved locally and leaves audio playback and battles intact. Retro temporarily hides the ambient background; switching back restores your chosen effect. The spectrum is radio-only, rests when playback stops, and pauses when hidden or under reduced motion. YouTube and remote podcast audio keep their usual playback path.
 
@@ -304,7 +304,7 @@ Switching it on plays a short, original synthesized modem handshake. It respects
 
 ![Retro MattAMP with beveled controls, numbered station playlist, live audio spectrum, and segmented system meters](docs/images/retro.png)
 
-Preview from an isolated demo profile; the spectrum is driven by test audio.
+Preview from an isolated demo profile.
 
 </details>
 
