@@ -144,7 +144,7 @@ Winamp and the sample belong to their respective rights holders; Webamp's code l
 - [YouTube embedded-player requirements](https://developers.google.com/youtube/terms/required-minimum-functionality)
 - [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage)
 
-## //e appearance (source build)
+## //e appearance (1.1.0+)
 
 Open Settings → Appearance → **//e — even more retro**. Modern and ’90s
 remain available, and old Retro preferences migrate to ’90s automatically.

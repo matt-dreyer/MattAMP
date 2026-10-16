@@ -104,7 +104,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.0.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -315,7 +315,7 @@ The spectrum is radio-only and rests when playback stops. It pauses when hidden 
 
 ### Even more retro: //e
 
-**New in the source build: Settings → Appearance → //e — even more retro.**
+**New in [MattAMP 1.1.0](docs/release-1.1.0.md): Settings → Appearance → //e — even more retro.**
 The Apple IIe-inspired sibling to ’90s mode: black screen, green outlines,
 bitmap lettering, blue selections, and station artwork dithered into a
 16-entry display palette. No floppy swapping required.
@@ -336,7 +336,7 @@ This is a usable modern player wearing an old computer's colors, not an Apple II
 or Echo II+ emulator. Video, camera and X content keep their native rendering.
 The radio spectrum observes real audio; CPU history is separately labeled.
 The screenshot uses an isolated profile with synthetic test audio and actual
-workstation telemetry. The existing 1.0 installers do not include //e yet.
+workstation telemetry. Install version 1.1.0 or later to use //e.
 
 ### More ways to make it yours
 
