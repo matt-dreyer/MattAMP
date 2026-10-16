@@ -104,7 +104,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-0.3.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.0.0.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -283,7 +283,7 @@ Sign in on X's own page inside the app. The session stays in MattAMP. **Browser*
 
 **A lighter navigation bar:** DI.FM, Podcasts, Twitter, SkiCams, and Game are icons and text, with a soft hover highlight and mint for the active tab. The strip is 70% opaque with a subtle blur, so the live background can show through. It stays pinned as you scroll, along with the bare title-bar icons. Keyboard focus rings and full click targets remain.
 
-This navigation refresh and the Retro skin below are staged for [MattAMP 1.0.0](docs/release-1.0.0.md); the published v0.3.0 installers have the earlier styling.
+The navigation refresh and optional Retro skin are included in [MattAMP 1.0.0](docs/release-1.0.0.md). Upgrading from v0.3.0 preserves your saved settings and scores.
 
 | Control | What happens |
 | --- | --- |

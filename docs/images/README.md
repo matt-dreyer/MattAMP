@@ -20,7 +20,7 @@ Captured from MattAMP in October 2026 using a fresh, isolated profile. These are
 | `game-widget.png` | A normal-size artillery battle, before expanding the window. |
 | `victory.png` | The app's actual WebGL victory ceremony. A winning game state was staged in the isolated profile to capture it. |
 
-The native camera and Twitter panes are included through an Electron desktop capture of the isolated app window. The settings images are cropped to their respective sections. The other images use the app window capture. The sidecar (`desktop.png`), stacked, and compact captures were refreshed on October 15, 2026 for the icon/text tabs, translucent pinned strip, and bare title-bar controls. Other captures illustrate their respective features with the earlier navigation styling. The published v0.3.0 installers predate this navigation refresh.
+The native camera and Twitter panes are included through an Electron desktop capture of the isolated app window. The settings images are cropped to their respective sections. The other images use the app window capture. The sidecar (`desktop.png`), stacked, and compact captures were refreshed on October 15, 2026 for the icon/text tabs, translucent pinned strip, and bare title-bar controls. Other captures illustrate their respective features with the earlier navigation styling. The older v0.3.0 installers predate this navigation refresh; v1.0.0 includes it and the optional Retro skin.
 
 Only `retro.png` and `retro-controls.png` were captured for the Retro README refresh on October 15, 2026. Other mode screenshots were retained. Test audio was muted at the isolated window output while its spectrum was captured.
 
