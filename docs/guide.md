@@ -83,7 +83,7 @@ Animation stops when Off, hidden, in bug mode, or under reduced motion. Reduced 
 
 ## Workstation meters
 
-- **CPU / RAM / network:** Linux counters every two seconds. Network traffic is the default-route interface's Kbps (kilobits per second). RAM and GPU memory capacities display in MiB.
+- **CPU / RAM / network:** Linux counters every two seconds. Network traffic is measured on the default-route interface: Mbps in Modern, Kbps in ’90s, and bps in //e. RAM and GPU memory capacities display in MiB.
 - **GPU:** NVIDIA utilization, VRAM, and temperature via `nvidia-smi`, for detected cards. NVIDIA hardware is optional; these are not general AMD/Intel GPU sensors.
 - **Details:** expanded memory/VRAM/temperature readings.
 - **Network status:** router and public-internet probes every ten seconds. ICMP failure falls back to HTTPS connectivity checks; a missing ping response alone doesn't establish an outage.

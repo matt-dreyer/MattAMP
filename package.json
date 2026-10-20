@@ -1,6 +1,6 @@
 {
   "name": "workstation-deck",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "MattAMP — radio, podcasts, mountain cams, system monitor, and arcade artillery",
   "main": "src/main.cjs",
