@@ -187,7 +187,7 @@ Use a single vertical list with two-digit row numbers, official station artwork 
 
 The audio spectrum uses actual same-origin radio audio analysis, with 40 LED columns and a maximum drawing rate of 20 fps. It observes playback without replacing the audio output. Label live, idle, unavailable, radio-only and reduced-motion states honestly. Hidden, Settings, Bug and reduced-motion states stop active spectrum work; unavailable or paused audio never receives invented animated levels.
 
-CPU history is a separate, explicitly labeled measurement chart: 60 samples from the existing two-second telemetry cadence, covering the last two minutes. Missing readings remain unlit. Hardware meters retain real CPU, memory and GPU values; their segmented treatment is visual only. Modern and ’90s bandwidth use Kbps, including compact status; //e uses bps. RAM/GPU memory amounts use MiB across appearances. Keep the unit beside the amount; utilization remains a percentage.
+CPU history is a separate, explicitly labeled measurement chart: 60 samples from the existing two-second telemetry cadence, covering the last two minutes. Missing readings remain unlit. Hardware meters retain real CPU, memory and GPU values; their segmented treatment is visual only. Modern bandwidth uses Mbps; ’90s uses Kbps; //e uses bps. This also applies to compact status. RAM/GPU memory amounts use MiB across appearances. Keep the unit beside the amount; utilization remains a percentage.
 
 ## Do's and Don'ts
 

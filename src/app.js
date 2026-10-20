@@ -183,7 +183,7 @@ function seekBy(delta){if(state.source!=='podcast'||!current)return;error();if(i
 function setMode(next){if(next==='bug')tabAudio.pause();if(next==='compact'){readingX=false;playingGame=false;watchingCams=false;}if(next==='bug'){restoreMode=mode;if(isVideo())pause();settings=false;}mode=next;render();}
 function setMeter(element,value,detail){const track=element.querySelector('.track');element.querySelector('b').textContent=pct(value);track.firstElementChild.style.width=Number.isFinite(value)?Math.min(100,Math.max(0,value))+'%':'0%';if(Number.isFinite(value))track.setAttribute('aria-valuenow',String(Math.round(value)));else track.removeAttribute('aria-valuenow');track.setAttribute('aria-valuetext',Number.isFinite(value)?pct(value):'Unavailable');element.querySelector('small').textContent=detail||'Unavailable';}
 function renderBandwidth(){
- const n=metrics?.network,old=state?.appearance==='apple2',unit=old?'bps':'Kbps',scale=old?1e6:1000;
+ const n=metrics?.network,old=state?.appearance==='apple2',classic=state?.appearance==='retro',unit=old?'bps':classic?'Kbps':'Mbps',scale=old?1e6:classic?1000:1;
  for(const key of ['down','up'])$(key).textContent=Number.isFinite(n?.[key])?(old?Math.round(n[key]*scale).toLocaleString():(n[key]*scale).toFixed(1)):'—';
  document.querySelectorAll('.bandwidth-unit').forEach(el=>el.textContent=unit);
  const ratio=Number.isFinite(n?.down)?Math.round(n.down*1e6/300).toLocaleString():null;

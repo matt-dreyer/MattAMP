@@ -344,7 +344,7 @@ workstation telemetry. Install version 1.1.0 or later to use //e.
 
 **Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
 
-CPU, memory, and network readings update every two seconds. Download and upload rates display in Kbps (kilobits per second), or bps in //e mode, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
+CPU, memory, and network readings update every two seconds. Download and upload rates display in Mbps in Modern, Kbps in ’90s, and bps in //e, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 
 ## Bonus disk: the 300 bps edition
 
