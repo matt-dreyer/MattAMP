@@ -167,16 +167,20 @@ test('current retaliation combines with existing rivalries and resets with a new
  const fresh=battle({skill:3,history:[past,past]});fresh.turn=1;assert.equal(fresh.targetChoices().find(c=>c.tank.id===2).weight,before);
 });
 
-test('power spreads short and medium shots across the dial while keeping long-shot reach',()=>{
+test('power changes launch speed linearly for actual and predicted shots',()=>{
  const b=battle();b.wind=0;b.terrain.fill(450);b.tanks.forEach((t,i)=>{t.x=i?950:70;t.y=442;});
- const land=power=>b.predict(b.tanks[0],45,power).x-70;
- assert.ok(land(1)<50,'minimum power can drop a shot close by');
- assert.ok(land(50)>180&&land(50)<300,'half power is useful for a nearby tank');
- assert.ok(land(70)>500&&land(70)<800,'mid-high power crosses most of the field');
- assert.ok(land(100)>900,'full power retains long-shot reach');
- for(let p=2;p<=100;p++)assert.ok(launchSpeed(p)>launchSpeed(p-1));
+ const speed=(tank,power)=>{const p=b.projectile(tank,45,power,'shell');return Math.hypot(p.vx,p.vy);};
+ for(const tank of [b.tanks[0],b.tanks[1]]){
+  for(let power=2;power<=100;power++)assert.ok(Math.abs(speed(tank,power)-speed(tank,power-1)-5.3)<1e-9,'every percentage point adds the same launch speed');
+ }
+ assert.equal(launchSpeed(50),305,'half power uses the linear scale');
  assert.equal(launchSpeed(100),570,'top-end speed stays unchanged');
- const oldLow=100+15*4.7;
- assert.ok(Math.abs(launchSpeed(50)-oldLow)<5,'old low-end shots move to the middle of the slider');
- b.fire(45,1);assert.equal(b.active.power,1,'human shots can use the bottom of the new scale');
+ assert.equal(launchSpeed(0),launchSpeed(1),'lower bound is clamped');
+ assert.equal(launchSpeed(101),launchSpeed(100),'upper bound is clamped');
+ const land=power=>b.predict(b.tanks[0],45,power).x-70;
+ assert.ok(land(1)<50,'minimum power can still drop a shot nearby');
+ assert.ok(land(50)>600&&land(50)<850,'prediction uses linear launch speed');
+ assert.ok(land(100)>900,'full power retains long-shot reach');
+ b.fire(45,50);assert.equal(b.active.power,50);
+ assert.ok(Math.abs(Math.hypot(b.projectiles[0].vx,b.projectiles[0].vy)-305)<1e-9,'fired shot matches the selected power');
 });

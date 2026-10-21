@@ -205,7 +205,7 @@ Your favorites and rotation preferences stay on your machine. No MattAMP account
 
 ![Expanded AMP Artillery battlefield with five tanks labeled with arcade names and aiming controls](docs/images/artillery.png)
 
-Power now uses a gentler **1–100%** scale, starting at **50%**, so close shots have room on the dial. Bot shots briefly show the shooter’s angle and power; toggle this in **Settings → Game**.
+Power uses a linear **1–100%** launch-speed scale, starting at **50%**: every percentage point adds the same speed, whether you use the slider, mouse wheel or arrow keys. Bot shots briefly show the shooter’s angle and power; toggle this in **Settings → Game**.
 
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 
