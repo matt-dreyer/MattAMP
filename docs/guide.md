@@ -79,7 +79,7 @@ Particles bend around the pointer, waves ripple, stars shift with depth, the fra
 
 Mandelbrot explores six regions in randomized 2½–3½-minute passes: horizontal/vertical glides, curved approaches, and slow spirals, returning to a wide view between destinations. Consecutive destinations/routes differ. Its GPU renderer is capped at 18 fps and 640 pixels on the longest edge; without WebGL it uses a static fractal.
 
-Trench Run flies an endless procedural vector trench with smooth bends, gridded walls, low rim structures and occasional dim paired bolts from recessed wall cannons. A fresh route is seeded at launch; scenery is generated ahead with a fixed geometry budget, 24 fps cap and no downloaded assets.
+Trench Run flies an endless procedural vector trench with occasional sharp 60–90° turns, variable-width passages, mechanical wall panels, recessed floor shafts and dim paired bolts from wall cannons. Narrow sections trigger knife-edge banks or occasional full barrel rolls. Only the background rotates; text and controls stay upright. A fresh route is seeded at launch; scenery is generated ahead with a fixed geometry budget, 24 fps cap and no downloaded assets.
 
 Animation stops when Off, hidden, in bug mode, or under reduced motion. Reduced transparency uses solid control fills. The victory ceremony also respects reduced motion and has a static fallback.
 

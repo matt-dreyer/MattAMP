@@ -33,62 +33,103 @@ class MattFractalCamera {
  }
 }
 
-/* Procedural vector scenery. Fixed draw budget, continuous world-space travel. */
+/* Endless local-space route: seeded turns and scenery without an ever-growing world. */
 class MattTrenchScene {
  constructor(seed=Math.floor(Math.random()*4294967296)){this.seed=seed>>>0;}
  random(index,salt=0){let n=(Math.imul(index,374761393)^Math.imul(salt,668265263)^this.seed)>>>0;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296;}
- noise(z,span,salt){const cell=Math.floor(z/span),t=z/span-cell,s=t*t*t*(t*(t*6-15)+10);return (this.random(cell,salt)*(1-s)+this.random(cell+1,salt)*s)*2-1;}
- path(z){return this.noise(z,90,7)*8+this.noise(z,270,11)*18;}
- slope(z){return (this.path(z+.01)-this.path(z-.01))/.02;}
- rim(){return 4.3;}
+ ease(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
+ noise(z,span,salt){const cell=Math.floor(z/span),s=this.ease(z/span-cell);return (this.random(cell,salt)*(1-s)+this.random(cell+1,salt)*s)*2-1;}
+ turn(cell){return {start:cell*96+42+this.random(cell,1)*8,length:14+this.random(cell,2)*6,angle:(cell%3!==0&&this.random(cell,3)<.2?0:1.05+this.random(cell,4)*.52)*(this.random(cell,5)<.5?-1:1)};}
+ headingBetween(a,b){
+  let heading=0;for(let cell=Math.floor(Math.min(a,b)/96)-1;cell<=Math.floor(Math.max(a,b)/96);cell++){
+   const t=this.turn(cell);heading+=t.angle*(this.ease((b-t.start)/t.length)-this.ease((a-t.start)/t.length));
+  }return heading;
+ }
+ maneuver(z){
+  const cell=Math.floor(z/96),u=(z-cell*96-8)/24,chance=this.random(cell,8);
+  const kind=chance<.14?'roll':chance<.44?'knife':'none',active=u>0&&u<1&&kind!=='none';
+  const pinch=active?Math.sin(Math.PI*u)**2:0,sign=this.random(cell,9)<.5?-1:1;
+  return {kind,pinch,roll:active?(kind==='roll'?Math.PI*2*this.ease(u):1.32*pinch)*sign:0};
+ }
+ width(z){const base=5.7+this.noise(z,48,12)*2,m=this.maneuver(z);return base*(1-m.pinch)+(m.kind==='roll'?1.35:2)*m.pinch;}
+ wall(z,side){return {height:4.5+this.noise(z,18,side+30)*1.4,recess:.35+this.random(Math.floor(z/18),side+40)*.9};}
+ vent(index){const z=index*24+5+this.random(index,50)*4,length=5+this.random(index,51)*2,half=Math.min(1.8,this.width(z+length/2)*.45);return {z,end:z+length,half,depth:2+this.random(index,52)*3};}
+ route(origin){
+  // Positions in camera-relative world space. Only the visible neighborhood is built.
+  const poses=new Map([[0,{x:0,z:0,heading:0}]]);
+  for(const sign of [-1,1])for(let n=1;n<=130;n++){
+   const offset=n*sign,prev=poses.get(offset-sign),h=this.headingBetween(origin,origin+offset-sign*.5);
+   poses.set(offset,{x:prev.x+Math.sin(h)*sign,z:prev.z+Math.cos(h)*sign,heading:this.headingBetween(origin,origin+offset)});
+  }
+  return distance=>{const at=distance-origin,n=Math.floor(at),t=at-n,a=poses.get(n),b=poses.get(n+1)||a;
+   if(!a)return null;return {x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t,heading:a.heading+(b.heading-a.heading)*t};};
+ }
  frame(time,w,h,pointer={x:.5,y:.5,strength:0}){
   if(!Number.isFinite(time)||!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return [];
-  const travel=time*3.2,near=1.5,far=100,step=3,lines=[];
+  const travel=time*3.2,near=1.5,far=110,step=3,lines=[],pose=this.route(travel);
   const strength=pointer.strength||0,px=(pointer.x-.5)*strength,py=(pointer.y-.5)*strength;
-  const cameraX=this.path(travel)+px*.8,cameraY=2.2+Math.sin(time*.2)*.08-py*.5;
-  const yaw=this.slope(travel),bank=Math.sin(time*.13)*.018-px*.055,ca=Math.cos(bank),sa=Math.sin(bank);
+  const cameraY=2.2+Math.sin(time*.2)*.08-py*.5;
+  const turnBank=Math.max(-.16,Math.min(.16,-this.headingBetween(travel-4,travel+4)*.25));
+  const bank=turnBank+this.maneuver(travel).roll-px*.055,ca=Math.cos(bank),sa=Math.sin(bank);
   const focal=Math.min(w*.85,h*.9),cx=w*.5,cy=h*(.43+py*.035);
-  const project=p=>{const x=(p[0]-cameraX-yaw*p[2])*focal/p[2],y=(cameraY-p[1])*focal/p[2];return [cx+x*ca-y*sa,cy+x*sa+y*ca];};
+  const point=([s,x,y])=>{const p=pose(s);return [p.x+x*Math.cos(p.heading),y,p.z-x*Math.sin(p.heading)];};
+  const project=p=>{const x=(p[0]-px*.8)*focal/p[2],y=(cameraY-p[1])*focal/p[2];return [cx+x*ca-y*sa,cy+x*sa+y*ca];};
   const line=(a,b,accent=0)=>{
-   if(a[2]<near&&b[2]<near||a[2]>far&&b[2]>far)return;
-   // Clip at the near plane instead of dropping long edges as they pass the camera.
+   a=point(a);b=point(b);if(a[2]<near&&b[2]<near||a[2]>far&&b[2]>far)return;
    if(a[2]<near||b[2]<near){if(a[2]<near){const t=(near-a[2])/(b[2]-a[2]);a=a.map((v,i)=>v+(b[i]-v)*t);}else{const t=(near-b[2])/(a[2]-b[2]);b=b.map((v,i)=>v+(a[i]-v)*t);}}
    const depth=(a[2]+b[2])*.5,A=project(a),B=project(b);
    if(A[0]<0&&B[0]<0||A[0]>w&&B[0]>w||A[1]<0&&B[1]<0||A[1]>h&&B[1]>h)return;
-   const shade=Math.min(3,Math.floor(depth/25));lines.push([...A,...B,shade,accent]);
+   lines.push([...A,...B,Math.min(3,Math.floor(depth/27.5)),accent]);
+  };
+  const vents=Array.from({length:7},(_,i)=>this.vent(Math.floor(travel/24)-1+i));
+  const floorLine=(a,b)=>{
+   // Cut the grid at each opening, so shafts read as holes rather than drawn-on boxes.
+   let spans=[[0,1]];
+   for(const v of vents){let lo=0,hi=1;
+    for(const [axis,min,max] of [[0,v.z,v.end],[1,-v.half,v.half]]){
+     const delta=b[axis]-a[axis];if(Math.abs(delta)<1e-9){if(a[axis]<min||a[axis]>max){hi=-1;break;}}
+     else{const p=(min-a[axis])/delta,q=(max-a[axis])/delta;lo=Math.max(lo,Math.min(p,q));hi=Math.min(hi,Math.max(p,q));}
+    }
+    if(lo>=hi)continue;spans=spans.flatMap(([l,r])=>hi<=l||lo>=r?[[l,r]]:[...(l<lo?[[l,lo]]:[]),...(hi<r?[[hi,r]]:[])]);
+   }
+   const at=t=>a.map((v,i)=>v+(b[i]-v)*t);for(const [l,r] of spans)line(at(l),at(r));
   };
   const section=z=>{
-   const center=this.path(z),rim=this.rim(z);
-   return [[-18,rim+1],[-10,rim+1],[-10,rim],[-6,rim],[-6,0],[-3,0],[0,0],[3,0],[6,0],[6,rim],[10,rim],[10,rim+1],[18,rim+1]].map(([x,y])=>[center+x,y,z-travel]);
+   const half=this.width(z),left=this.wall(z,-1),right=this.wall(z,1);
+   const side=(s,p)=>[[s*(half+8),p.height+1],[s*(half+3),p.height+1],[s*(half+3),p.height],[s*half,p.height],[s*(half+p.recess),p.height*.55],[s*half,0]];
+   return [...side(-1,left),[-half*.5,0],[0,0],[half*.5,0],...side(1,right).reverse()].map(([x,y])=>[z,x,y]);
   };
   const first=Math.floor(travel/step)*step;
-  for(let i=0;i<35;i++){
+  for(let i=-1;i<36;i++){
    const z=first+i*step,a=section(z),b=section(z+step);
-   for(let j=0;j<a.length;j++)line(a[j],b[j],j===3||j===9?1:0);
-   for(let j=0;j<a.length-1;j++)line(a[j],a[j+1]);
+   for(let j=0;j<a.length;j++)a[j][2]===0&&b[j][2]===0?floorLine(a[j],b[j]):line(a[j],b[j],j===3||j===11?1:0);
+   for(let j=0;j<a.length-1;j++)a[j][2]===0&&a[j+1][2]===0?floorLine(a[j],a[j+1]):line(a[j],a[j+1]);
   }
-  // Low machinery along the rim, with seeded spacing and proportions, not a skyline.
-  const start=Math.floor(travel/18)-1;
-  for(let i=start;i<start+7;i++)for(const side of [-1,1]){
-   const z=i*18+this.random(i,side+20)*7,width=1+this.random(i,side+30),depth=3+this.random(i,side+40)*4;
-   const y=this.rim(z),height=.6+this.random(i,side+50)*2,x=this.path(z)+side*(7.5+width);
-   const points=[];for(const yy of [y,y+height])for(const [xx,zz] of [[-width,0],[width,0],[width,depth],[-width,depth]])points.push([x+xx,yy,z+zz-travel]);
-   for(let j=0;j<4;j++){line(points[j],points[(j+1)%4]);line(points[j+4],points[(j+1)%4+4],1);line(points[j],points[j+4]);}
+  for(const v of vents){
+   if(v.z>travel+108||v.end<travel-3)continue;
+   const lip=[[v.z,-v.half,0],[v.z,v.half,0],[v.end,v.half,0],[v.end,-v.half,0]],bottom=lip.map(([s,x])=>[s,x*.7,-v.depth]);
+   for(let j=0;j<4;j++){line(lip[j],lip[(j+1)%4],1);line(lip[j],bottom[j]);line(bottom[j],bottom[(j+1)%4]);}
+   for(let rung=1;rung<=3;rung++)line([v.end,-v.half*.4,-v.depth*rung/4],[v.end,v.half*.4,-v.depth*rung/4],1);
   }
-  // Sparse wall cannons and paired bolts; the seeded schedule is independent of fps.
+  // Seeded mechanical panels, braces, and rim machinery follow local wall width.
+  for(let i=Math.floor(travel/18)-1;i<Math.floor(travel/18)+7;i++)for(const side of [-1,1]){
+   const z=i*18+3,half=this.width(z),wall=this.wall(z,side),type=Math.floor(this.random(i,side+60)*3);
+   if(type===0){line([z,side*half,.6],[z+6,side*this.width(z+6),wall.height-.4],1);line([z,side*half,wall.height-.4],[z+6,side*this.width(z+6),.6],1);}
+   else if(type===1){for(const y of [1,1.5,2])line([z,side*(half+.15),y],[z+5,side*(this.width(z+5)+.15),y],1);}
+   else{
+    const points=[];for(const y of [wall.height,wall.height+1.5])for(const [s,x] of [[z,half+.3],[z,half+2],[z+4,this.width(z+4)+2],[z+4,this.width(z+4)+.3]])points.push([s,side*x,y]);
+    for(let j=0;j<4;j++){line(points[j],points[j+4]);line(points[j+4],points[(j+1)%4+4],1);}
+   }
+  }
   const current=Math.floor(time/5.5);
   for(let slot=current-3;slot<=current+5;slot++){
    if(this.random(slot,70)<.3)continue;
-   const fireAt=slot*5.5+this.random(slot,71)*2,side=this.random(slot,72)<.5?-1:1;
-   const worldZ=fireAt*3.2+36,base=this.path(worldZ)+side*6;
-   const muzzle=[base-side*.9,2.8,worldZ-1.5-travel];
-   line([base,2.4,worldZ-travel],[base,3.2,worldZ-travel],1);
-   line([base,2.4,worldZ-travel],muzzle,1);line([base,3.2,worldZ-travel],muzzle,1);
-   const targetX=this.path(worldZ-30)+this.random(slot,73)*2-1;
-   for(const delay of [0,.18]){
-    const age=time-fireAt-delay,duration=1.8;if(age<0||age>duration)continue;
-    const bolt=t=>[muzzle[0]+(targetX-muzzle[0])*t,2.8-1.1*t,worldZ-1.5-30*t-travel];
-    line(bolt(Math.max(0,age/duration-.075)),bolt(age/duration),2);
+   const fireAt=slot*5.5+this.random(slot,71)*2,side=this.random(slot,72)<.5?-1:1,z=fireAt*3.2+36,half=this.width(z);
+   if(z>travel+110)continue;
+   const muzzle=[z-1.5,side*(half-.7),2.8];
+   line([z,side*half,2.4],[z,side*half,3.2],1);line([z,side*half,2.4],muzzle,1);line([z,side*half,3.2],muzzle,1);
+   for(const delay of [0,.18]){const age=time-fireAt-delay;if(age<0||age>1.8)continue;
+    const bolt=t=>[z-1.5-30*t,muzzle[1]*(1-t),2.8-1.1*t];line(bolt(Math.max(0,age/1.8-.075)),bolt(age/1.8),2);
    }
   }
   return lines;
