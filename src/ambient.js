@@ -33,10 +33,72 @@ class MattFractalCamera {
  }
 }
 
+/* Procedural vector scenery. Fixed draw budget, continuous world-space travel. */
+class MattTrenchScene {
+ constructor(seed=Math.floor(Math.random()*4294967296)){this.seed=seed>>>0;}
+ random(index,salt=0){let n=(Math.imul(index,374761393)^Math.imul(salt,668265263)^this.seed)>>>0;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296;}
+ noise(z,span,salt){const cell=Math.floor(z/span),t=z/span-cell,s=t*t*t*(t*(t*6-15)+10);return (this.random(cell,salt)*(1-s)+this.random(cell+1,salt)*s)*2-1;}
+ path(z){return this.noise(z,90,7)*8+this.noise(z,270,11)*18;}
+ slope(z){return (this.path(z+.01)-this.path(z-.01))/.02;}
+ rim(){return 4.3;}
+ frame(time,w,h,pointer={x:.5,y:.5,strength:0}){
+  if(!Number.isFinite(time)||!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return [];
+  const travel=time*3.2,near=1.5,far=100,step=3,lines=[];
+  const strength=pointer.strength||0,px=(pointer.x-.5)*strength,py=(pointer.y-.5)*strength;
+  const cameraX=this.path(travel)+px*.8,cameraY=2.2+Math.sin(time*.2)*.08-py*.5;
+  const yaw=this.slope(travel),bank=Math.sin(time*.13)*.018-px*.055,ca=Math.cos(bank),sa=Math.sin(bank);
+  const focal=Math.min(w*.85,h*.9),cx=w*.5,cy=h*(.43+py*.035);
+  const project=p=>{const x=(p[0]-cameraX-yaw*p[2])*focal/p[2],y=(cameraY-p[1])*focal/p[2];return [cx+x*ca-y*sa,cy+x*sa+y*ca];};
+  const line=(a,b,accent=0)=>{
+   if(a[2]<near&&b[2]<near||a[2]>far&&b[2]>far)return;
+   // Clip at the near plane instead of dropping long edges as they pass the camera.
+   if(a[2]<near||b[2]<near){if(a[2]<near){const t=(near-a[2])/(b[2]-a[2]);a=a.map((v,i)=>v+(b[i]-v)*t);}else{const t=(near-b[2])/(a[2]-b[2]);b=b.map((v,i)=>v+(a[i]-v)*t);}}
+   const depth=(a[2]+b[2])*.5,A=project(a),B=project(b);
+   if(A[0]<0&&B[0]<0||A[0]>w&&B[0]>w||A[1]<0&&B[1]<0||A[1]>h&&B[1]>h)return;
+   const shade=Math.min(3,Math.floor(depth/25));lines.push([...A,...B,shade,accent]);
+  };
+  const section=z=>{
+   const center=this.path(z),rim=this.rim(z);
+   return [[-18,rim+1],[-10,rim+1],[-10,rim],[-6,rim],[-6,0],[-3,0],[0,0],[3,0],[6,0],[6,rim],[10,rim],[10,rim+1],[18,rim+1]].map(([x,y])=>[center+x,y,z-travel]);
+  };
+  const first=Math.floor(travel/step)*step;
+  for(let i=0;i<35;i++){
+   const z=first+i*step,a=section(z),b=section(z+step);
+   for(let j=0;j<a.length;j++)line(a[j],b[j],j===3||j===9?1:0);
+   for(let j=0;j<a.length-1;j++)line(a[j],a[j+1]);
+  }
+  // Low machinery along the rim, with seeded spacing and proportions, not a skyline.
+  const start=Math.floor(travel/18)-1;
+  for(let i=start;i<start+7;i++)for(const side of [-1,1]){
+   const z=i*18+this.random(i,side+20)*7,width=1+this.random(i,side+30),depth=3+this.random(i,side+40)*4;
+   const y=this.rim(z),height=.6+this.random(i,side+50)*2,x=this.path(z)+side*(7.5+width);
+   const points=[];for(const yy of [y,y+height])for(const [xx,zz] of [[-width,0],[width,0],[width,depth],[-width,depth]])points.push([x+xx,yy,z+zz-travel]);
+   for(let j=0;j<4;j++){line(points[j],points[(j+1)%4]);line(points[j+4],points[(j+1)%4+4],1);line(points[j],points[j+4]);}
+  }
+  // Sparse wall cannons and paired bolts; the seeded schedule is independent of fps.
+  const current=Math.floor(time/5.5);
+  for(let slot=current-3;slot<=current+5;slot++){
+   if(this.random(slot,70)<.3)continue;
+   const fireAt=slot*5.5+this.random(slot,71)*2,side=this.random(slot,72)<.5?-1:1;
+   const worldZ=fireAt*3.2+36,base=this.path(worldZ)+side*6;
+   const muzzle=[base-side*.9,2.8,worldZ-1.5-travel];
+   line([base,2.4,worldZ-travel],[base,3.2,worldZ-travel],1);
+   line([base,2.4,worldZ-travel],muzzle,1);line([base,3.2,worldZ-travel],muzzle,1);
+   const targetX=this.path(worldZ-30)+this.random(slot,73)*2-1;
+   for(const delay of [0,.18]){
+    const age=time-fireAt-delay,duration=1.8;if(age<0||age>duration)continue;
+    const bolt=t=>[muzzle[0]+(targetX-muzzle[0])*t,2.8-1.1*t,worldZ-1.5-30*t-travel];
+    line(bolt(Math.max(0,age/duration-.075)),bolt(age/duration),2);
+   }
+  }
+  return lines;
+ }
+}
+
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
-  this.fractalCamera=new MattFractalCamera();
+  this.fractalCamera=new MattFractalCamera();this.trench=new MattTrenchScene();
   this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
   const host=canvas.parentElement;
   host.addEventListener('pointermove',event=>{
@@ -72,7 +134,7 @@ class MattAmbient {
   this.draw(0);
  }
  configure(mode,paused=false){
-  const next=['flow','waves','stars','mandelbrot'].includes(mode)?mode:'off';
+  const next=['flow','waves','stars','mandelbrot','trench'].includes(mode)?mode:'off';
   if(next===this.mode&&paused===this.paused)return;
   this.mode=next;this.paused=paused;this.sync();
  }
@@ -92,7 +154,8 @@ class MattAmbient {
   pointer.x+=(pointer.targetX-pointer.x)*ease;pointer.y+=(pointer.targetY-pointer.y)*ease;
   pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
   const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
-  if(this.mode==='mandelbrot'){this.drawFractal(dt);}
+  if(this.mode==='trench'){this.drawTrench();}
+  else if(this.mode==='mandelbrot'){this.drawFractal(dt);}
   else if(this.mode==='waves'){
    const rows=Math.max(18,Math.min(32,Math.round(h/25)));
    for(let row=0;row<rows;row++){
@@ -123,6 +186,16 @@ class MattAmbient {
     c.strokeStyle=p.mint?'rgba(145,190,171,.25)':'rgba(123,177,204,.28)';c.lineWidth=1;c.beginPath();p.trail.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.stroke();
     c.fillStyle=p.mint?'rgba(160,202,180,.36)':'rgba(139,187,207,.38)';c.beginPath();c.arc(p.x,p.y,p.mint?1.2:.9,0,Math.PI*2);c.fill();
    }
+  }
+ }
+ drawTrench(){
+  const c=this.ctx,lines=this.trench.frame(this.time,this.width,this.height,this.pointer);
+  // Batch by depth and tint: twelve strokes per frame, no glow or full-screen fills.
+  for(let shade=3;shade>=0;shade--)for(let accent=0;accent<3;accent++){
+   c.beginPath();for(const line of lines)if(line[4]===shade&&line[5]===accent){c.moveTo(line[0],line[1]);c.lineTo(line[2],line[3]);}
+   const alpha=[.27,.19,.11,.045][shade];
+   c.strokeStyle=accent===2?`rgba(218,139,106,${alpha*1.3})`:accent===1?`rgba(156,202,176,${alpha})`:`rgba(121,185,205,${alpha})`;
+   c.lineWidth=accent===2?1.5:accent===1?1.1:.85;c.stroke();
   }
  }
  initFractal(){
@@ -192,3 +265,5 @@ class MattAmbient {
 }
 window.MattAmbient=MattAmbient;
 window.MattFractalCamera=MattFractalCamera;
+
+window.MattTrenchScene=MattTrenchScene;
