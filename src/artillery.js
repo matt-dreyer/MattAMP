@@ -6,8 +6,8 @@
  const COLORS=['#b6ddbd','#d5ac82','#94b7da','#c7a3cf','#d4cd87','#83c5c2'];
  const BOT_NAMES=['Byte','Floppy','Modem','Turbo','DOS'];
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
- // Fine control for nearby shots; retain the old maximum for long lobs and wild wind.
- const launchSpeed=power=>40+530*(clamp(power,1,100)/100)**2;
+ // Each power step adds the same launch speed for both players and bots.
+ const launchSpeed=power=>40+530*(clamp(power,1,100)/100);
  const TERRAINS={rolling:'Rolling hills',valley:'Valley',crags:'Craggy peaks',plateaus:'Plateaus',flat:'Flatlands'};
  const GRAVITY={normal:125,moon:80,heavy:200};
  const GRAVITY_NAMES={normal:'Normal gravity',moon:'Moonshot ×0.64',heavy:'Heavy gravity ×1.6'};
