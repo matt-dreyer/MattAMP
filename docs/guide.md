@@ -73,11 +73,13 @@ Leaving an unfinished battle earns no score or rivalry record.
 
 ## Backgrounds and accessibility
 
-Choose **Settings → Live background**: Particle flow (default), Water waves, Starfield, Mandelbrot zoom, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
+Choose **Settings → Live background**: Particle flow (default), Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
 
-Particles bend around the pointer, waves ripple, stars shift with depth, and the fractal pans gently. Embedded X/video surfaces handle their own pointer input and retain their own backgrounds.
+Particles bend around the pointer, waves ripple, stars shift with depth, the fractal pans gently, and Trench Run banks toward the pointer. Embedded X/video surfaces handle their own pointer input and retain their own backgrounds.
 
 Mandelbrot explores six regions in randomized 2½–3½-minute passes: horizontal/vertical glides, curved approaches, and slow spirals, returning to a wide view between destinations. Consecutive destinations/routes differ. Its GPU renderer is capped at 18 fps and 640 pixels on the longest edge; without WebGL it uses a static fractal.
+
+Trench Run flies an endless procedural vector trench with occasional sharp 60–90° turns, variable-width passages, mechanical wall panels, recessed floor shafts and dim paired bolts from wall cannons. Narrow sections trigger knife-edge banks or full barrel rolls about once a minute. Only the background rotates; text and controls stay upright. A fresh route is seeded at launch; scenery is generated ahead with a fixed geometry budget, 24 fps cap and no downloaded assets.
 
 Animation stops when Off, hidden, in bug mode, or under reduced motion. Reduced transparency uses solid control fills. The victory ceremony also respects reduced motion and has a static fallback.
 

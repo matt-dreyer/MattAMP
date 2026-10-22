@@ -24,7 +24,7 @@ It's a small, slightly ridiculous desktop app for Linux, Windows, and macOS: **m
 | Your podcast lineup: YouTube episodes or audio | Sarcastic bots with three-match grudges |
 | SkiCams with your own favorites and automatic rotation | Optional “Send it!” and other silly tab greetings |
 | A filtered X/Twitter pane | Ricochet walls, wraparound shots, and occasional absurd wind |
-| Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, and Mandelbrot glides |
+| Live CPU, memory, network, and NVIDIA GPU meters | Mouse-reactive particles, waves, stars, fractal glides, and a vector trench |
 | Stacked, sidecar, compact, and tiny bug layouts | A wildly unnecessary 3D victory ceremony |
 | Optional Retro skin with real audio spectrum and LED meters | Brushed aluminum, corner rivets, and a modem greeting |
 
@@ -63,13 +63,17 @@ Browse the tabs, layouts, and backgrounds below, or jump to the new [Retro previ
 </details>
 
 <details>
-<summary>Backgrounds — particles, waves, stars, fractals, or none</summary>
+<summary>Backgrounds — particles, waves, stars, fractals, Trench Run, or none</summary>
 
 | Particle flow | Water waves |
 | --- | --- |
 | ![Particle flow background behind the radio and meters](docs/images/background-flow.png) | ![Water wave background behind the radio and meters](docs/images/desktop.png) |
 | **Starfield** | **Mandelbrot zoom** |
 | ![Starfield background behind the radio and meters](docs/images/background-stars.png) | ![Mandelbrot fractal background behind the radio and meters](docs/images/background-mandelbrot.png) |
+
+**Trench Run** — an endless vector-arcade flight: sharp turns, tight gaps, barrel rolls, and occasional enemy cannon fire:
+
+![Trench Run vector background behind the radio and system meters](docs/images/background-trench.png)
 
 **Off**, when you'd rather sit still:
 
@@ -104,7 +108,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.2.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.3.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -205,7 +209,7 @@ Your favorites and rotation preferences stay on your machine. No MattAMP account
 
 ![Expanded AMP Artillery battlefield with five tanks labeled with arcade names and aiming controls](docs/images/artillery.png)
 
-Power uses a linear **1–100%** launch-speed scale, starting at **50%**: every percentage point adds the same speed, whether you use the slider, mouse wheel or arrow keys. Bot shots briefly show the shooter’s angle and power; toggle this in **Settings → Game**.
+Power uses a linear **1–100%** launch-speed scale, starting at **50%**: every percentage point adds the same speed, whether you use the slider, mouse wheel or arrow keys. Wind direction and strength sit beside the aiming controls, with gravity alongside. The score multiplier lives with the points total. Bot shots briefly show the shooter’s angle and power; toggle this in **Settings → Game**.
 
 You get unlimited shells and **three MIRVs**, each splitting into five warheads. Terrain deforms, splash damage hurts, falling hurts, and wind occasionally decides that your carefully calculated shot belongs in another postcode.
 
@@ -342,7 +346,7 @@ workstation telemetry. Install version 1.1.0 or later to use //e.
 
 **Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
-**Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Animation pauses when hidden or in bug mode and respects reduced motion.
+**Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. They react gently to the mouse. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Trench Run is an endless, Star Wars vector-arcade-inspired flight through a geometric canyon: sharp corners, narrowing passages, varied wall panels, recessed floor shafts, and occasional dim enemy cannon bolts. Tight gaps bring steep knife-edge banks and full barrel rolls about once a minute; the text and controls stay upright. Mouse movement adds a little steering feel. A new procedural route is seeded each launch; there is no short repeating loop. Animation pauses when hidden or in bug mode and respects reduced motion.
 
 CPU, memory, and network readings update every two seconds. Download and upload rates display in Mbps in Modern, Kbps in ’90s, and bps in //e, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 

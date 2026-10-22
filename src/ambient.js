@@ -33,10 +33,114 @@ class MattFractalCamera {
  }
 }
 
+/* Endless local-space route: seeded turns and scenery without an ever-growing world. */
+class MattTrenchScene {
+ constructor(seed=Math.floor(Math.random()*4294967296)){this.seed=seed>>>0;}
+ random(index,salt=0){let n=(Math.imul(index,374761393)^Math.imul(salt,668265263)^this.seed)>>>0;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296;}
+ ease(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
+ noise(z,span,salt){const cell=Math.floor(z/span),s=this.ease(z/span-cell);return (this.random(cell,salt)*(1-s)+this.random(cell+1,salt)*s)*2-1;}
+ turn(cell){return {start:cell*96+42+this.random(cell,1)*8,length:14+this.random(cell,2)*6,angle:(cell%3!==0&&this.random(cell,3)<.2?0:1.05+this.random(cell,4)*.52)*(this.random(cell,5)<.5?-1:1)};}
+ headingBetween(a,b){
+  let heading=0;for(let cell=Math.floor(Math.min(a,b)/96)-1;cell<=Math.floor(Math.max(a,b)/96);cell++){
+   const t=this.turn(cell);heading+=t.angle*(this.ease((b-t.start)/t.length)-this.ease((a-t.start)/t.length));
+  }return heading;
+ }
+ maneuver(z){
+  const cell=Math.floor(z/96),u=(z-cell*96-8)/24,chance=this.random(cell,8);
+  // At 3.2 units/second, alternate 96-unit sections give one full roll per minute.
+  const kind=cell>0&&cell%2===0?'roll':chance<.3?'knife':'none',active=u>0&&u<1&&kind!=='none';
+  const pinch=active?Math.sin(Math.PI*u)**2:0,sign=this.random(cell,9)<.5?-1:1;
+  return {kind,pinch,roll:active?(kind==='roll'?Math.PI*2*this.ease(u):1.32*pinch)*sign:0};
+ }
+ width(z){const base=5.7+this.noise(z,48,12)*2,m=this.maneuver(z);return base*(1-m.pinch)+(m.kind==='roll'?1.35:2)*m.pinch;}
+ wall(z,side){return {height:4.5+this.noise(z,18,side+30)*1.4};}
+ vent(index){const z=index*96+12+this.random(index,50)*36,length=5+this.random(index,51)*2,half=Math.min(1.8,this.width(z+length/2)*.45);return {z,end:z+length,half,depth:2+this.random(index,52)*3};}
+ route(origin){
+  // Positions in camera-relative world space. Only the visible neighborhood is built.
+  const poses=new Map([[0,{x:0,z:0,heading:0}]]);
+  for(const sign of [-1,1])for(let n=1;n<=130;n++){
+   const offset=n*sign,prev=poses.get(offset-sign),h=this.headingBetween(origin,origin+offset-sign*.5);
+   poses.set(offset,{x:prev.x+Math.sin(h)*sign,z:prev.z+Math.cos(h)*sign,heading:this.headingBetween(origin,origin+offset)});
+  }
+  return distance=>{const at=distance-origin,n=Math.floor(at),t=at-n,a=poses.get(n),b=poses.get(n+1)||a;
+   if(!a)return null;return {x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t,heading:a.heading+(b.heading-a.heading)*t};};
+ }
+ frame(time,w,h,pointer={x:.5,y:.5,strength:0}){
+  if(!Number.isFinite(time)||!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return [];
+  const travel=time*3.2,near=1.5,far=110,step=3,lines=[],pose=this.route(travel);
+  const strength=pointer.strength||0,px=(pointer.x-.5)*strength,py=(pointer.y-.5)*strength;
+  const cameraY=2.2+Math.sin(time*.2)*.08-py*.5;
+  const turnBank=Math.max(-.16,Math.min(.16,-this.headingBetween(travel-4,travel+4)*.25));
+  const bank=turnBank+this.maneuver(travel).roll-px*.055,ca=Math.cos(bank),sa=Math.sin(bank);
+  const focal=Math.min(w*.85,h*.9),cx=w*.5,cy=h*(.43+py*.035);
+  const point=([s,x,y])=>{const p=pose(s);return [p.x+x*Math.cos(p.heading),y,p.z-x*Math.sin(p.heading)];};
+  const project=p=>{const x=(p[0]-px*.8)*focal/p[2],y=(cameraY-p[1])*focal/p[2];return [cx+x*ca-y*sa,cy+x*sa+y*ca];};
+  const line=(a,b,accent=0)=>{
+   a=point(a);b=point(b);if(a[2]<near&&b[2]<near||a[2]>far&&b[2]>far)return;
+   if(a[2]<near||b[2]<near){if(a[2]<near){const t=(near-a[2])/(b[2]-a[2]);a=a.map((v,i)=>v+(b[i]-v)*t);}else{const t=(near-b[2])/(a[2]-b[2]);b=b.map((v,i)=>v+(a[i]-v)*t);}}
+   const depth=(a[2]+b[2])*.5,A=project(a),B=project(b);
+   if(A[0]<0&&B[0]<0||A[0]>w&&B[0]>w||A[1]<0&&B[1]<0||A[1]>h&&B[1]>h)return;
+   lines.push([...A,...B,Math.min(3,Math.floor(depth/27.5)),accent]);
+  };
+  const vents=Array.from({length:4},(_,i)=>this.vent(Math.floor(travel/96)-1+i));
+  const floorLine=(a,b)=>{
+   // Cut the grid at each opening, so shafts read as holes rather than drawn-on boxes.
+   let spans=[[0,1]];
+   for(const v of vents){let lo=0,hi=1;
+    for(const [axis,min,max] of [[0,v.z,v.end],[1,-v.half,v.half]]){
+     const delta=b[axis]-a[axis];if(Math.abs(delta)<1e-9){if(a[axis]<min||a[axis]>max){hi=-1;break;}}
+     else{const p=(min-a[axis])/delta,q=(max-a[axis])/delta;lo=Math.max(lo,Math.min(p,q));hi=Math.min(hi,Math.max(p,q));}
+    }
+    if(lo>=hi)continue;spans=spans.flatMap(([l,r])=>hi<=l||lo>=r?[[l,r]]:[...(l<lo?[[l,lo]]:[]),...(hi<r?[[hi,r]]:[])]);
+   }
+   const at=t=>a.map((v,i)=>v+(b[i]-v)*t);for(const [l,r] of spans)line(at(l),at(r));
+  };
+  const section=z=>{
+   const half=this.width(z),left=this.wall(z,-1),right=this.wall(z,1);
+   const side=(s,p)=>[[s*(half+8),p.height+1],[s*(half+3),p.height+1],[s*(half+3),p.height],[s*half,p.height],[s*half,p.height*.55],[s*half,0]];
+   return [...side(-1,left),[-half*.5,0],[0,0],[half*.5,0],...side(1,right).reverse()].map(([x,y])=>[z,x,y]);
+  };
+  const first=Math.floor(travel/step)*step;
+  for(let i=-1;i<36;i++){
+   const z=first+i*step,a=section(z),b=section(z+step);
+   for(let j=0;j<a.length;j++)a[j][2]===0&&b[j][2]===0?floorLine(a[j],b[j]):line(a[j],b[j],j===3||j===11?1:0);
+   for(let j=0;j<a.length-1;j++)a[j][2]===0&&a[j+1][2]===0?floorLine(a[j],a[j+1]):line(a[j],a[j+1]);
+  }
+  for(const v of vents){
+   if(v.z>travel+108||v.end<travel-3)continue;
+   const lip=[[v.z,-v.half,0],[v.z,v.half,0],[v.end,v.half,0],[v.end,-v.half,0]],bottom=lip.map(([s,x])=>[s,x*.7,-v.depth]);
+   for(let j=0;j<4;j++){line(lip[j],lip[(j+1)%4],1);line(lip[j],bottom[j]);line(bottom[j],bottom[(j+1)%4]);}
+   for(let rung=1;rung<=3;rung++)line([v.end,-v.half*.4,-v.depth*rung/4],[v.end,v.half*.4,-v.depth*rung/4],1);
+  }
+  // Seeded mechanical panels, braces, and rim machinery follow local wall width.
+  for(let i=Math.floor(travel/18)-1;i<Math.floor(travel/18)+7;i++)for(const side of [-1,1]){
+   const z=i*18+3,half=this.width(z),wall=this.wall(z,side),type=Math.floor(this.random(i,side+60)*3);
+   if(type===0){line([z,side*half,.6],[z+6,side*this.width(z+6),wall.height-.4],1);line([z,side*half,wall.height-.4],[z+6,side*this.width(z+6),.6],1);}
+   else if(type===1){for(const y of [1,1.5,2])line([z,side*(half+.15),y],[z+5,side*(this.width(z+5)+.15),y],1);}
+   else{
+    const points=[];for(const y of [wall.height,wall.height+1.5])for(const [s,x] of [[z,half+.3],[z,half+2],[z+4,this.width(z+4)+2],[z+4,this.width(z+4)+.3]])points.push([s,side*x,y]);
+    for(let j=0;j<4;j++){line(points[j],points[j+4]);line(points[j+4],points[(j+1)%4+4],1);}
+   }
+  }
+  const current=Math.floor(time/5.5);
+  for(let slot=current-3;slot<=current+5;slot++){
+   if(this.random(slot,70)<.3)continue;
+   const fireAt=slot*5.5+this.random(slot,71)*2,side=this.random(slot,72)<.5?-1:1,z=fireAt*3.2+36,half=this.width(z);
+   if(z>travel+110)continue;
+   const muzzle=[z-1.5,side*(half-.7),2.8];
+   line([z,side*half,2.4],[z,side*half,3.2],1);line([z,side*half,2.4],muzzle,1);line([z,side*half,3.2],muzzle,1);
+   for(const delay of [0,.18]){const age=time-fireAt-delay;if(age<0||age>1.8)continue;
+    const bolt=t=>[z-1.5-30*t,muzzle[1]*(1-t),2.8-1.1*t];line(bolt(Math.max(0,age/1.8-.075)),bolt(age/1.8),2);
+   }
+  }
+  return lines;
+ }
+}
+
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
-  this.fractalCamera=new MattFractalCamera();
+  this.fractalCamera=new MattFractalCamera();this.trench=new MattTrenchScene();
   this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
   const host=canvas.parentElement;
   host.addEventListener('pointermove',event=>{
@@ -72,7 +176,7 @@ class MattAmbient {
   this.draw(0);
  }
  configure(mode,paused=false){
-  const next=['flow','waves','stars','mandelbrot'].includes(mode)?mode:'off';
+  const next=['flow','waves','stars','mandelbrot','trench'].includes(mode)?mode:'off';
   if(next===this.mode&&paused===this.paused)return;
   this.mode=next;this.paused=paused;this.sync();
  }
@@ -92,7 +196,8 @@ class MattAmbient {
   pointer.x+=(pointer.targetX-pointer.x)*ease;pointer.y+=(pointer.targetY-pointer.y)*ease;
   pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
   const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
-  if(this.mode==='mandelbrot'){this.drawFractal(dt);}
+  if(this.mode==='trench'){this.drawTrench();}
+  else if(this.mode==='mandelbrot'){this.drawFractal(dt);}
   else if(this.mode==='waves'){
    const rows=Math.max(18,Math.min(32,Math.round(h/25)));
    for(let row=0;row<rows;row++){
@@ -123,6 +228,16 @@ class MattAmbient {
     c.strokeStyle=p.mint?'rgba(145,190,171,.25)':'rgba(123,177,204,.28)';c.lineWidth=1;c.beginPath();p.trail.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.stroke();
     c.fillStyle=p.mint?'rgba(160,202,180,.36)':'rgba(139,187,207,.38)';c.beginPath();c.arc(p.x,p.y,p.mint?1.2:.9,0,Math.PI*2);c.fill();
    }
+  }
+ }
+ drawTrench(){
+  const c=this.ctx,lines=this.trench.frame(this.time,this.width,this.height,this.pointer);
+  // Batch by depth and tint: twelve strokes per frame, no glow or full-screen fills.
+  for(let shade=3;shade>=0;shade--)for(let accent=0;accent<3;accent++){
+   c.beginPath();for(const line of lines)if(line[4]===shade&&line[5]===accent){c.moveTo(line[0],line[1]);c.lineTo(line[2],line[3]);}
+   const alpha=[.27,.19,.11,.045][shade];
+   c.strokeStyle=accent===2?`rgba(218,139,106,${alpha*1.3})`:accent===1?`rgba(156,202,176,${alpha})`:`rgba(121,185,205,${alpha})`;
+   c.lineWidth=accent===2?1.5:accent===1?1.1:.85;c.stroke();
   }
  }
  initFractal(){
@@ -192,3 +307,5 @@ class MattAmbient {
 }
 window.MattAmbient=MattAmbient;
 window.MattFractalCamera=MattFractalCamera;
+
+window.MattTrenchScene=MattTrenchScene;

@@ -175,8 +175,15 @@ class MattArcade{
   this.$('conditions').textContent=MattArtillery.describeConditions((b||this.preview).conditions);
   this.$('conditions').title='Arena rules stay fixed for this battle. Ricochet reflects side-wall shots; wraparound sends them through the opposite side.';
   this.$('controls').disabled=!mine;this.$('controls').hidden=!b||over||spectating;this.$('pause').disabled=!b||over;this.$('pause').textContent=this.paused?'Resume':'Pause';
-  this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name+' · '+b.multiplier.toFixed(2)+'×':'Last tank standing';
+  this.$('round').textContent=b?'Round '+b.round+' · '+MattArtillery.SKILLS[b.skill].name:'Last tank standing';
   const wind=Math.abs(b?.wind||0);this.$('wind').textContent=b?'Wind '+(b.wind<0?'← ':b.wind>0?'→ ':'· ')+wind+(wind>=76?' · WILD GUST':wind>=31?' · Strong':''):'Wind —';this.$('wind').classList.toggle('wild-gust',!!b&&wind>=76);
+  this.$('weather').hidden=!b;
+  this.$('wind').title=b?.conditions.chaos==='off'?'Wind stays fixed for this battle.':'Wind changes each turn.';
+  const gravity=(b||this.preview).conditions.gravity;
+  this.$('gravity').textContent=gravity==='moon'?'Gravity ×0.64':gravity==='heavy'?'Gravity ×1.6':'Gravity ×1';
+  this.$('gravity').title='Gravity stays fixed for this battle.';
+  this.$('multiplier').textContent=b?'Score ×'+b.multiplier.toFixed(2):'Score';
+  this.$('multiplier').title='Difficulty and bot count multiply your points.';
   this.$('score').textContent=String(b?.score||0).padStart(6,'0');
   this.$('status').textContent=this.paused?'Paused. Take your time.':spectating?'You’re out. Spectating · '+b.message:b?.message||'Choose your rivals, then start a battle.';
   this.$('overlay').hidden=!!b&&!this.paused&&(!over||!!this.dance);
