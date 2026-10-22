@@ -53,7 +53,7 @@ class MattTrenchScene {
  }
  width(z){const base=5.7+this.noise(z,48,12)*2,m=this.maneuver(z);return base*(1-m.pinch)+(m.kind==='roll'?1.35:2)*m.pinch;}
  wall(z,side){return {height:4.5+this.noise(z,18,side+30)*1.4,recess:.35+this.random(Math.floor(z/18),side+40)*.9};}
- vent(index){const z=index*24+5+this.random(index,50)*4,length=5+this.random(index,51)*2,half=Math.min(1.8,this.width(z+length/2)*.45);return {z,end:z+length,half,depth:2+this.random(index,52)*3};}
+ vent(index){const z=index*96+12+this.random(index,50)*36,length=5+this.random(index,51)*2,half=Math.min(1.8,this.width(z+length/2)*.45);return {z,end:z+length,half,depth:2+this.random(index,52)*3};}
  route(origin){
   // Positions in camera-relative world space. Only the visible neighborhood is built.
   const poses=new Map([[0,{x:0,z:0,heading:0}]]);
@@ -81,7 +81,7 @@ class MattTrenchScene {
    if(A[0]<0&&B[0]<0||A[0]>w&&B[0]>w||A[1]<0&&B[1]<0||A[1]>h&&B[1]>h)return;
    lines.push([...A,...B,Math.min(3,Math.floor(depth/27.5)),accent]);
   };
-  const vents=Array.from({length:7},(_,i)=>this.vent(Math.floor(travel/24)-1+i));
+  const vents=Array.from({length:4},(_,i)=>this.vent(Math.floor(travel/96)-1+i));
   const floorLine=(a,b)=>{
    // Cut the grid at each opening, so shafts read as holes rather than drawn-on boxes.
    let spans=[[0,1]];
