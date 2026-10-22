@@ -50,11 +50,12 @@
     <button type="submit" class="primary" id="game-start">Start battle</button>
    </form>
    <p id="game-conditions" class="game-conditions" aria-live="polite"></p>
-   <div class="game-hud"><span id="game-round">Last tank standing</span><span id="game-wind">Wind —</span><strong id="game-score">000000</strong></div>
+   <div class="game-hud"><span id="game-round">Last tank standing</span><div class="game-scoring"><span id="game-multiplier">Score</span><strong id="game-score">000000</strong></div></div>
    <section id="game-victory" aria-label="Victory celebration" hidden></section><div class="game-stage"><div class="game-field"><div id="game-shot" role="status" aria-live="polite" aria-atomic="true" hidden></div><canvas id="game-canvas" tabindex="0" width="1000" height="540" role="img" aria-label="Artillery battlefield. Aim with the controls below."></canvas><div id="game-quip" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="game-quip-name"></strong><span id="game-quip-text"></span></div><div id="game-overlay"><strong id="game-overlay-title">A little scorched nostalgia.</strong><span id="game-overlay-detail">One ridge. You and 3–5 bots. Three MIRVs each.</span><span id="game-replay-hint" hidden>Click the battlefield for a new skirmish.</span></div><button id="game-again" type="button" aria-label="New skirmish" aria-describedby="game-save-status" hidden><span class="sr-only">New skirmish</span></button></div></div>
    <div class="game-console">
    <div class="game-turn"><p id="game-status" role="status">Choose your rivals, then start a battle.</p><button id="game-pause" disabled>Pause</button></div>
    <div id="game-roster" class="game-roster" aria-label="Tank health"></div>
+   <div id="game-weather" class="game-weather" hidden><strong id="game-wind">Wind —</strong><span id="game-gravity"></span></div>
    <fieldset id="game-controls" disabled><legend class="sr-only">Aim and fire</legend>
     <label>Angle <output id="game-angle-value" for="game-angle">55°</output><input id="game-angle" type="range" min="5" max="175" value="55"></label>
     <label>Power <output id="game-power-value" for="game-power">50%</output><input id="game-power" type="range" min="1" max="100" value="50"></label>
