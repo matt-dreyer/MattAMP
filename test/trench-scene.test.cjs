@@ -47,3 +47,12 @@ test('trench turns change actual heading sharply while width and rolls remain sm
 test('floor vent openings fit the narrow sections and have recessed bottoms',()=>{
  for(let i=0;i<100;i++){const v=scene.vent(i);assert.ok(v.depth>=2&&v.depth<=5);assert.ok(v.half<scene.width((v.z+v.end)/2));assert.ok(v.end-v.z>=5);}
 });
+
+test('full rolls wait a minute and remain a minute apart for every route',()=>{
+ for(const seed of [0,123,456,9876]){
+  const route=new context.window.MattTrenchScene(seed),starts=[];
+  for(let cell=0;cell<20;cell++)if(route.maneuver(cell*96+20).kind==='roll')starts.push((cell*96+8)/3.2);
+  assert.ok(starts[0]>=60);assert.ok(starts.length>2);
+  for(let i=1;i<starts.length;i++)assert.equal(starts[i]-starts[i-1],60);
+ }
+});

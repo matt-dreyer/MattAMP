@@ -47,12 +47,13 @@ class MattTrenchScene {
  }
  maneuver(z){
   const cell=Math.floor(z/96),u=(z-cell*96-8)/24,chance=this.random(cell,8);
-  const kind=chance<.14?'roll':chance<.44?'knife':'none',active=u>0&&u<1&&kind!=='none';
+  // At 3.2 units/second, alternate 96-unit sections give one full roll per minute.
+  const kind=cell>0&&cell%2===0?'roll':chance<.3?'knife':'none',active=u>0&&u<1&&kind!=='none';
   const pinch=active?Math.sin(Math.PI*u)**2:0,sign=this.random(cell,9)<.5?-1:1;
   return {kind,pinch,roll:active?(kind==='roll'?Math.PI*2*this.ease(u):1.32*pinch)*sign:0};
  }
  width(z){const base=5.7+this.noise(z,48,12)*2,m=this.maneuver(z);return base*(1-m.pinch)+(m.kind==='roll'?1.35:2)*m.pinch;}
- wall(z,side){return {height:4.5+this.noise(z,18,side+30)*1.4,recess:.35+this.random(Math.floor(z/18),side+40)*.9};}
+ wall(z,side){return {height:4.5+this.noise(z,18,side+30)*1.4};}
  vent(index){const z=index*96+12+this.random(index,50)*36,length=5+this.random(index,51)*2,half=Math.min(1.8,this.width(z+length/2)*.45);return {z,end:z+length,half,depth:2+this.random(index,52)*3};}
  route(origin){
   // Positions in camera-relative world space. Only the visible neighborhood is built.
@@ -96,7 +97,7 @@ class MattTrenchScene {
   };
   const section=z=>{
    const half=this.width(z),left=this.wall(z,-1),right=this.wall(z,1);
-   const side=(s,p)=>[[s*(half+8),p.height+1],[s*(half+3),p.height+1],[s*(half+3),p.height],[s*half,p.height],[s*(half+p.recess),p.height*.55],[s*half,0]];
+   const side=(s,p)=>[[s*(half+8),p.height+1],[s*(half+3),p.height+1],[s*(half+3),p.height],[s*half,p.height],[s*half,p.height*.55],[s*half,0]];
    return [...side(-1,left),[-half*.5,0],[0,0],[half*.5,0],...side(1,right).reverse()].map(([x,y])=>[z,x,y]);
   };
   const first=Math.floor(travel/step)*step;
