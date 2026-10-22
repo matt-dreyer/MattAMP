@@ -31,7 +31,8 @@
     "test:sticky-chrome": "node scripts/sticky-chrome-smoke.cjs",
     "test:apple2": "node scripts/apple2-smoke.cjs",
     "test:window-order": "node scripts/window-order-smoke.cjs",
-    "test:trench": "node scripts/trench-smoke.cjs"
+    "test:trench": "node scripts/trench-smoke.cjs",
+    "test:flow": "node scripts/flow-smoke.cjs"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

@@ -137,6 +137,46 @@ class MattTrenchScene {
  }
 }
 
+/* Moving eddies carry layered tracers; trails and particle count stay bounded. */
+class MattParticleFlow {
+ constructor(w,h){
+  this.width=w;this.height=h;
+  this.particles=Array.from({length:Math.min(360,Math.max(180,Math.round(w*h/1350)))},(_,i)=>{
+   const depth=.35+(i*.754877666%1)*.65;
+   return {x:(i*.61803398875%1)*w,y:(i*.41421356237%1)*h,vx:0,vy:0,depth,tint:i%7===0?2:i%3===0?1:0,trail:[],age:(i*.56984029%1)*24,life:24+(i%11),generation:0,index:i,fade:1};
+  });
+ }
+ step(dt,time,pointer={x:.5,y:.5,strength:0}){
+  if(!Number.isFinite(dt)||dt<=0)return;
+  dt=Math.min(dt,.08);const w=this.width,h=this.height,scale=Math.min(w,h);
+  const eddies=[
+   {x:w*(.31+.12*Math.sin(time*.085)),y:h*(.38+.17*Math.cos(time*.065)),r:scale*.36,spin:1},
+   {x:w*(.7+.12*Math.cos(time*.07)),y:h*(.64+.16*Math.sin(time*.09)),r:scale*.3,spin:-1},
+   {x:w*(.48+.23*Math.sin(time*.045)),y:h*(.5+.25*Math.cos(time*.055)),r:scale*.47,spin:.65}
+  ];
+  const mx=pointer.x*w,my=pointer.y*h,radius=Math.max(100,Math.min(190,scale*.4));
+  for(const p of this.particles){
+   const x=p.x/w,y=p.y/h;
+   let vx=19+19*Math.sin(y*7+time*.18)+12*Math.cos(y*13-time*.13),vy=17*Math.sin(x*8-time*.16)+10*Math.cos(x*15+time*.11);
+   for(const e of eddies){const dx=p.x-e.x,dy=p.y-e.y,falloff=Math.exp(-(dx*dx+dy*dy)/(e.r*e.r));vx-=dy/e.r*155*falloff*e.spin;vy+=dx/e.r*155*falloff*e.spin;}
+   const dx=p.x-mx,dy=p.y-my,falloff=Math.exp(-(dx*dx+dy*dy)/(radius*radius))*(pointer.strength||0);
+   // A soft whirlpool with an outward wake; no hard mouse collision or input interception.
+   vx+=(dx*.32-dy)*falloff*1.3;vy+=(dy*.32+dx)*falloff*1.3;
+   const ease=1-Math.exp(-dt*2.8),speed=.65+p.depth*.65;
+   p.vx+=(vx*speed-p.vx)*ease;p.vy+=(vy*speed-p.vy)*ease;
+   p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;
+   if(p.age>=p.life){
+    p.generation++;const n=p.index+p.generation*127;
+    p.x=((n*.61803398875+.19)%1)*w;p.y=((n*.41421356237+.27)%1)*h;p.age=0;p.vx=0;p.vy=0;p.trail=[];
+   }else if(p.x< -16||p.x>w+16||p.y< -16||p.y>h+16){
+    p.x=((p.x+16)%(w+32)+w+32)%(w+32)-16;p.y=((p.y+16)%(h+32)+h+32)%(h+32)-16;p.trail=[];
+   }
+   p.fade=Math.max(0,Math.min(1,p.age/1.2,(p.life-p.age)/1.5));
+   p.trail.push({x:p.x,y:p.y});if(p.trail.length>64)p.trail.shift();
+  }
+ }
+}
+
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
@@ -168,7 +208,7 @@ class MattAmbient {
   if(w===this.width&&h===this.height)return;
   this.width=w;this.height=h;const scale=Math.min(devicePixelRatio||1,1.5);
   this.canvas.width=Math.round(w*scale);this.canvas.height=Math.round(h*scale);this.ctx?.setTransform(scale,0,0,scale,0,0);
-  this.particles=Array.from({length:Math.min(220,Math.max(80,Math.round(w*h/2800)))},(_,i)=>({x:((i*.61803398875)%1)*w,y:((i*.41421356237)%1)*h,trail:[],mint:i%4===0}));
+  this.flow=new MattParticleFlow(w,h);this.particles=this.flow.particles;
   this.stars=Array.from({length:Math.min(300,Math.max(110,Math.round(w*h/1900)))},(_,i)=>({
    x:((i*.61803398875+.17)%1)*w,y:((i*.41421356237+.31)%1)*h,
    depth:.2+((i*.754877666)%1)*.8,phase:i*2.39996323
@@ -213,23 +253,27 @@ class MattAmbient {
     c.fillStyle=`rgba(151,184,207,${(.13+star.depth*.22)*shimmer})`;
     c.beginPath();c.arc((star.x+(pointer.x-.5)*28*star.depth*power+w)%w,(star.y+(pointer.y-.5)*28*star.depth*power+h)%h,.45+star.depth*.7,0,Math.PI*2);c.fill();
    }
-  }else{
-   for(const p of this.particles){
-    const angle=Math.sin(p.y/h*5+this.time*.08)*.65+Math.cos(p.x/w*4-this.time*.06)*.35;
-    const dx=p.x-mx,dy=p.y-my,distance=Math.hypot(dx,dy),falloff=Math.max(0,1-distance/radius);
-    const force=power*falloff*falloff*42/Math.max(12,distance);
-    p.x+=(Math.cos(angle)*15+(dx-dy*.55)*force)*dt;
-    p.y+=(Math.sin(angle)*15+(dy+dx*.55)*force)*dt;
-    if(p.x>w+12||p.x< -12||p.y>h+12||p.y< -12){
-     if(p.x>w+12)p.x=-10;else if(p.x< -12)p.x=w+10;
-     if(p.y>h+12)p.y=-10;else if(p.y< -12)p.y=h+10;p.trail=[];
-    }
-    if(dt)p.trail.push({x:p.x,y:p.y});if(p.trail.length>22)p.trail.shift();
-    c.strokeStyle=p.mint?'rgba(145,190,171,.25)':'rgba(123,177,204,.28)';c.lineWidth=1;c.beginPath();p.trail.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.stroke();
-    c.fillStyle=p.mint?'rgba(160,202,180,.36)':'rgba(139,187,207,.38)';c.beginPath();c.arc(p.x,p.y,p.mint?1.2:.9,0,Math.PI*2);c.fill();
-   }
-  }
+  }else{this.drawFlow(dt);}
  }
+ drawFlow(dt){
+  this.flow.step(dt,this.time,this.pointer);
+  const c=this.ctx,colors=['123,177,204','145,190,171','142,159,201'];
+  c.lineCap='round';c.lineJoin='round';
+  for(const p of this.particles){
+   const trail=p.trail,n=trail.length;if(n<2)continue;
+   // Faint tails build into brighter tips, with depth carried by speed and line weight.
+   for(let band=0;band<3;band++){
+    const from=Math.floor((n-1)*band/3),to=Math.floor((n-1)*(band+1)/3);
+    c.strokeStyle=`rgba(${colors[p.tint]},${[.065,.16,.3][band]*p.fade*(.6+p.depth*.4)})`;
+    c.lineWidth=.55+p.depth*.65;c.beginPath();c.moveTo(trail[from].x,trail[from].y);
+    for(let j=from+1;j<=to;j++)c.lineTo(trail[j].x,trail[j].y);c.stroke();
+   }
+   c.fillStyle=`rgba(${colors[p.tint]},${(.25+p.depth*.25)*p.fade})`;
+   c.beginPath();c.arc(p.x,p.y,.65+p.depth*.65,0,Math.PI*2);c.fill();
+  }
+  c.lineCap='butt';c.lineJoin='miter';
+ }
+
  drawTrench(){
   const c=this.ctx,lines=this.trench.frame(this.time,this.width,this.height,this.pointer);
   // Batch by depth and tint: twelve strokes per frame, no glow or full-screen fills.
@@ -309,3 +353,5 @@ window.MattAmbient=MattAmbient;
 window.MattFractalCamera=MattFractalCamera;
 
 window.MattTrenchScene=MattTrenchScene;
+
+window.MattParticleFlow=MattParticleFlow;
