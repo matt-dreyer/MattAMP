@@ -63,7 +63,7 @@ Browse the tabs, layouts, and backgrounds below, or jump to the new [Retro previ
 </details>
 
 <details>
-<summary>Backgrounds — particles, waves, stars, fractals, Trench Run, or none</summary>
+<summary>Backgrounds — particles, Windy, waves, stars, fractals, Trench Run, or none</summary>
 
 | Particle flow | Water waves |
 | --- | --- |
@@ -74,6 +74,10 @@ Browse the tabs, layouts, and backgrounds below, or jump to the new [Retro previ
 **Trench Run** — an endless vector-arcade flight: sharp turns, tight gaps, barrel rolls, and occasional enemy cannon fire:
 
 ![Trench Run vector background behind the radio and system meters](docs/images/background-trench.png)
+
+**Windy** — long wind-map trails, passing storms and quieter currents:
+
+![Windy background during a storm pass](docs/images/background-windy.png)
 
 **Off**, when you'd rather sit still:
 
@@ -346,7 +350,7 @@ workstation telemetry. Install version 1.1.0 or later to use //e.
 
 **Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
-**Live backgrounds:** Particle flow, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. They react to the mouse. Particle flow keeps its long, fading trails while a decorative hurricane drifts through the currents: a calm eye, curling bands, and subtle wind-map colors. Hovering still stirs a curling wake. This is locally generated scenery, not live weather. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Trench Run is an endless, Star Wars vector-arcade-inspired flight through a geometric canyon: sharp corners, narrowing passages, varied wall panels, recessed floor shafts, and occasional dim enemy cannon bolts. Tight gaps bring steep knife-edge banks and full barrel rolls about once a minute; the text and controls stay upright. Mouse movement adds a little steering feel. A new procedural route is seeded each launch; there is no short repeating loop. Animation pauses when hidden or in bug mode and respects reduced motion.
+**Live backgrounds:** Particle flow, Windy, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. They react to the mouse. Particle flow sends layered cyan, mint, and muted-blue trails through shifting eddies; hovering stirs a curling wake. Windy is a separate wind-map-inspired effect with long trails, subtle color shading, passing hurricane eyes and broad currents between storms. Its seeded three-minute chapters vary direction, size and rotation, including storm-free chapters; it is decorative local animation, not live weather. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Trench Run is an endless, Star Wars vector-arcade-inspired flight through a geometric canyon: sharp corners, narrowing passages, varied wall panels, recessed floor shafts, and occasional dim enemy cannon bolts. Tight gaps bring steep knife-edge banks and full barrel rolls about once a minute; the text and controls stay upright. Mouse movement adds a little steering feel. A new procedural route is seeded each launch; there is no short repeating loop. Animation pauses when hidden or in bug mode and respects reduced motion.
 
 CPU, memory, and network readings update every two seconds. Download and upload rates display in Mbps in Modern, Kbps in ’90s, and bps in //e, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 

@@ -73,9 +73,11 @@ Leaving an unfinished battle earns no score or rivalry record.
 
 ## Backgrounds and accessibility
 
-Choose **Settings → Live background**: Particle flow (default), Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
+Choose **Settings → Live background**: Particle flow (default), Windy, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
 
-Particle flow keeps its long, fading trails at varied speeds, now circulating around a slowly drifting hurricane eye. Subtle green, amber and violet shading follows the generated wind field; the pointer still stirs a local whirlpool and outward wake. This is decorative local animation, not a weather forecast or a Windy.com integration. Waves ripple, stars shift with depth, the fractal pans gently, and Trench Run banks toward the pointer. Embedded X/video surfaces handle their own pointer input and retain their own backgrounds.
+Particle flow uses long, fading trails at varied speeds through moving swirls; the pointer stirs a local whirlpool and outward wake. Waves ripple, stars shift with depth, the fractal pans gently, and Trench Run banks toward the pointer. Embedded X/video surfaces handle their own pointer input and retain their own backgrounds.
+
+Windy is a separate option; Particle flow retains its original moving eddies and long trails. Windy blends broad currents with storm passes in three-minute chapters. Storms travel in from outside the widget and move away again, with varied routes, sizes and rotation. Some chapters have no storm at all. It retains long trails and mouse response, with subtle wind-map colors. This is local decorative scenery, not live weather or a Windy.com connection.
 
 Mandelbrot explores six regions in randomized 2½–3½-minute passes: horizontal/vertical glides, curved approaches, and slow spirals, returning to a wide view between destinations. Consecutive destinations/routes differ. Its GPU renderer is capped at 18 fps and 640 pixels on the longest edge; without WebGL it uses a static fractal.
 

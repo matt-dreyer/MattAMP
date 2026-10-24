@@ -48,7 +48,7 @@ function update(patch){
  if([1,5,15,30,60].includes(patch.cameraCycleMinutes))state.cameraCycleMinutes=patch.cameraCycleMinutes;
  if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
- if(['off','flow','waves','stars','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(['off','flow','windy','waves','stars','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
  if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
