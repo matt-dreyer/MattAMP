@@ -137,33 +137,49 @@ class MattTrenchScene {
  }
 }
 
-/* Moving eddies carry layered tracers; trails and particle count stay bounded. */
+/* Decorative wind field, not live weather: bounded tracers orbit a drifting storm. */
 class MattParticleFlow {
  constructor(w,h){
   this.width=w;this.height=h;
-  this.particles=Array.from({length:Math.min(360,Math.max(180,Math.round(w*h/1350)))},(_,i)=>{
+  this.particles=Array.from({length:Math.min(480,Math.max(220,Math.round(w*h/1050)))},(_,i)=>{
    const depth=.35+(i*.754877666%1)*.65;
-   return {x:(i*.61803398875%1)*w,y:(i*.41421356237%1)*h,vx:0,vy:0,depth,tint:i%7===0?2:i%3===0?1:0,trail:[],age:(i*.56984029%1)*24,life:24+(i%11),generation:0,index:i,fade:1};
+   return {x:(i*.61803398875%1)*w,y:(i*.41421356237%1)*h,vx:0,vy:0,depth,energy:0,trail:[],age:(i*.56984029%1)*24,life:24+(i%11),generation:0,index:i,fade:1};
   });
+ }
+ weather(time){
+  const scale=Math.min(this.width,this.height);
+  return {x:this.width*(.55+.14*Math.sin(time*.018)),y:this.height*(.53+.13*Math.cos(time*.021)),r:scale*(.39+.035*Math.sin(time*.026)),eye:scale*.045,phase:time*.07};
+ }
+ wind(x,y,time,storm=this.weather(time)){
+  const dx=x-storm.x,dy=y-storm.y,d=Math.hypot(dx,dy),r=storm.r;
+  const angle=Math.atan2(dy,dx),q=Math.max(0,(d-storm.eye)/(r*.15));
+  const wall=1-Math.exp(-q*q),influence=Math.exp(-Math.pow(d/(r*1.4),4));
+  const bands=.66+.34*Math.sin(angle*3-Math.log(Math.max(d,storm.eye)/r)*5+storm.phase);
+  const rotation=115*wall*Math.exp(-d/(r*.9))*(.86+bands*.14);
+  const inflow=-20*wall*Math.exp(-d/r)*bands;
+  const norm=Math.max(d,1),background=1-influence;
+  const vx=(19+19*Math.sin(y/this.height*7+time*.1)+12*Math.cos(y/this.height*13-time*.08))*background+(-dy*rotation+dx*inflow)/norm;
+  const vy=(17*Math.sin(x/this.width*8-time*.09)+10*Math.cos(x/this.width*15+time*.07))*background+(dx*rotation+dy*inflow)/norm;
+  const eyeFade=Math.max(0,Math.min(1,(d-storm.eye*.65)/(storm.eye*.6)));
+  return {vx,vy,energy:Math.min(1,Math.hypot(vx,vy)/65),wash:wall*Math.exp(-d/(r*1.15))*bands,eyeFade};
+ }
+ // Subdued wind-map palette: cool currents, green bands, warmer eyewall.
+ color(energy){
+  const stops=[[123,177,204],[145,190,171],[185,168,126],[166,143,185]];
+  const t=Math.max(0,Math.min(1,energy))*3,i=Math.min(2,Math.floor(t)),f=t-i;
+  return stops[i].map((n,j)=>Math.round(n+(stops[i+1][j]-n)*f));
  }
  step(dt,time,pointer={x:.5,y:.5,strength:0}){
   if(!Number.isFinite(dt)||dt<=0)return;
-  dt=Math.min(dt,.08);const w=this.width,h=this.height,scale=Math.min(w,h);
-  const eddies=[
-   {x:w*(.31+.12*Math.sin(time*.085)),y:h*(.38+.17*Math.cos(time*.065)),r:scale*.36,spin:1},
-   {x:w*(.7+.12*Math.cos(time*.07)),y:h*(.64+.16*Math.sin(time*.09)),r:scale*.3,spin:-1},
-   {x:w*(.48+.23*Math.sin(time*.045)),y:h*(.5+.25*Math.cos(time*.055)),r:scale*.47,spin:.65}
-  ];
-  const mx=pointer.x*w,my=pointer.y*h,radius=Math.max(100,Math.min(190,scale*.4));
+  dt=Math.min(dt,.08);const w=this.width,h=this.height,storm=this.weather(time);
+  const mx=pointer.x*w,my=pointer.y*h,radius=Math.max(100,Math.min(190,Math.min(w,h)*.4));
   for(const p of this.particles){
-   const x=p.x/w,y=p.y/h;
-   let vx=19+19*Math.sin(y*7+time*.18)+12*Math.cos(y*13-time*.13),vy=17*Math.sin(x*8-time*.16)+10*Math.cos(x*15+time*.11);
-   for(const e of eddies){const dx=p.x-e.x,dy=p.y-e.y,falloff=Math.exp(-(dx*dx+dy*dy)/(e.r*e.r));vx-=dy/e.r*155*falloff*e.spin;vy+=dx/e.r*155*falloff*e.spin;}
+   const wind=this.wind(p.x,p.y,time,storm);let {vx,vy}=wind;
    const dx=p.x-mx,dy=p.y-my,falloff=Math.exp(-(dx*dx+dy*dy)/(radius*radius))*(pointer.strength||0);
-   // A soft whirlpool with an outward wake; no hard mouse collision or input interception.
    vx+=(dx*.32-dy)*falloff*1.3;vy+=(dy*.32+dx)*falloff*1.3;
-   const ease=1-Math.exp(-dt*2.8),speed=.65+p.depth*.65;
-   p.vx+=(vx*speed-p.vx)*ease;p.vy+=(vy*speed-p.vy)*ease;
+   // Fast directional response keeps the eyewall coherent; depth still varies speed.
+   const ease=1-Math.exp(-dt*7),speed=.8+p.depth*.4;
+   p.vx+=(vx*speed-p.vx)*ease;p.vy+=(vy*speed-p.vy)*ease;p.energy+=(wind.energy-p.energy)*ease;
    p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;
    if(p.age>=p.life){
     p.generation++;const n=p.index+p.generation*127;
@@ -171,7 +187,8 @@ class MattParticleFlow {
    }else if(p.x< -16||p.x>w+16||p.y< -16||p.y>h+16){
     p.x=((p.x+16)%(w+32)+w+32)%(w+32)-16;p.y=((p.y+16)%(h+32)+h+32)%(h+32)-16;p.trail=[];
    }
-   p.fade=Math.max(0,Math.min(1,p.age/1.2,(p.life-p.age)/1.5));
+   p.fade=Math.max(0,Math.min(1,p.age/1.2,(p.life-p.age)/1.5))*wind.eyeFade;
+   // Keep the long trails that make Particle Flow distinctive.
    p.trail.push({x:p.x,y:p.y});if(p.trail.length>64)p.trail.shift();
   }
  }
@@ -257,21 +274,37 @@ class MattAmbient {
  }
  drawFlow(dt){
   this.flow.step(dt,this.time,this.pointer);
-  const c=this.ctx,colors=['123,177,204','145,190,171','142,159,201'];
+  const c=this.ctx;this.drawWindWash();
   c.lineCap='round';c.lineJoin='round';
   for(const p of this.particles){
-   const trail=p.trail,n=trail.length;if(n<2)continue;
+   const trail=p.trail,n=trail.length;if(n<2)continue;const color=this.flow.color(p.energy).join(',');
    // Faint tails build into brighter tips, with depth carried by speed and line weight.
    for(let band=0;band<3;band++){
     const from=Math.floor((n-1)*band/3),to=Math.floor((n-1)*(band+1)/3);
-    c.strokeStyle=`rgba(${colors[p.tint]},${[.065,.16,.3][band]*p.fade*(.6+p.depth*.4)})`;
+    c.strokeStyle=`rgba(${color},${[.065,.16,.3][band]*p.fade*(.6+p.depth*.4)})`;
     c.lineWidth=.55+p.depth*.65;c.beginPath();c.moveTo(trail[from].x,trail[from].y);
     for(let j=from+1;j<=to;j++)c.lineTo(trail[j].x,trail[j].y);c.stroke();
    }
-   c.fillStyle=`rgba(${colors[p.tint]},${(.25+p.depth*.25)*p.fade})`;
+   c.fillStyle=`rgba(${color},${(.25+p.depth*.25)*p.fade})`;
    c.beginPath();c.arc(p.x,p.y,.65+p.depth*.65,0,Math.PI*2);c.fill();
   }
   c.lineCap='butt';c.lineJoin='miter';
+ }
+
+ drawWindWash(){
+  // A small, slowly updated field keeps the color wash inexpensive and softly blended.
+  const w=this.width,h=this.height,scale=96/Math.max(w,h),sw=Math.max(1,Math.round(w*scale)),sh=Math.max(1,Math.round(h*scale));
+  if(!this.windMap){this.windMap=document.createElement('canvas');this.windMapTime=-Infinity;}
+  if(this.windMap.width!==sw||this.windMap.height!==sh){this.windMap.width=sw;this.windMap.height=sh;this.windMapTime=-Infinity;}
+  if(Math.abs(this.time-this.windMapTime)>=.25){
+   const context=this.windMap.getContext('2d'),pixels=context.createImageData(sw,sh),storm=this.flow.weather(this.time);
+   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const wind=this.flow.wind((x+.5)*w/sw,(y+.5)*h/sh,this.time,storm),color=this.flow.color(wind.energy),i=(y*sw+x)*4;
+    pixels.data[i]=color[0];pixels.data[i+1]=color[1];pixels.data[i+2]=color[2];pixels.data[i+3]=Math.round(wind.wash*wind.eyeFade*30);
+   }
+   context.putImageData(pixels,0,0);this.windMapTime=this.time;
+  }
+  this.ctx.drawImage(this.windMap,0,0,w,h);
  }
 
  drawTrench(){
