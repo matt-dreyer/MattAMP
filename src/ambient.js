@@ -177,10 +177,76 @@ class MattParticleFlow {
  }
 }
 
+/* Decorative wind field, not live weather: storm passes alternate with broad currents. */
+class MattWindyFlow {
+ constructor(w,h,seed=123){
+  this.width=w;this.height=h;this.seed=seed>>>0;
+  this.particles=Array.from({length:Math.min(480,Math.max(220,Math.round(w*h/1050)))},(_,i)=>{
+   const depth=.35+(i*.754877666%1)*.65;
+   return {x:(i*.61803398875%1)*w,y:(i*.41421356237%1)*h,vx:0,vy:0,depth,energy:0,trail:[],age:(i*.56984029%1)*24,life:24+(i%11),generation:0,index:i,fade:1};
+  });
+ }
+ random(index,salt){let n=(Math.imul(index,374761393)^Math.imul(salt,668265263)^this.seed)>>>0;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296;}
+ weather(time){
+  // Each three-minute chapter has a seeded route; quiet fronts separate storm passes.
+  const cell=Math.floor(time/180),local=time-cell*180,scale=Math.min(this.width,this.height);
+  const u=Math.max(0,Math.min(1,(local-20)/120)),smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};
+  const strength=this.random(cell,1)<.22?0:smooth((local-20)/12)*smooth((140-local)/12);
+  const direction=this.random(cell,2)<.5?1:-1,along=direction===1?u:1-u;
+  const cross=.25+this.random(cell,3)*.5+.1*Math.sin(u*Math.PI*2+this.random(cell,4)*6)*Math.sin(u*Math.PI);
+  const horizontal=this.random(cell,5)<.5;
+  return {x:this.width*(horizontal?-.7+along*2.4:cross),y:this.height*(horizontal?cross:-.7+along*2.4),
+   r:scale*(.3+this.random(cell,6)*.17),eye:scale*(.035+this.random(cell,7)*.02),phase:time*.07,
+   strength,spin:this.random(cell,8)<.5?1:-1};
+ }
+ wind(x,y,time,storm=this.weather(time)){
+  const dx=x-storm.x,dy=y-storm.y,d=Math.hypot(dx,dy),r=storm.r;
+  const angle=Math.atan2(dy,dx),q=Math.max(0,(d-storm.eye)/(r*.15));
+  const wall=1-Math.exp(-q*q),influence=storm.strength*Math.exp(-Math.pow(d/(r*1.4),4));
+  const bands=.66+.34*Math.sin(angle*3-Math.log(Math.max(d,storm.eye)/r)*5+storm.phase);
+  const rotation=storm.strength*storm.spin*115*wall*Math.exp(-d/(r*.9))*(.86+bands*.14);
+  const inflow=-storm.strength*20*wall*Math.exp(-d/r)*bands;
+  const norm=Math.max(d,1),background=1-influence;
+  const vx=(19+19*Math.sin(y/this.height*7+time*.1)+12*Math.cos(y/this.height*13-time*.08))*background+(-dy*rotation+dx*inflow)/norm;
+  const vy=(17*Math.sin(x/this.width*8-time*.09)+10*Math.cos(x/this.width*15+time*.07))*background+(dx*rotation+dy*inflow)/norm;
+  const eyeFade=1-storm.strength*(1-Math.max(0,Math.min(1,(d-storm.eye*.65)/(storm.eye*.6))));
+  return {vx,vy,energy:Math.min(1,Math.hypot(vx,vy)/65),wash:storm.strength*wall*Math.exp(-d/(r*1.15))*bands+.12*background*Math.min(1,Math.hypot(vx,vy)/65),eyeFade};
+ }
+ // Subdued wind-map palette: cool currents, green bands, warmer eyewall.
+ color(energy){
+  const stops=[[123,177,204],[145,190,171],[185,168,126],[166,143,185]];
+  const t=Math.max(0,Math.min(1,energy))*3,i=Math.min(2,Math.floor(t)),f=t-i;
+  return stops[i].map((n,j)=>Math.round(n+(stops[i+1][j]-n)*f));
+ }
+ step(dt,time,pointer={x:.5,y:.5,strength:0}){
+  if(!Number.isFinite(dt)||dt<=0)return;
+  dt=Math.min(dt,.08);const w=this.width,h=this.height,storm=this.weather(time);
+  const mx=pointer.x*w,my=pointer.y*h,radius=Math.max(100,Math.min(190,Math.min(w,h)*.4));
+  for(const p of this.particles){
+   const wind=this.wind(p.x,p.y,time,storm);let {vx,vy}=wind;
+   const dx=p.x-mx,dy=p.y-my,falloff=Math.exp(-(dx*dx+dy*dy)/(radius*radius))*(pointer.strength||0);
+   vx+=(dx*.32-dy)*falloff*1.3;vy+=(dy*.32+dx)*falloff*1.3;
+   // Fast directional response keeps the eyewall coherent; depth still varies speed.
+   const ease=1-Math.exp(-dt*7),speed=.8+p.depth*.4;
+   p.vx+=(vx*speed-p.vx)*ease;p.vy+=(vy*speed-p.vy)*ease;p.energy+=(wind.energy-p.energy)*ease;
+   p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;
+   if(p.age>=p.life){
+    p.generation++;const n=p.index+p.generation*127;
+    p.x=((n*.61803398875+.19)%1)*w;p.y=((n*.41421356237+.27)%1)*h;p.age=0;p.vx=0;p.vy=0;p.trail=[];
+   }else if(p.x< -16||p.x>w+16||p.y< -16||p.y>h+16){
+    p.x=((p.x+16)%(w+32)+w+32)%(w+32)-16;p.y=((p.y+16)%(h+32)+h+32)%(h+32)-16;p.trail=[];
+   }
+   p.fade=Math.max(0,Math.min(1,p.age/1.2,(p.life-p.age)/1.5))*wind.eyeFade;
+   // Keep the long trails that make Particle Flow distinctive.
+   p.trail.push({x:p.x,y:p.y});if(p.trail.length>64)p.trail.shift();
+  }
+ }
+}
+
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
-  this.fractalCamera=new MattFractalCamera();this.trench=new MattTrenchScene();
+  this.fractalCamera=new MattFractalCamera();this.trench=new MattTrenchScene();this.windySeed=Math.floor(Math.random()*4294967296);
   this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
   const host=canvas.parentElement;
   host.addEventListener('pointermove',event=>{
@@ -208,7 +274,7 @@ class MattAmbient {
   if(w===this.width&&h===this.height)return;
   this.width=w;this.height=h;const scale=Math.min(devicePixelRatio||1,1.5);
   this.canvas.width=Math.round(w*scale);this.canvas.height=Math.round(h*scale);this.ctx?.setTransform(scale,0,0,scale,0,0);
-  this.flow=new MattParticleFlow(w,h);this.particles=this.flow.particles;
+  this.flow=new MattParticleFlow(w,h);this.particles=this.flow.particles;this.windy=new MattWindyFlow(w,h,this.windySeed);this.windMapTime=-Infinity;
   this.stars=Array.from({length:Math.min(300,Math.max(110,Math.round(w*h/1900)))},(_,i)=>({
    x:((i*.61803398875+.17)%1)*w,y:((i*.41421356237+.31)%1)*h,
    depth:.2+((i*.754877666)%1)*.8,phase:i*2.39996323
@@ -216,7 +282,7 @@ class MattAmbient {
   this.draw(0);
  }
  configure(mode,paused=false){
-  const next=['flow','waves','stars','mandelbrot','trench'].includes(mode)?mode:'off';
+  const next=['flow','windy','waves','stars','mandelbrot','trench'].includes(mode)?mode:'off';
   if(next===this.mode&&paused===this.paused)return;
   this.mode=next;this.paused=paused;this.sync();
  }
@@ -237,6 +303,7 @@ class MattAmbient {
   pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
   const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
   if(this.mode==='trench'){this.drawTrench();}
+  else if(this.mode==='windy'){this.drawWindy(dt);}
   else if(this.mode==='mandelbrot'){this.drawFractal(dt);}
   else if(this.mode==='waves'){
    const rows=Math.max(18,Math.min(32,Math.round(h/25)));
@@ -272,6 +339,41 @@ class MattAmbient {
    c.beginPath();c.arc(p.x,p.y,.65+p.depth*.65,0,Math.PI*2);c.fill();
   }
   c.lineCap='butt';c.lineJoin='miter';
+ }
+
+ drawWindy(dt){
+  this.windy.step(dt,this.time,this.pointer);
+  const c=this.ctx;this.drawWindWash();
+  c.lineCap='round';c.lineJoin='round';
+  for(const p of this.windy.particles){
+   const trail=p.trail,n=trail.length;if(n<2)continue;const color=this.windy.color(p.energy).join(',');
+   // Faint tails build into brighter tips, with depth carried by speed and line weight.
+   for(let band=0;band<3;band++){
+    const from=Math.floor((n-1)*band/3),to=Math.floor((n-1)*(band+1)/3);
+    c.strokeStyle=`rgba(${color},${[.065,.16,.3][band]*p.fade*(.6+p.depth*.4)})`;
+    c.lineWidth=.55+p.depth*.65;c.beginPath();c.moveTo(trail[from].x,trail[from].y);
+    for(let j=from+1;j<=to;j++)c.lineTo(trail[j].x,trail[j].y);c.stroke();
+   }
+   c.fillStyle=`rgba(${color},${(.25+p.depth*.25)*p.fade})`;
+   c.beginPath();c.arc(p.x,p.y,.65+p.depth*.65,0,Math.PI*2);c.fill();
+  }
+  c.lineCap='butt';c.lineJoin='miter';
+ }
+
+ drawWindWash(){
+  // A small, slowly updated field keeps the color wash inexpensive and softly blended.
+  const w=this.width,h=this.height,scale=96/Math.max(w,h),sw=Math.max(1,Math.round(w*scale)),sh=Math.max(1,Math.round(h*scale));
+  if(!this.windMap){this.windMap=document.createElement('canvas');this.windMapTime=-Infinity;}
+  if(this.windMap.width!==sw||this.windMap.height!==sh){this.windMap.width=sw;this.windMap.height=sh;this.windMapTime=-Infinity;}
+  if(Math.abs(this.time-this.windMapTime)>=.25){
+   const context=this.windMap.getContext('2d'),pixels=context.createImageData(sw,sh),storm=this.windy.weather(this.time);
+   for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const wind=this.windy.wind((x+.5)*w/sw,(y+.5)*h/sh,this.time,storm),color=this.windy.color(wind.energy),i=(y*sw+x)*4;
+    pixels.data[i]=color[0];pixels.data[i+1]=color[1];pixels.data[i+2]=color[2];pixels.data[i+3]=Math.round(wind.wash*wind.eyeFade*30);
+   }
+   context.putImageData(pixels,0,0);this.windMapTime=this.time;
+  }
+  this.ctx.drawImage(this.windMap,0,0,w,h);
  }
 
  drawTrench(){
@@ -355,3 +457,5 @@ window.MattFractalCamera=MattFractalCamera;
 window.MattTrenchScene=MattTrenchScene;
 
 window.MattParticleFlow=MattParticleFlow;
+
+window.MattWindyFlow=MattWindyFlow;
