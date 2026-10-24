@@ -112,7 +112,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.4.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.5.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
