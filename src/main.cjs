@@ -80,26 +80,27 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
-function windowSizeKey(view,expanded,game){return [view,state.layout,!!game,expanded].join(':');}
+function windowSizeKey(view,expanded,game){return [view,state.layout,game==='sky'?'sky':!!game,expanded].join(':');}
 function resize(view,height,expanded=false,game=''){
  if(!win||!['full','compact','bug'].includes(view))return;
  lastResizeArgs=[view,height,expanded,game];const key=windowSizeKey(view,expanded,game);
+ if(win.isFullScreen())return;
  // Native maximize owns the bounds; content updates must not shrink it.
  // An explicit layout change or leaving Game returns to normal widget sizing.
  if(win.isMaximized()){if(maximizeRestore&&maximizeRestore.key!==key)win.unmaximize();return;}
  if(restoredWindowKey===key)return;
  restoredWindowKey=null;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
- const playing=game==='play'&&view==='full';
- if(!['play','settings','bug'].includes(game))gameSession=null;
+ const playing=['play','sky'].includes(game)&&view==='full';
+ if(!['play','sky','settings','bug'].includes(game))gameSession=null;
  else if(!playing&&gameSession&&!gameSession.suspended){gameSession.bounds=win.getBounds();gameSession.suspended=true;}
  // Content changes (replay, scores, heckles) must not resize a game window.
  // Temporary settings/bug views restore the latest user-chosen bounds on return.
- if(playing&&gameSession&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
+ if(playing&&gameSession&&gameSession.kind===game&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
   if(gameSession.suspended){win.setResizable(true);win.setMinimumSize(expanded?Math.min(640,area.width):340,expanded?Math.min(480,area.height):260);win.setBounds(gameSession.bounds);gameSession.suspended=false;}
   mode='full';return;
  }
- const rememberGame=()=>{if(playing)gameSession={layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
+ const rememberGame=()=>{if(playing)gameSession={kind:game,layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
  if(expanded===true&&view==='full'&&game!=='settings'){
   if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
   mode='full';rememberGame();return;
@@ -155,9 +156,10 @@ if(primaryInstance)app.whenReady().then(async()=>{
  if(!state.cameras.some(c=>c.id===state.cameraId))state.cameraId=state.cameras[0]?.id||'';
  state.positions ||= {};state.selected ||= {};
  await startServer();
- const allowLocation=(wc,permission,url,main)=>!!(permission==='geolocation'&&wc===win?.webContents&&main&&url?.startsWith(origin+'/')&&Date.now()<locationUntil);
- session.defaultSession.setPermissionRequestHandler((wc,permission,callback,details)=>callback(allowLocation(wc,permission,details.requestingUrl,details.isMainFrame)));
- session.defaultSession.setPermissionCheckHandler((wc,permission,_origin,details)=>allowLocation(wc,permission,details.requestingUrl,details.isMainFrame));
+ // Only our own main frame can enter fullscreen; remote players stay denied.
+ const allowMainPermission=(wc,permission,url,main)=>!!(wc===win?.webContents&&main&&url?.startsWith(origin+'/')&&(permission==='fullscreen'||permission==='geolocation'&&Date.now()<locationUntil));
+ session.defaultSession.setPermissionRequestHandler((wc,permission,callback,details)=>callback(allowMainPermission(wc,permission,details.requestingUrl,details.isMainFrame)));
+ session.defaultSession.setPermissionCheckHandler((wc,permission,_origin,details)=>allowMainPermission(wc,permission,details.requestingUrl,details.isMainFrame));
  session.defaultSession.webRequest.onBeforeSendHeaders({urls:['https://www.youtube.com/embed/*','https://www.youtube-nocookie.com/embed/*']},(details,callback)=>{
   details.requestHeaders.Referer='https://ai.fshbwl.deck/';callback({requestHeaders:details.requestHeaders});
  });
@@ -177,6 +179,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
   send('deck:window-state',{maximized:false});
   if(lastResizeArgs)resize(...lastResizeArgs);
  });
+ win.on('leave-full-screen',()=>{if(lastResizeArgs)resize(...lastResizeArgs);});
  win.on('minimize',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('hide',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));

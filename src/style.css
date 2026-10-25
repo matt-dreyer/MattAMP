@@ -142,3 +142,24 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 /* Only the open sky surface is a shortcut; foreground controls keep their actions. */
 #deck.sky-clickable .content,#deck.sky-clickable .media,#deck.sky-clickable #radio-display,#deck.sky-clickable #system{cursor:zoom-in}
 #deck.sky-clickable :is(#transport,#podcast-tools,#game-panel,#youtube-box,#x-panel,#camera-panel){cursor:default}
+
+/* Sky is a full workspace, beside Game; its canvas owns the remaining viewport. */
+#deck.sky-mode{height:100dvh;min-height:0;display:flex;flex-direction:column}
+#deck.sky-mode>.full{display:flex;flex:1;min-height:0;flex-direction:column}
+.sky-mode .content{display:flex;flex:1;min-height:0;flex-direction:column}
+.sky-mode .sourcebar,.sky-mode>.titlebar{flex:none}
+.sky-mode #system,.sky-mode #compact-status{display:none}
+#sky-view:not([hidden]){display:flex;flex:1;flex-direction:column;min-height:0;width:100%;height:auto;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none;overflow:auto}
+#sky-view:fullscreen{height:100vh;width:100vw;padding:12px 18px;overflow:hidden}
+.sky-view-actions{display:flex;gap:8px;flex:none}
+#sky-location-controls{margin:0 20px 6px;font-size:11px;color:#a9c4cb;flex:none}
+#sky-location-controls>summary{cursor:pointer;padding:5px 0;width:fit-content}
+#sky-location-controls .settings-row{display:flex;gap:8px;flex-wrap:wrap}
+#sky-location-controls .sky-coordinates{max-width:540px}
+#sky-location-controls input{max-width:160px}
+#sky-empty{margin:24px 20px;max-width:480px;color:#a9c4cb}
+#sky-view #sky-map{min-height:140px}
+.sky-view-header,.sky-view-tools,.sky-view-footer,#sky-found{flex:none}
+#deck .sourcebar{flex-wrap:wrap}
+#deck.sky-clickable #sky-view{cursor:default}
+@media(max-width:550px){.sky-view-header{padding:10px 12px 6px;align-items:flex-start;flex-wrap:wrap}.sky-view-tools{padding:6px 12px;gap:8px}.sky-view-header h2{font-size:18px}.sky-view-actions button{padding:6px}.sky-view-footer{padding:4px 12px 8px}.sky-view-footer p:last-child{display:none}}
