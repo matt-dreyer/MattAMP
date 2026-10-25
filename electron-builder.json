@@ -56,7 +56,10 @@
     "category": "public.app-category.entertainment",
     "icon": "build/icon.png",
     "identity": "-",
-    "hardenedRuntime": false
+    "hardenedRuntime": false,
+    "extendInfo": {
+      "NSLocationUsageDescription": "MattAMP uses your approximate location to calculate your local night sky. You can enter coordinates instead."
+    }
   },
   "dmg": {
     "sign": false

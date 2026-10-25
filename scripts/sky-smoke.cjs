@@ -1,0 +1,42 @@
+const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const profile=fs.mkdtempSync(path.join(os.tmpdir(),'mattamp-sky-'));
+fs.writeFileSync(path.join(profile,'state.json'),JSON.stringify({volume:0,tabSounds:false,alwaysOnTop:false,ambient:'off',layout:'sidecar'}));
+(async()=>{let app;try{
+ const launch=async()=>{app=await _electron.launch({chromiumSandbox:true,args:[path.resolve(__dirname,'..')],env:{...process.env,DECK_TEST_DIR:profile}});const p=await app.firstWindow();await p.locator('#stations button').first().waitFor();return p;};
+ let p=await launch();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.locator('#settings-open').click();await p.locator('#ambient-mode').selectOption('night-sky');await p.locator('#sky-settings').scrollIntoViewIfNeeded();
+ assert.equal(await p.locator('#sky-open').isDisabled(),true);assert.equal(await p.evaluate(()=>window.deck.skyLocation('network').then(r=>r.ok)),false,'network location denied without consent');
+ // Exercise the actual permission gate without requesting the tester’s location.
+ await app.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:0});});await p.locator('#sky-locate').click();await p.waitForFunction(()=>!document.getElementById('sky-locate').disabled);assert.equal(await p.evaluate(()=>state.skyLocation),null,'cancel does not locate');
+ await app.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:1});});
+ await p.evaluate(()=>{navigator.geolocation.getCurrentPosition=success=>success({coords:{latitude:39.123456,longitude:-120.123456}});});
+ await p.locator('#sky-locate').click();await p.waitForFunction(()=>state.skyLocation?.latitude===39.1&&ambient.nightSky.data);
+ assert.equal(await p.evaluate(()=>state.skyLocation.longitude),-120.1,'precise coordinates rounded before storage');
+ assert.ok(await p.evaluate(()=>ambient.nightSky.data.stars.length)>1000);
+ await p.locator('#sky-open').click();await p.waitForTimeout(300);await p.locator('#sky-find').selectOption('Moon');assert.match(await p.locator('#sky-found').textContent(),/Moon:/);await p.locator('#sky-lines').uncheck();assert.equal(await p.evaluate(()=>ambient.nightSky.layers.constellations),false);await p.locator('#sky-lines').check();await p.locator('#sky-find').selectOption('');assert.equal(await p.locator('#sky-view').isVisible(),true);await p.keyboard.press('Escape');assert.equal(await p.locator('#sky-view').isVisible(),false);
+ await p.locator('#settings-close').click();await p.waitForFunction(()=>ambient.mode==='night-sky'&&!ambient.canvas.hidden);
+ await p.locator('#volume').fill('12');await p.locator('#volume').dispatchEvent('input');assert.equal(await p.locator('#volume').inputValue(),'12');
+ // An explicitly labelled evening example for review, not the tester’s current location.
+ const demo=require('../src/night-sky.cjs').skyAt({latitude:39,longitude:-120,source:'manual'},new Date('2026-10-26T04:00:00Z'));
+ await p.evaluate(data=>{ambient.nightSky.data=data;clearTimeout(skyUI.timer);skyUI.timer=0;},demo);await p.waitForTimeout(200);await p.screenshot({path:'/tmp/mattamp-night-sky-widget.png'});
+ await p.locator('#settings-open').click();await p.locator('#sky-settings').scrollIntoViewIfNeeded();await p.locator('#sky-open').click();
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setBounds({width:1080,height:800}));
+ await p.waitForTimeout(500);await p.evaluate(data=>{ambient.nightSky.data=data;clearTimeout(skyUI.timer);skyUI.timer=0;document.getElementById('sky-view-heading').textContent='Night Sky';document.getElementById('sky-view-time').textContent='Evening example • Sierra Nevada • Oct 25, 2026, 9:00 PM PDT';document.getElementById('sky-view-moon').textContent='Moon 100% lit • Full Moon';document.getElementById('sky-view-status').textContent='Real star and planet positions • Starlink off';skyUI.draw();},demo);
+ await p.mouse.move(20,20);await p.waitForTimeout(100);await p.screenshot({path:'/tmp/mattamp-night-sky-viewer.png'});await p.locator('#sky-view-close').click();
+ const cost=await p.evaluate(()=>{const c=ambient.ctx,t=performance.now();for(let i=0;i<100;i++)ambient.nightSky.draw(c,710,560,i/24,ambient.pointer);return (performance.now()-t)/100;});console.log('Mean sky draw time:',cost.toFixed(2),'ms');
+ await p.locator('#settings-close').click();await p.emulateMedia({reducedMotion:'reduce'});await p.waitForFunction(()=>ambient.canvas.hidden&&!ambient.timer&&!skyUI.timer);await p.emulateMedia({reducedMotion:'no-preference'});await p.waitForFunction(()=>!ambient.canvas.hidden);
+ await p.locator('#bug-toggle').click();await p.waitForFunction(()=>ambient.canvas.hidden&&!skyUI.timer);await p.locator('#bug').click();await p.waitForFunction(()=>!ambient.canvas.hidden);
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].hide());await p.waitForFunction(()=>ambient.canvas.hidden&&!skyUI.timer&&!skyUI.frame);await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].show());await p.waitForFunction(()=>!ambient.canvas.hidden);
+ for(const appearance of ['retro','apple2','modern']){await p.locator('#settings-open').click();await p.locator('#appearance').selectOption(appearance);await p.locator('#settings-close').click();assert.equal(await p.evaluate(()=>ambient.canvas.hidden),appearance!=='modern');}
+ await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===430);await p.locator('#layout').click();await p.waitForFunction(()=>innerWidth===710);
+ await p.locator('#settings-open').click();await p.locator('#sky-settings').scrollIntoViewIfNeeded();await p.locator('#sky-time').selectOption('tour');await p.waitForFunction(()=>state.skyTime==='tour'&&ambient.nightSky.data&&ambient.nightSky.clock.mode==='tour');
+ assert.equal(await p.locator('#sky-satellites').isDisabled(),true);assert.equal(await p.locator('#sky-clock-readout').isVisible(),true);
+ await p.evaluate(async()=>{await skyUI.save({skySatellites:true});const s=(await window.deck.sky(-86400000)).data;if(s.satellites.length||!s.satelliteStatus.includes('time travel'))throw new Error('Tour must not show satellite predictions');await skyUI.save({skySatellites:false});ambient.nightSky.clock.elapsed=420;await skyUI.refresh();});
+ assert.equal(fs.existsSync(path.join(profile,'sky-orbits.json')),false,'time travel does not fetch satellite data');
+ await p.locator('#settings-close').click();const firstSky=await p.evaluate(()=>ambient.canvas.toDataURL());await p.waitForTimeout(400);assert.notEqual(await p.evaluate(()=>ambient.canvas.toDataURL()),firstSky,'tour visibly advances');
+ console.log('Tour mean draw time:',await p.evaluate(()=>{const t=performance.now();for(let i=0;i<100;i++)ambient.nightSky.draw(ambient.ctx,710,560,i/24,ambient.pointer);return ((performance.now()-t)/100).toFixed(2)}),'ms');
+ await app.close();app=null;p=await launch();await p.waitForFunction(()=>state.skyLocation?.latitude===39.1&&ambient.nightSky.data);assert.equal(await p.evaluate(()=>state.skyTime),'tour','clock mode persists');
+ await p.locator('#settings-open').click();await p.locator('#sky-settings').scrollIntoViewIfNeeded();await p.locator('#sky-forget').click();await p.waitForFunction(()=>!state.skyLocation&&!ambient.nightSky.data&&!skyUI.timer);assert.equal(await p.evaluate(()=>window.deck.init().then(r=>r.data.state.skyLocation)),null);
+ await p.locator('#ambient-mode').selectOption('stars');assert.equal(await p.evaluate(()=>ambient.mode),'stars');await p.locator('#ambient-mode').selectOption('off');await p.waitForFunction(()=>ambient.canvas.hidden&&!ambient.timer&&!skyUI.timer);
+ assert.deepEqual(errors,[]);console.log('PASS: consent/cancel, coarse location, astronomy display, viewer, controls, reduced motion, bug pause, resizing, persistence, forget, Starfield and Off.');
+ }finally{if(app)await app.close();fs.rmSync(profile,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});

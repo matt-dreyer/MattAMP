@@ -127,3 +127,14 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 /* Keep navigation opaque when transparency is unavailable or unwanted. */
 @supports not (backdrop-filter:blur(1px)){.full>.sourcebar{background:var(--shell)}}
 @media(prefers-reduced-transparency:reduce){.full>.sourcebar{background:var(--shell);backdrop-filter:none}}
+
+/* Night Sky: the detailed chart is optional; the background stays behind the controls. */
+#sky-settings .settings-row{flex-wrap:wrap}#sky-settings details{margin:10px 0}.sky-coordinates{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:10px 0}.sky-coordinates label{flex:1;min-width:95px}.sky-coordinates input{width:100%;margin-top:5px}
+#sky-view{padding:0;width:calc(100vw - 28px);height:calc(100vh - 28px);max-width:1400px;max-height:min(920px,calc(100vw + 150px));border:1px solid #47616c;border-radius:10px;background:#080f19;color:#cedcdd;overflow:hidden;box-shadow:0 12px 70px #0008}
+#sky-view[open]{display:flex;flex-direction:column}#sky-view::backdrop{background:rgba(4,10,17,.82)}.sky-view-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px 8px}.sky-view-header h2{font-size:20px;font-weight:500;margin:0}.sky-view-header p{font-size:11px;color:#91a9b6;margin:5px 0 0}.sky-view-header button{padding:8px 12px;color:#cfdbdc;background:#192b38;border:1px solid #47616c;border-radius:6px}
+#sky-map{width:100%;flex:1;min-height:0;display:block}.sky-view-footer{padding:4px 20px 14px}.sky-view-footer p{margin:4px 0;font-size:10px;color:#809ba9}.sky-view-footer #sky-view-moon{font-size:13px;color:#d4d8bd}
+@media(max-height:400px){.sky-view-header{padding:8px 14px}.sky-view-header h2{font-size:15px}.sky-view-footer{padding:2px 14px 8px}.sky-view-footer p:last-child{display:none}}
+
+.sky-view-tools{display:flex;align-items:center;gap:10px;padding:6px 20px;flex-wrap:wrap;font-size:11px;color:#94b2bd}.sky-view-tools label{display:flex;align-items:center;gap:3px}.sky-view-tools select{max-width:190px;padding:6px;background:#152635;color:#c7d9dd;border:1px solid #47616c;border-radius:4px}#sky-found{margin:2px 20px 0;font-size:11px;color:#a5c4ad;min-height:15px}
+
+.brand:has(#sky-clock-readout:not([hidden])){display:flex;flex-direction:column;align-items:flex-start;gap:0}#sky-clock-readout{font-size:9px;font-weight:400;letter-spacing:0;color:#a6c6c0;line-height:12px}

@@ -73,7 +73,7 @@ Leaving an unfinished battle earns no score or rivalry record.
 
 ## Backgrounds and accessibility
 
-Choose **Settings → Live background**: Particle flow (default), Windy, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
+Choose **Settings → Live background**: Particle flow (default), Windy, Water waves, Starfield, Night Sky, Mandelbrot zoom, Trench Run, or Off. The selection saves locally. Effects stay inside MattAMP; they do not change your desktop wallpaper.
 
 Particle flow uses long, fading trails at varied speeds through moving swirls; the pointer stirs a local whirlpool and outward wake. Waves ripple, stars shift with depth, the fractal pans gently, and Trench Run banks toward the pointer. Embedded X/video surfaces handle their own pointer input and retain their own backgrounds.
 
@@ -112,6 +112,18 @@ Missing sensors display as unavailable rather than an invented zero.
 | No GPU meters | Check whether `nvidia-smi` works. Other GPU vendors and missing NVIDIA drivers do not provide these readings. |
 | Live background doesn't move | Check the selected effect and OS reduced-motion preference. Hidden/bug mode deliberately stops animation. |
 | Finished match hasn't enabled replay | Wait for score saving. If it reports a disk error, use the save retry button and check available space/permissions. |
+
+## Night Sky
+
+Choose **Settings → Live background → Night Sky**, then **Use device location**. The native permission dialog explains the device lookup and an IP-based fallback via ipwho.is. If allowed, MattAMP first asks the OS/browser location service; if unavailable, it requests a network estimate. VPNs can point that estimate somewhere else. Check the displayed coordinates, or enter latitude/longitude yourself. Coordinates are rounded to 0.1° and saved locally. **Forget location** deletes them and clears the sky; there is no location request on startup and no continuous location tracking. Use the button again after travelling.
+
+Stars, constellations, Milky Way contours, planets and the Moon are calculated locally from the current date/time and saved coordinates. After setup, they work offline. The background is a cropped view looking up toward the zenith; **Explore sky** shows the whole hemisphere, north up and east left. Hover for star names, use **Find** to highlight a star, planet or constellation, and switch lines, names or Milky Way contours on/off. The finder tells you when an object is below the horizon. The Moon's illuminated fraction and bright-limb direction are calculated; its texture is illustrative. Moon and planet glyphs are enlarged. Stars remain shown during daylight, so this is a sky chart rather than a camera or a naked-eye visibility forecast. No phone-style compass or orientation tracking is implied.
+
+**Show predicted Starlink tracks** is off by default. Enabling it downloads public OMM orbital elements from CelesTrak, selects a spread of up to 768 satellites, and draws up to 16 above-horizon tracks using SGP4. It does not attempt to display every Starlink satellite or predict sunlight, weather or visual brightness. Data is cached for at least two hours (including retry backoff), with the update timestamp shown. Elements older than seven days are discarded. Outages leave stars and the Moon working. Your coordinates never go to CelesTrak; the network location fallback receives your IP address, not device coordinates.
+
+**Sky clock** offers **Live now** and **Two-week drift**. Drift glides from seven days ago to seven days ahead over 14 minutes, eases into a reversal, and retraces the span without a hard loop cut. In the middle of each journey, one day passes in roughly a minute. Stars rotate smoothly between ephemeris updates; the Moon and planets follow the simulated date too. A “Tour” date in the title bar and “Simulated” time in the chart distinguish it from Live now. Starlink downloads and tracks pause during the tour because week-ahead orbital predictions would be misleading. The selected clock mode saves locally; a new launch starts the journey again.
+
+Animation pauses in hidden/Bug modes and respects reduced motion. An explicitly opened chart remains available as a still view with reduced motion. The original decorative Starfield is unchanged. [Catalog sources and licenses](../assets/sky/README.md).
 
 ## Local data and privacy
 

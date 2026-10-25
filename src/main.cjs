@@ -1,4 +1,7 @@
-const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme}=require('electron');
+const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme,dialog}=require('electron');
+const {skyAt,location:skyLocation}=require('./night-sky.cjs');
+const {Starlink,networkLocation}=require('./sky-services.cjs');
+let locationUntil=0,locationPrompt=false,skyCache=null,starlink;
 const {APPEARANCES,appearance}=require('./appearance.cjs');
 const {createStationImages}=require('./station-image.cjs');
 const path=require('node:path');
@@ -24,7 +27,7 @@ if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();
 let lastResizeArgs,maximizeRestore,restoredWindowKey;
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',skyLocation:null,skySatellites:false,skyTime:'live',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -48,7 +51,10 @@ function update(patch){
  if([1,5,15,30,60].includes(patch.cameraCycleMinutes))state.cameraCycleMinutes=patch.cameraCycleMinutes;
  if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
- if(['off','flow','windy','waves','stars','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(['off','flow','windy','waves','stars','night-sky','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(patch.skyLocation!==undefined){state.skyLocation=skyLocation(patch.skyLocation);skyCache=null;if(!state.skyLocation)locationUntil=0;}
+ if(['live','tour'].includes(patch.skyTime)){state.skyTime=patch.skyTime;skyCache=null;}
+ if(typeof patch.skySatellites==='boolean')state.skySatellites=patch.skySatellites;
  if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
@@ -114,7 +120,7 @@ function resize(view,height,expanded=false,game=''){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/apple2.js':'apple2.js','/apple2.css':'apple2.css','/apple2-font.ttf':'../assets/fonts/VT323-Regular.ttf','/tab-sounds/apple2.wav':'../assets/tab-sounds/apple2.wav','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/apple2.js':'apple2.js','/apple2.css':'apple2.css','/apple2-font.ttf':'../assets/fonts/VT323-Regular.ttf','/tab-sounds/apple2.wav':'../assets/tab-sounds/apple2.wav','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/night-sky.js':'night-sky.js','/sky-clock.js':'sky-clock.js','/sky-ui.js':'sky-ui.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg','metal-slug-tank.png','metal-slug-blasts.png','worms-fire.ogg','worms-split.ogg',...Array.from({length:3},(_,i)=>'worms-blast-'+(i+1)+'.ogg'),...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  for(const name of ['hell-yeah','send-it','meh','yeah'])routes['/tab-sounds/'+name+'.mp3']='../assets/tab-sounds/'+name+'.mp3';
  server=http.createServer((req,res)=>{
@@ -135,6 +141,9 @@ if(primaryInstance)app.whenReady().then(async()=>{
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.appearance=appearance(state);state.retro=state.appearance==='retro';state.scanlines=state.scanlines===true;
+ state.skyTime=state.skyTime==='tour'?'tour':'live';
+ state.skyLocation=skyLocation(state.skyLocation);state.skySatellites=state.skySatellites===true;
+ starlink=new Starlink(path.join(app.getPath('userData'),'sky-orbits.json'));
  state.alwaysOnTop=state.alwaysOnTop===true;
  state.tabSounds=state.tabSounds!==false;
  state.gameShotReadouts=state.gameShotReadouts!==false;
@@ -144,8 +153,9 @@ if(primaryInstance)app.whenReady().then(async()=>{
  if(!state.cameras.some(c=>c.id===state.cameraId))state.cameraId=state.cameras[0]?.id||'';
  state.positions ||= {};state.selected ||= {};
  await startServer();
- session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
- session.defaultSession.setPermissionCheckHandler(()=>false);
+ const allowLocation=(wc,permission,url,main)=>!!(permission==='geolocation'&&wc===win?.webContents&&main&&url?.startsWith(origin+'/')&&Date.now()<locationUntil);
+ session.defaultSession.setPermissionRequestHandler((wc,permission,callback,details)=>callback(allowLocation(wc,permission,details.requestingUrl,details.isMainFrame)));
+ session.defaultSession.setPermissionCheckHandler((wc,permission,_origin,details)=>allowLocation(wc,permission,details.requestingUrl,details.isMainFrame));
  session.defaultSession.webRequest.onBeforeSendHeaders({urls:['https://www.youtube.com/embed/*','https://www.youtube-nocookie.com/embed/*']},(details,callback)=>{
   details.requestHeaders.Referer='https://ai.fshbwl.deck/';callback({requestHeaders:details.requestHeaders});
  });
@@ -181,6 +191,24 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',async()=>Object.fromEntries(Object.keys(await stationArtwork()).filter(id=>STATIONS.some(station=>station.id===id)).map(id=>[id,'/station-art/'+id])));
+ handle('deck:sky-location',async action=>{
+  if(action==='cancel'){locationUntil=0;return false;}
+  if(action==='network'){
+   if(Date.now()>=locationUntil)throw new Error('Allow location first.');locationUntil=0;
+   return networkLocation();
+  }
+  if(action!=='request'||locationPrompt)return false;
+  locationPrompt=true;
+  try{const answer=await dialog.showMessageBox(win,{type:'question',title:'Night Sky location',message:'Use your approximate location for Night Sky?',detail:'MattAMP will ask your device for location. If that is unavailable, it will send your IP address to ipwho.is for a city-level estimate (VPNs may point elsewhere). Only coordinates rounded to 0.1° are saved on this device. They are never sent to the satellite service. You can forget them in Settings.',buttons:['Cancel','Allow location'],defaultId:0,cancelId:0});locationUntil=answer.response===1?Date.now()+60000:0;return answer.response===1;}finally{locationPrompt=false;}
+ });
+ handle('deck:sky',offset=>{
+  if(!state.skyLocation)return null;
+  const now=Date.now(),tour=state.skyTime==='tour',date=now+(tour&&Number.isFinite(offset)?Math.max(-604800000,Math.min(604800000,offset)):0);
+  if(!skyCache||Math.abs(date-skyCache.at)>=(tour?1000:10000))skyCache=skyAt(state.skyLocation,new Date(date));
+  if(tour)return {...skyCache,satellites:[],satelliteStatus:'Starlink paused during time travel'};
+  if(state.skySatellites){if(!starlink.library||now>=starlink.next)void starlink.refresh();return {...skyCache,satellites:starlink.tracks(state.skyLocation,new Date(skyCache.at)),satelliteStatus:starlink.status};}
+  return {...skyCache,satellites:[],satelliteStatus:'Starlink off'};
+ });
  handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup,maximized:win.isMaximized()};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());
