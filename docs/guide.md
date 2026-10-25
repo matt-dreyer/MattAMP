@@ -185,3 +185,9 @@ MattAMP follows normal desktop window ordering by default. To keep it visible
 above other apps, enable **Settings → Keep MattAMP above other windows**.
 Unchecking it takes effect immediately and persists after restarting. Existing
 explicit pin preferences are preserved when upgrading.
+
+### Meteor watch
+
+Open **Sky** alongside SkiCams and Game, then expand **Meteor watch** for your next seven real days. It lists selected active showers, estimated peaks, suggested viewing hours and moonlight interference using your saved location. A small dot on Sky highlights a peak this week with a suitable dark viewing window. The outlook keeps using today's date during Two-week drift. No separate notification permission is needed; these are in-app heads-ups.
+
+Times use your device timezone. The bundled [IMO 2026 calendar](https://www.imo.net/files/meteor-shower/cal2026.pdf) supplies seasonal estimates, not live weather or guaranteed meteor counts. When there is no suitable dark hour, the widget says so. Location is optional and can be forgotten in Sky → Location.

@@ -163,3 +163,13 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 #deck .sourcebar{flex-wrap:wrap}
 #deck.sky-clickable #sky-view{cursor:default}
 @media(max-width:550px){.sky-view-header{padding:10px 12px 6px;align-items:flex-start;flex-wrap:wrap}.sky-view-tools{padding:6px 12px;gap:8px}.sky-view-header h2{font-size:18px}.sky-view-actions button{padding:6px}.sky-view-footer{padding:4px 12px 8px}.sky-view-footer p:last-child{display:none}}
+
+/* Meteor watch stays compact until opened, leaving the sky center stage. */
+.meteor-watch{flex:none;margin:8px 20px 4px;border:1px solid #34515f;border-radius:7px;background:#10202bcc;color:#b9d2d7}
+.meteor-watch>summary{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 12px;cursor:pointer;font-size:12px}
+.meteor-watch>summary::before{content:'✧';color:#a9d5b7;font-size:18px}.meteor-watch>summary:hover{background:#23404b88}
+#meteor-headline{color:#a9d5b7;font-size:11px}#meteor-content{padding:0 12px 10px;max-height:220px;overflow:auto;font-size:11px}
+#meteor-period,.meteor-note,#meteor-next{color:#8faab5;line-height:1.5}#meteor-showers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+#meteor-showers article{border-top:1px solid #2c4551;padding-top:8px}#meteor-showers h3{margin:0;font-size:14px;font-weight:500;color:#d4e3d8}#meteor-showers p{margin:5px 0;line-height:1.5}
+#sky-alert{color:#b7e4a6;font-size:15px}.meteor-note{font-size:10px}
+@media(max-width:550px){.meteor-watch{margin:6px 12px}.meteor-watch>summary{gap:6px}#meteor-content{max-height:180px}}

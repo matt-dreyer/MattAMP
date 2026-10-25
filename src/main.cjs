@@ -1,3 +1,4 @@
+const meteorOutlook=require('./meteor-showers.cjs').createOutlookCache();
 const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme,dialog}=require('electron');
 const {skyAt,location:skyLocation}=require('./night-sky.cjs');
 const {Starlink,networkLocation}=require('./sky-services.cjs');
@@ -52,7 +53,7 @@ function update(patch){
  if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
  if(['off','flow','windy','waves','stars','night-sky','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
- if(patch.skyLocation!==undefined){state.skyLocation=skyLocation(patch.skyLocation);skyCache=null;if(!state.skyLocation)locationUntil=0;}
+ if(patch.skyLocation!==undefined){state.skyLocation=skyLocation(patch.skyLocation);skyCache=null;meteorOutlook.clear();if(!state.skyLocation)locationUntil=0;}
  if(typeof patch.skyScan==='boolean')state.skyScan=patch.skyScan;
  if(['live','tour'].includes(patch.skyTime)){state.skyTime=patch.skyTime;skyCache=null;}
  if(typeof patch.skySatellites==='boolean')state.skySatellites=patch.skySatellites;
@@ -204,8 +205,9 @@ if(primaryInstance)app.whenReady().then(async()=>{
   }
   if(action!=='request'||locationPrompt)return false;
   locationPrompt=true;
-  try{const answer=await dialog.showMessageBox(win,{type:'question',title:'Night Sky location',message:'Use your approximate location for Night Sky?',detail:'MattAMP will ask your device for location. If that is unavailable, it will send your IP address to ipwho.is for a city-level estimate (VPNs may point elsewhere). Only coordinates rounded to 0.1° are saved on this device. They are never sent to the satellite service. You can forget them in Settings.',buttons:['Cancel','Allow location'],defaultId:0,cancelId:0});locationUntil=answer.response===1?Date.now()+60000:0;return answer.response===1;}finally{locationPrompt=false;}
+  try{const answer=await dialog.showMessageBox(win,{type:'question',title:'Night Sky location',message:'Use your approximate location for Night Sky?',detail:'MattAMP will ask your device for location. If that is unavailable, it will send your IP address to ipwho.is for a city-level estimate (VPNs may point elsewhere). Only coordinates rounded to 0.1° are saved on this device. They are never sent to the satellite service. You can forget them in Sky → Location.',buttons:['Cancel','Allow location'],defaultId:0,cancelId:0});locationUntil=answer.response===1?Date.now()+60000:0;return answer.response===1;}finally{locationPrompt=false;}
  });
+ handle('deck:meteor-outlook',()=>meteorOutlook.get(state.skyLocation));
  handle('deck:sky',offset=>{
   if(!state.skyLocation)return null;
   const now=Date.now(),tour=state.skyTime==='tour',date=now+(tour&&Number.isFinite(offset)?Math.max(-604800000,Math.min(604800000,offset)):0);

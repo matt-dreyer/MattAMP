@@ -1,6 +1,6 @@
 class MattSkyUI {
  constructor({ambient,getState,save,onOpen=()=>{},onClose=()=>{}}){
-  this.onOpen=onOpen;this.onClose=onClose;this.ambient=ambient;this.getState=getState;this.save=save;this.active=false;this.timer=0;this.frame=0;this.busy=false;this.generation=0;this.pointer={x:.5,y:.5,inside:false};
+  this.onOpen=onOpen;this.onClose=onClose;this.ambient=ambient;this.getState=getState;this.save=save;this.active=false;this.timer=0;this.frame=0;this.busy=false;this.generation=0;this.pointer={x:.5,y:.5,inside:false};this.meteorKey=null;this.meteorAt=0;this.meteorBusy=false;
   this.$=id=>document.getElementById(id);this.dialog=this.$('sky-view');this.map=this.$('sky-map');this.scene=ambient.nightSky;this.motion=matchMedia('(prefers-reduced-motion: reduce)');
   for(const id of ['sky-time','sky-view-clock'])this.$(id).onchange=async e=>{await this.save({skyTime:e.target.value});this.scene.clock.configure(e.target.value);this.scene.data=null;this.render();await this.refresh();};
   for(const id of ['sky-scan','sky-view-scan'])this.$(id).onchange=async e=>{await this.save({skyScan:e.target.checked});this.render();this.draw();};
@@ -47,7 +47,7 @@ class MattSkyUI {
   const s=this.getState();if(!s)return;
   this.$('sky-settings').hidden=s.ambient!=='night-sky';this.$('sky-satellites').checked=this.$('sky-view-satellites').checked=s.skySatellites;this.$('sky-satellites').disabled=this.$('sky-view-satellites').disabled=s.skyTime==='tour';this.scene.clock.configure(s.skyTime);this.$('sky-time').value=this.$('sky-view-clock').value=s.skyTime||'live';this.$('sky-clock-readout').hidden=!(s.ambient==='night-sky'&&s.appearance==='modern'&&s.skyTime==='tour'&&s.skyLocation);
   this.scene.scan=s.skyScan!==false;this.$('sky-scan').checked=this.$('sky-view-scan').checked=this.scene.scan;
-  const loc=s.skyLocation;this.$('sky-quick-open').hidden=!this.active||this.isOpen;this.$('deck').classList.toggle('sky-clickable',this.active&&!!loc);
+  const loc=s.skyLocation;void this.refreshMeteors();this.$('sky-quick-open').hidden=!this.active||this.isOpen;this.$('deck').classList.toggle('sky-clickable',this.active&&!!loc);
   this.$('sky-empty').hidden=!!loc;this.map.hidden=!loc;this.$('sky-location-controls').open=!loc;this.$('sky-location-controls').querySelector('summary').textContent=loc?`Location · ${loc.latitude.toFixed(1)}°, ${loc.longitude.toFixed(1)}°`:'Choose your sky location';this.$('sky-forget').disabled=!loc;
   this.$('sky-location-status').textContent=loc?`${loc.latitude.toFixed(1)}°, ${loc.longitude.toFixed(1)}° — ${loc.source==='network'?'network estimate; check if using a VPN':loc.source==='device'?'device location':'chosen coordinates'}. Saved only on this device.`:'No location saved. Allow location or enter coordinates to light up your sky.';
  }
@@ -56,10 +56,36 @@ class MattSkyUI {
   if(!this.getState()?.skyLocation||document.hidden||this.blocked||((!active||this.motion.matches)&&!this.isOpen)){cancelAnimationFrame(this.frame);this.frame=0;return;}
   void this.refresh();this.animate();
  }
+ async refreshMeteors(){
+  const loc=this.getState()?.skyLocation,key=JSON.stringify(loc);
+  if(!loc){this.meteorKey=null;this.meteorAt=0;this.$('meteor-headline').textContent='Choose a location for your seven-day outlook';this.$('meteor-content').hidden=true;this.$('sky-alert').hidden=true;this.$('source-sky').title='Explore your sky';return;}
+  if(this.meteorBusy||(this.meteorKey===key&&Date.now()-this.meteorAt<1800000))return;
+  this.meteorBusy=true;
+  try{
+   const data=await this.unwrap(window.deck.meteorOutlook());
+   if(!data||key!==JSON.stringify(this.getState()?.skyLocation))return;
+   this.meteorKey=key;this.meteorAt=Date.now();this.$('meteor-content').hidden=false;
+   const peaks=data.showers.filter(s=>s.peakThisWeek),visible=peaks.filter(s=>s.window);
+   this.$('sky-alert').hidden=!visible.length;
+   this.$('source-sky').title=visible.length?`Meteor watch: ${visible.map(s=>s.name).join(', ')} peak this week`:'Explore your sky';
+   this.$('meteor-headline').textContent=peaks.length?`${peaks.map(s=>s.name).join(', ')} · peak this week`:`${data.showers.length} active shower${data.showers.length===1?'':'s'} · no peak this week`;
+   const day=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'}),peak=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'}),time=t=>new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+   this.$('meteor-period').textContent=`Next 7 days · ${day(data.at)}–${day(data.until)} · times in ${Intl.DateTimeFormat().resolvedOptions().timeZone} (device timezone)`;
+   const list=this.$('meteor-showers');list.replaceChildren();
+   for(const s of data.showers){
+    const card=document.createElement('article'),title=document.createElement('h3'),date=document.createElement('p'),window=document.createElement('p');
+    title.textContent=s.name;date.textContent=`${s.activeNow?'Active now':'Starts this week'} · approximate peak ${peak(s.peak)} (UTC date)`;
+    window.textContent=s.window?`Suggested hour: ${time(s.window.start)} – ${time(s.window.end)}. Moon ${Math.round(s.window.moonIllumination*100)}% lit, ${s.window.moonUp?(s.window.moonIllumination>.5?'above the horizon; bright moonlight will wash out fainter meteors':'above the horizon; some interference possible'):'below the horizon'}.`:s.reason;
+    card.append(title,date,window);list.append(card);
+   }
+   this.$('meteor-next').textContent=data.next?`Next peak after this week: ${data.next.name} · around ${peak(data.next.peak)}.`:'No further peak in the bundled calendar.';
+  }catch{this.$('meteor-headline').textContent='Outlook unavailable · reopen Sky to retry';this.meteorAt=0;}
+  finally{this.meteorBusy=false;}
+ }
  async refresh(){
   if(this.busy)return;
   const loc=this.getState()?.skyLocation;if(!loc||document.hidden||this.blocked||((!this.active||this.motion.matches)&&!this.isOpen))return;
-  const key=JSON.stringify(loc);this.busy=true;
+  void this.refreshMeteors();const key=JSON.stringify(loc);this.busy=true;
   try{
    const data=await this.unwrap(window.deck.sky(this.scene.clock.offset()));
    if(key!==JSON.stringify(this.getState()?.skyLocation))return;

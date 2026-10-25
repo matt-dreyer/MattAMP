@@ -1,0 +1,126 @@
+{
+  "source": "https://www.imo.net/files/meteor-shower/cal2026.pdf",
+  "year": 2026,
+  "showers": [
+    {
+      "name": "Quadrantids",
+      "start": "12-28",
+      "end": "01-12",
+      "peak": "01-03",
+      "ra": 230,
+      "dec": 49
+    },
+    {
+      "name": "Alpha Centaurids",
+      "start": "01-31",
+      "end": "02-20",
+      "peak": "02-08",
+      "ra": 211,
+      "dec": -58
+    },
+    {
+      "name": "Lyrids",
+      "start": "04-14",
+      "end": "04-30",
+      "peak": "04-22",
+      "ra": 271,
+      "dec": 34
+    },
+    {
+      "name": "Eta Aquariids",
+      "start": "04-19",
+      "end": "05-28",
+      "peak": "05-06",
+      "ra": 338,
+      "dec": -1
+    },
+    {
+      "name": "Southern Delta Aquariids",
+      "start": "07-12",
+      "end": "08-23",
+      "peak": "07-31",
+      "ra": 340,
+      "dec": -16
+    },
+    {
+      "name": "Alpha Capricornids",
+      "start": "07-03",
+      "end": "08-15",
+      "peak": "07-31",
+      "ra": 307,
+      "dec": -10
+    },
+    {
+      "name": "Perseids",
+      "start": "07-17",
+      "end": "08-24",
+      "peak": "08-13",
+      "ra": 48,
+      "dec": 58
+    },
+    {
+      "name": "Aurigids",
+      "start": "08-28",
+      "end": "09-05",
+      "peak": "09-01",
+      "ra": 91,
+      "dec": 39
+    },
+    {
+      "name": "Draconids",
+      "start": "10-06",
+      "end": "10-10",
+      "peak": "10-09",
+      "ra": 262,
+      "dec": 54
+    },
+    {
+      "name": "Orionids",
+      "start": "10-02",
+      "end": "11-07",
+      "peak": "10-21",
+      "ra": 95,
+      "dec": 16
+    },
+    {
+      "name": "Southern Taurids",
+      "start": "09-20",
+      "end": "11-20",
+      "peak": "11-05",
+      "ra": 52,
+      "dec": 15
+    },
+    {
+      "name": "Northern Taurids",
+      "start": "10-20",
+      "end": "12-10",
+      "peak": "11-12",
+      "ra": 58,
+      "dec": 22
+    },
+    {
+      "name": "Leonids",
+      "start": "11-06",
+      "end": "11-30",
+      "peak": "11-17",
+      "ra": 152,
+      "dec": 22
+    },
+    {
+      "name": "Geminids",
+      "start": "12-04",
+      "end": "12-20",
+      "peak": "12-14",
+      "ra": 112,
+      "dec": 33
+    },
+    {
+      "name": "Ursids",
+      "start": "12-17",
+      "end": "12-26",
+      "peak": "12-22",
+      "ra": 217,
+      "dec": 76
+    }
+  ]
+}

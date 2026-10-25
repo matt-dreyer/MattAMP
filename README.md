@@ -356,7 +356,12 @@ workstation telemetry. Install version 1.1.0 or later to use //e.
 
 **Two-week drift** glides from last week into next week and eases back, with roughly one sky rotation per minute and a clearly marked simulated date. Optional Starlink trails in **Live now** use sampled, cached orbital data; they show predicted positions, including satellites you cannot actually see. Decorative **Starfield** remains a separate choice. [Location, satellite data, and sky details](docs/guide.md#night-sky)
 
+
+**Meteor watch:** Sky includes a location-aware seven-day outlook for selected annual showers, suggested dark viewing hours and moonlight conditions. A subtle Sky indicator flags upcoming peaks. Uses offline seasonal estimates from the [IMO calendar](https://www.imo.net/files/meteor-shower/cal2026.pdf), with no extra location sharing.
+
 ![Sky mode with its own controls, shown using example Sierra Nevada coordinates](docs/images/night-sky.png)
+
+![Meteor watch with viewing windows for example Sierra Nevada coordinates](docs/images/meteor-watch.png)
 
 
 CPU, memory, and network readings update every two seconds. Download and upload rates display in Mbps in Modern, Kbps in ’90s, and bps in //e, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
