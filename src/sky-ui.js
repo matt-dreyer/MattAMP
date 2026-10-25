@@ -3,6 +3,7 @@ class MattSkyUI {
   this.ambient=ambient;this.getState=getState;this.save=save;this.active=false;this.timer=0;this.frame=0;this.busy=false;this.generation=0;this.pointer={x:.5,y:.5,inside:false};
   this.$=id=>document.getElementById(id);this.dialog=this.$('sky-view');this.map=this.$('sky-map');this.scene=ambient.nightSky;this.motion=matchMedia('(prefers-reduced-motion: reduce)');
   for(const id of ['sky-time','sky-view-clock'])this.$(id).onchange=async e=>{await this.save({skyTime:e.target.value});this.scene.clock.configure(e.target.value);this.scene.data=null;this.render();await this.refresh();};
+  for(const id of ['sky-scan','sky-view-scan'])this.$(id).onchange=async e=>{await this.save({skyScan:e.target.checked});this.render();this.draw();};
   this.$('sky-find').onchange=e=>{this.scene.focus=e.target.value;this.found();this.draw();};
   for(const [id,key] of [['sky-lines','constellations'],['sky-labels','labels'],['sky-milkyway','milkyWay']])this.$(id).onchange=e=>{this.scene.layers[key]=e.target.checked;this.draw();};
   this.$('sky-locate').onclick=()=>this.locate();
@@ -22,12 +23,13 @@ class MattSkyUI {
  render(){
   const s=this.getState();if(!s)return;
   this.$('sky-settings').hidden=s.ambient!=='night-sky';this.$('sky-satellites').checked=s.skySatellites;this.$('sky-satellites').disabled=s.skyTime==='tour';this.scene.clock.configure(s.skyTime);this.$('sky-time').value=this.$('sky-view-clock').value=s.skyTime||'live';this.$('sky-clock-readout').hidden=!(s.ambient==='night-sky'&&s.appearance==='modern'&&s.skyTime==='tour'&&s.skyLocation);
+  this.scene.scan=s.skyScan!==false;this.$('sky-scan').checked=this.$('sky-view-scan').checked=this.scene.scan;
   const loc=s.skyLocation;
   this.$('sky-open').disabled=!loc;this.$('sky-forget').disabled=!loc;
   this.$('sky-location-status').textContent=loc?`${loc.latitude.toFixed(1)}°, ${loc.longitude.toFixed(1)}° — ${loc.source==='network'?'network estimate; check if using a VPN':loc.source==='device'?'device location':'chosen coordinates'}. Saved only on this device.`:'No location saved. Allow location or enter coordinates to light up your sky.';
  }
  sync(active,blocked=this.blocked){
-  this.active=active;this.blocked=blocked;this.scene.clock.paused=this.motion.matches||blocked||document.hidden||((!active||this.motion.matches)&&!this.dialog.open);clearTimeout(this.timer);this.timer=0;
+  this.active=active;this.blocked=blocked;this.scene.reducedMotion=this.motion.matches;this.scene.clock.paused=this.motion.matches||blocked||document.hidden||((!active||this.motion.matches)&&!this.dialog.open);clearTimeout(this.timer);this.timer=0;
   if(!this.getState()?.skyLocation||document.hidden||this.blocked||((!active||this.motion.matches)&&!this.dialog.open)){cancelAnimationFrame(this.frame);this.frame=0;return;}
   void this.refresh();this.animate();
  }

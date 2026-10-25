@@ -1,7 +1,22 @@
-/* The sky is a chart of real positions; only twinkle and glyph sizes are artistic. */
+/* The sky is a chart of real positions; camera motion, twinkle and glyph sizes are artistic. */
 class MattNightSky {
- constructor(){this.clock=new MattSkyClock();this.data=null;this.focus='';this.layers={constellations:true,labels:true,milkyWay:true};}
- project(az,alt,w,h,full=false){const radius=(full?Math.min(w,h)*.43:Math.max(w,h)*.62),r=radius*Math.sqrt(Math.max(0,1-Math.sin(alt*Math.PI/180))),a=az*Math.PI/180;return [w*.5-r*Math.sin(a),h*.5-r*Math.cos(a)];}
+ constructor(){this.clock=new MattSkyClock();this.data=null;this.focus='';this.scan=true;this.cameraElapsed=0;this.cameraLast=null;this.cameraBlend=1;this.layers={constellations:true,labels:true,milkyWay:true};}
+ // Camera time is independent of astronomical time, so Live now also glides.
+ stepCamera(now){
+  const dt=this.cameraLast===null?0:Math.max(0,Math.min(.08,(now-this.cameraLast)/1000));this.cameraLast=now;
+  if(this.clock.paused)return;
+  const moving=this.scan&&!this.focus;
+  if(moving)this.cameraElapsed+=dt;
+  this.cameraBlend+=((moving?1:0)-this.cameraBlend)*(1-Math.exp(-dt*2.2));
+  if(Math.abs(this.cameraBlend-(moving?1:0))<.001)this.cameraBlend=moving?1:0;
+ }
+ geometry(w,h,full=false){
+  const t=this.cameraElapsed,b=this.reducedMotion?0:this.cameraBlend,base=full?Math.min(w,h)*.43:Math.max(w,h)*.62,scanRadius=Math.hypot(w*.70,h*.67)*(1+.035*Math.sin(t/23));
+  // Different slow periods avoid a conspicuous repeating orbit or hard turnaround.
+  return {cx:w*(.5+b*.17*Math.sin(t/14)),cy:h*(.5+b*.13*Math.sin(t/19)),
+   r:base+b*(scanRadius-base),angle:b*.22*Math.sin(t/17)};
+ }
+ project(az,alt,w,h,full=false){const g=this.geometry(w,h,full),r=g.r*Math.sqrt(Math.max(0,1-Math.sin(alt*Math.PI/180))),a=az*Math.PI/180+g.angle;return [g.cx-r*Math.sin(a),g.cy-r*Math.cos(a)];}
  view(){
   const data=this.data;if(!data)return null;
   this.clock.step(performance.now());
@@ -13,8 +28,8 @@ class MattNightSky {
   return {...data,at,stars:data.stars.map(rotate),constellations:data.constellations.map(t=>({...t,center:rotate(t.center),lines:t.lines.map(line=>line.map(rotate))})),bodies,moon:bodies.find(b=>b.name==='Moon'),milkyWay:this.clouds,satellites:[],targets:data.targets.map(t=>{const body=bodies.find(b=>b.name===t.name),p=body?[body.az,body.alt]:rotate([t.az,t.alt]);return {...t,az:p[0],alt:p[1]};})};
  }
  draw(c,w,h,time,pointer,full=false){
-  const sky=this.view();if(!sky)return;
-  const project=(az,alt)=>this.project(az,alt,w,h,full),r=(full?Math.min(w,h)*.43:Math.max(w,h)*.62),cx=w*.5,cy=h*.5;
+  const sky=this.view();if(!sky)return;this.stepCamera(performance.now());
+  const project=(az,alt)=>this.project(az,alt,w,h,full),{r,cx,cy}=this.geometry(w,h,full);
   c.save();c.lineWidth=.7;c.textAlign='center';c.font='11px system-ui';
   if(full){
    const haze=c.createRadialGradient(cx,cy,0,cx,cy,r);haze.addColorStop(0,'#14283a');haze.addColorStop(.65,'#0d1b2b');haze.addColorStop(1,'#070e19');c.fillStyle=haze;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fill();
@@ -63,13 +78,16 @@ class MattNightSky {
   c.restore();
  }
  drawMilkyWay(c,w,h,full,sky){
-  const cache=full?'full':'ambient';this.milkyCaches ||= {};const key=[this.data.at,this.clock.mode==='tour'?this.cloudKey:0,w,h,full].join(':');const previous=this.milkyCaches[cache];this.milkyKey=previous?.key;this.milkyCanvas=previous?.canvas;
-  if(this.milkyKey!==key){
-   this.milkyKey=key;this.milkyCanvas ||= document.createElement('canvas');this.milkyCanvas.width=Math.ceil(w);this.milkyCanvas.height=Math.ceil(h);const ctx=this.milkyCanvas.getContext('2d');
-   ctx.save();ctx.beginPath();ctx.arc(w*.5,h*.5,(full?Math.min(w,h)*.43:Math.max(w,h)*.62),0,Math.PI*2);ctx.clip();
-   for(const layer of sky.milkyWay||[]){ctx.beginPath();for(const ring of layer){ring.forEach((p,i)=>{const q=this.project(...p,w,h,full);i?ctx.lineTo(...q):ctx.moveTo(...q);});ctx.closePath();}ctx.fillStyle=full?'rgba(116,155,183,.045)':'rgba(116,155,183,.024)';ctx.fill('evenodd');}ctx.restore();
+  // Cache the entire dome, then move it with the camera. No camera-dependent
+  // polygon rebuilds or missing cloud edges when the viewport pans or zooms.
+  const cache=full?'full':'ambient';this.milkyCaches ||= {};const key=[this.data.at,this.clock.mode==='tour'?this.cloudKey:0,full].join(':');let layer=this.milkyCaches[cache];
+  if(layer?.key!==key){
+   const canvas=layer?.canvas||document.createElement('canvas');canvas.width=canvas.height=1024;const ctx=canvas.getContext('2d');
+   ctx.save();ctx.beginPath();ctx.arc(512,512,512,0,Math.PI*2);ctx.clip();
+   for(const cloud of sky.milkyWay||[]){ctx.beginPath();for(const ring of cloud){ring.forEach(([az,alt],i)=>{const r=512*Math.sqrt(Math.max(0,1-Math.sin(alt*Math.PI/180))),a=az*Math.PI/180,q=[512-r*Math.sin(a),512-r*Math.cos(a)];i?ctx.lineTo(...q):ctx.moveTo(...q);});ctx.closePath();}ctx.fillStyle=full?'rgba(116,155,183,.045)':'rgba(116,155,183,.024)';ctx.fill('evenodd');}ctx.restore();
+   layer=this.milkyCaches[cache]={key,canvas};
   }
-  this.milkyCaches[cache]={key,canvas:this.milkyCanvas};c.drawImage(this.milkyCanvas,0,0);
+  const {cx,cy,r,angle}=this.geometry(w,h,full);c.save();c.translate(cx,cy);c.rotate(-angle);c.drawImage(layer.canvas,-r,-r,2*r,2*r);c.restore();
  }
  limbAngle(moon,sun,w,h,full){
   const D=Math.PI/180,v=p=>[Math.cos(p.alt*D)*Math.sin(p.az*D),Math.cos(p.alt*D)*Math.cos(p.az*D),Math.sin(p.alt*D)],m=v(moon),s=v(sun),dot=m.reduce((n,x,i)=>n+x*s[i],0),p=m.map((x,i)=>x+.01*(s[i]-dot*x)),len=Math.hypot(...p),q=this.project((Math.atan2(p[0],p[1])/D+360)%360,Math.asin(p[2]/len)/D,w,h,full),a=this.project(moon.az,moon.alt,w,h,full);return Math.atan2(q[1]-a[1],q[0]-a[0]);

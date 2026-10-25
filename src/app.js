@@ -5,7 +5,7 @@ const ambient=new MattAmbient($('ambient'));
 const retro=new MattRetro(root,audio);
 const apple2=new MattApple2();
 let appHidden=false;
-const skyUI=new MattSkyUI({ambient,getState:()=>state,save:async patch=>{const saved=await unwrap(window.deck.save(patch));state.skyLocation=saved.skyLocation;state.skySatellites=saved.skySatellites;state.skyTime=saved.skyTime;}});
+const skyUI=new MattSkyUI({ambient,getState:()=>state,save:async patch=>{const saved=await unwrap(window.deck.save(patch));state.skyLocation=saved.skyLocation;state.skySatellites=saved.skySatellites;state.skyTime=saved.skyTime;state.skyScan=saved.skyScan;}});
 function syncAmbient(){if(state){ambient.configure(state.appearance!=='modern'?'off':state.ambient,appHidden||mode==='bug');skyUI.sync(state.appearance==='modern'&&state.ambient==='night-sky'&&!appHidden&&mode!=='bug',appHidden||mode==='bug');skyUI.render();retro.configure(state.appearance!=='modern',!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';

@@ -27,7 +27,7 @@ if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();
 let lastResizeArgs,maximizeRestore,restoredWindowKey;
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',skyLocation:null,skySatellites:false,skyTime:'live',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',skyLocation:null,skySatellites:false,skyTime:'live',skyScan:true,chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -53,6 +53,7 @@ function update(patch){
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
  if(['off','flow','windy','waves','stars','night-sky','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
  if(patch.skyLocation!==undefined){state.skyLocation=skyLocation(patch.skyLocation);skyCache=null;if(!state.skyLocation)locationUntil=0;}
+ if(typeof patch.skyScan==='boolean')state.skyScan=patch.skyScan;
  if(['live','tour'].includes(patch.skyTime)){state.skyTime=patch.skyTime;skyCache=null;}
  if(typeof patch.skySatellites==='boolean')state.skySatellites=patch.skySatellites;
  if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
@@ -142,6 +143,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.appearance=appearance(state);state.retro=state.appearance==='retro';state.scanlines=state.scanlines===true;
  state.skyTime=state.skyTime==='tour'?'tour':'live';
+ state.skyScan=state.skyScan!==false;
  state.skyLocation=skyLocation(state.skyLocation);state.skySatellites=state.skySatellites===true;
  starlink=new Starlink(path.join(app.getPath('userData'),'sky-orbits.json'));
  state.alwaysOnTop=state.alwaysOnTop===true;

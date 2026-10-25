@@ -40,3 +40,20 @@ test('smooth sky rotation follows the ephemeris between tour snapshots',()=>{
  const loc={latitude:39,longitude:-120},date=new Date('2026-10-25T04:00:00Z'),first=skyAt(loc,date),later=skyAt(loc,new Date(+date+1800000));
  const a=first.stars.find(s=>s[4]==='Vega'),b=later.stars.find(s=>s[4]==='Vega'),moved=SkyClock.rotate(a,39,1800);assert.ok(Math.abs(moved[0]-b[0])<.001);assert.ok(Math.abs(moved[1]-b[1])<.001);
 });
+
+const vm=require('node:vm');
+function sceneForTest(){const context={MattSkyClock:SkyClock,window:{}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/night-sky.js'),'utf8'),context);return new context.window.MattNightSky();}
+test('default camera scans in Live now without changing sky time, with smooth bounded motion',()=>{
+ const scene=sceneForTest(),start=scene.project(40,45,710,560);scene.stepCamera(0);let previous=start,maxStep=0;
+ for(let ms=40;ms<=180000;ms+=40){scene.stepCamera(ms);const p=scene.project(40,45,710,560);maxStep=Math.max(maxStep,Math.hypot(p[0]-previous[0],p[1]-previous[1]));assert.ok(p.every(Number.isFinite));previous=p;}
+ assert.ok(Math.hypot(previous[0]-start[0],previous[1]-start[1])>50);assert.ok(maxStep<2,'no abrupt camera cuts');assert.equal(scene.clock.offset(),0,'camera does not advance astronomy');
+ const frozen=JSON.stringify(scene.geometry(710,560));scene.clock.paused=true;scene.stepCamera(999999);assert.equal(JSON.stringify(scene.geometry(710,560)),frozen,'hidden/paused camera stays put');
+});
+test('camera settles for object finding, scan off and reduced motion; free exploration resumes',()=>{
+ const scene=sceneForTest();scene.stepCamera(0);for(let t=40;t<=4000;t+=40)scene.stepCamera(t);
+ scene.focus='Moon';for(let t=4040;t<=8040;t+=40)scene.stepCamera(t);
+ assert.deepEqual(Array.from(scene.project(0,90,710,560,true)),[355,280],'selected objects use the whole stable dome');assert.equal(scene.geometry(710,560,true).angle,0);
+ const elapsed=scene.cameraElapsed;scene.focus='';scene.stepCamera(8080);assert.ok(scene.cameraElapsed>elapsed);
+ scene.scan=false;for(let t=8120;t<=12120;t+=40)scene.stepCamera(t);assert.equal(scene.geometry(710,560,true).r,560*.43);
+ scene.scan=true;for(let t=12160;t<=16160;t+=40)scene.stepCamera(t);scene.reducedMotion=true;assert.equal(scene.geometry(710,560,true).r,560*.43);assert.equal(scene.geometry(710,560,true).angle,0);
+});
