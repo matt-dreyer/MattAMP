@@ -1,6 +1,6 @@
 class MattSkyUI {
- constructor({ambient,getState,save}){
-  this.ambient=ambient;this.getState=getState;this.save=save;this.active=false;this.timer=0;this.frame=0;this.busy=false;this.generation=0;this.pointer={x:.5,y:.5,inside:false};
+ constructor({ambient,getState,save,onToggle=()=>{}}){
+  this.onToggle=onToggle;this.ambient=ambient;this.getState=getState;this.save=save;this.active=false;this.timer=0;this.frame=0;this.busy=false;this.generation=0;this.pointer={x:.5,y:.5,inside:false};
   this.$=id=>document.getElementById(id);this.dialog=this.$('sky-view');this.map=this.$('sky-map');this.scene=ambient.nightSky;this.motion=matchMedia('(prefers-reduced-motion: reduce)');
   for(const id of ['sky-time','sky-view-clock'])this.$(id).onchange=async e=>{await this.save({skyTime:e.target.value});this.scene.clock.configure(e.target.value);this.scene.data=null;this.render();await this.refresh();};
   for(const id of ['sky-scan','sky-view-scan'])this.$(id).onchange=async e=>{await this.save({skyScan:e.target.checked});this.render();this.draw();};
@@ -10,21 +10,34 @@ class MattSkyUI {
   this.$('sky-forget').onclick=async()=>{this.generation++;await window.deck.skyLocation('cancel');await this.setLocation(null);};
   this.$('sky-location-form').onsubmit=async e=>{e.preventDefault();this.generation++;await this.setLocation({latitude:Number(this.$('sky-lat').value),longitude:Number(this.$('sky-lon').value),source:'manual'});};
   this.$('sky-satellites').onchange=async e=>{await this.save({skySatellites:e.target.checked});await this.refresh();};
-  this.$('sky-open').onclick=()=>{this.dialog.showModal();this.sync(this.active);this.refresh();this.animate();};
+  this.$('sky-open').onclick=this.$('sky-quick-open').onclick=()=>this.open();
+  const deck=this.$('deck');let down=null;
+  deck.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};},{passive:true});
+  deck.addEventListener('click',e=>{
+   if(!this.active||this.blocked||e.defaultPrevented||e.button!==0||!this.getState()?.skyLocation||!window.getSelection()?.isCollapsed)return;
+   if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)return;
+   // Use the original event path: a control can replace its icon during its click handler.
+   if(e.composedPath().some(node=>node instanceof Element&&node.matches('button,a,input,select,textarea,label,summary,details,[role=button],[contenteditable],.titlebar,.sourcebar,#settings,#bug,#transport,#podcast-tools,#game-panel,#youtube-box,#x-panel,#camera-panel')))return;
+   this.open();
+  });
   this.$('sky-view-close').onclick=()=>this.dialog.close();
-  this.dialog.addEventListener('close',()=>{cancelAnimationFrame(this.frame);this.frame=0;this.sync(this.active);});
+  this.dialog.addEventListener('close',()=>{cancelAnimationFrame(this.frame);this.frame=0;this.sync(this.active);this.onToggle(false);});
   this.dialog.addEventListener('pointermove',e=>{const r=this.map.getBoundingClientRect();this.pointer={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height,inside:true};if(this.motion.matches)this.draw();});
   this.dialog.addEventListener('pointerleave',()=>{this.pointer.inside=false;});
   this.motion.addEventListener('change',()=>{cancelAnimationFrame(this.frame);this.frame=0;this.sync(this.active);});
   document.addEventListener('visibilitychange',()=>this.sync(this.active));
   this.observer=new ResizeObserver(()=>this.draw());this.observer.observe(this.map);
  }
+ open(){
+  if(this.dialog.open||this.blocked||!this.getState()?.skyLocation)return;
+  this.dialog.showModal();this.onToggle(true);this.sync(this.active);this.refresh();this.animate();
+ }
  async unwrap(promise){const r=await promise;if(!r.ok)throw new Error(r.error);return r.data;}
  render(){
   const s=this.getState();if(!s)return;
   this.$('sky-settings').hidden=s.ambient!=='night-sky';this.$('sky-satellites').checked=s.skySatellites;this.$('sky-satellites').disabled=s.skyTime==='tour';this.scene.clock.configure(s.skyTime);this.$('sky-time').value=this.$('sky-view-clock').value=s.skyTime||'live';this.$('sky-clock-readout').hidden=!(s.ambient==='night-sky'&&s.appearance==='modern'&&s.skyTime==='tour'&&s.skyLocation);
   this.scene.scan=s.skyScan!==false;this.$('sky-scan').checked=this.$('sky-view-scan').checked=this.scene.scan;
-  const loc=s.skyLocation;
+  const loc=s.skyLocation;this.$('sky-quick-open').hidden=!this.active||!loc;this.$('deck').classList.toggle('sky-clickable',this.active&&!!loc);
   this.$('sky-open').disabled=!loc;this.$('sky-forget').disabled=!loc;
   this.$('sky-location-status').textContent=loc?`${loc.latitude.toFixed(1)}°, ${loc.longitude.toFixed(1)}° — ${loc.source==='network'?'network estimate; check if using a VPN':loc.source==='device'?'device location':'chosen coordinates'}. Saved only on this device.`:'No location saved. Allow location or enter coordinates to light up your sky.';
  }

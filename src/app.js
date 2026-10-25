@@ -5,7 +5,7 @@ const ambient=new MattAmbient($('ambient'));
 const retro=new MattRetro(root,audio);
 const apple2=new MattApple2();
 let appHidden=false;
-const skyUI=new MattSkyUI({ambient,getState:()=>state,save:async patch=>{const saved=await unwrap(window.deck.save(patch));state.skyLocation=saved.skyLocation;state.skySatellites=saved.skySatellites;state.skyTime=saved.skyTime;state.skyScan=saved.skyScan;}});
+const skyUI=new MattSkyUI({ambient,getState:()=>state,onToggle:()=>{syncXBounds();syncGame();},save:async patch=>{const saved=await unwrap(window.deck.save(patch));state.skyLocation=saved.skyLocation;state.skySatellites=saved.skySatellites;state.skyTime=saved.skyTime;state.skyScan=saved.skyScan;}});
 function syncAmbient(){if(state){ambient.configure(state.appearance!=='modern'?'off':state.ambient,appHidden||mode==='bug');skyUI.sync(state.appearance==='modern'&&state.ambient==='night-sky'&&!appHidden&&mode!=='bug',appHidden||mode==='bug');skyUI.render();retro.configure(state.appearance!=='modern',!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
@@ -27,7 +27,7 @@ function syncWindowState({maximized}){
  button.setAttribute('aria-pressed',String(maximized));button.setAttribute('aria-label',maximized?'Restore window':'Maximize window');button.title=maximized?'Restore window':'Maximize window';button.innerHTML=icon(maximized?'copy':'square');
  if(state)render();
 }
-function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&mode==='full'&&!appHidden&&!document.hidden);}
+function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&!skyUI.dialog.open&&mode==='full'&&!appHidden&&!document.hidden);}
 function syncChrome(){
  const title=document.querySelector('.titlebar').offsetHeight,tabs=document.querySelector('.sourcebar').offsetHeight;
  root.style.setProperty('--titlebar-height',title+'px');root.style.setProperty('--sourcebar-height',tabs+'px');
@@ -36,8 +36,8 @@ function syncChrome(){
  syncXBounds();
 }
 function syncXBounds(){
- cameraPanel?.setVisible(watchingCams&&!settings&&mode==='full'&&!appHidden&&!document.hidden);
- const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&mode==='full'&&!document.hidden&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom;
+ cameraPanel?.setVisible(watchingCams&&!settings&&!skyUI.dialog.open&&mode==='full'&&!appHidden&&!document.hidden);
+ const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&!skyUI.dialog.open&&mode==='full'&&!document.hidden&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom;
  void window.deck.xBounds({visible,x:rect.x,y:rect.y,width:rect.width,height:rect.height});
 }
 function toggleX(open){watchingCams=false;playingGame=false;readingX=open;if(open){mode='full';settings=false;if(isVideo())pause();}render();}

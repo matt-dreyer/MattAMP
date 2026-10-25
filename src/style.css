@@ -138,3 +138,7 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 .sky-view-tools{display:flex;align-items:center;gap:10px;padding:6px 20px;flex-wrap:wrap;font-size:11px;color:#94b2bd}.sky-view-tools label{display:flex;align-items:center;gap:3px}.sky-view-tools select{max-width:190px;padding:6px;background:#152635;color:#c7d9dd;border:1px solid #47616c;border-radius:4px}#sky-found{margin:2px 20px 0;font-size:11px;color:#a5c4ad;min-height:15px}
 
 .brand:has(#sky-clock-readout:not([hidden])){display:flex;flex-direction:column;align-items:flex-start;gap:0}#sky-clock-readout{font-size:9px;font-weight:400;letter-spacing:0;color:#a6c6c0;line-height:12px}
+
+/* Only the open sky surface is a shortcut; foreground controls keep their actions. */
+#deck.sky-clickable .content,#deck.sky-clickable .media,#deck.sky-clickable #radio-display,#deck.sky-clickable #system{cursor:zoom-in}
+#deck.sky-clickable :is(#transport,#podcast-tools,#game-panel,#youtube-box,#x-panel,#camera-panel){cursor:default}
