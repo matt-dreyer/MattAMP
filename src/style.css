@@ -115,7 +115,7 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 #deck .window-actions button:enabled:hover{color:#fff}
 #deck .window-actions #quit-top:enabled:hover{color:#ffadb5}
 
-/* Mode navigation is icon/text, with a surface highlight only on hover. */
+/* Mode navigation keeps a surface highlight only on hover. */
 #deck .sourcebar button,
 #deck .sourcebar button:enabled:hover{
  background:transparent!important;border:0;box-shadow:none;backdrop-filter:none;
@@ -173,3 +173,15 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 #meteor-showers article{border-top:1px solid #2c4551;padding-top:8px}#meteor-showers h3{margin:0;font-size:14px;font-weight:500;color:#d4e3d8}#meteor-showers p{margin:5px 0;line-height:1.5}
 #sky-alert{color:#b7e4a6;font-size:15px}.meteor-note{font-size:10px}
 @media(max-width:550px){.meteor-watch{margin:6px 12px}.meteor-watch>summary{gap:6px}#meteor-content{max-height:180px}}
+
+/* Icons retain roomy targets; mode names float below without reflowing the bar. */
+#deck .sourcebar{flex-wrap:nowrap}
+#deck .sourcebar button{position:relative;min-height:40px;flex-direction:row}
+#deck .sourcebar button>svg{display:block;width:18px;height:18px}
+#deck .sourcebar button>.mode-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:2;display:block;height:auto;padding:6px 9px;border:1px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);font:12px/1.4 system-ui,sans-serif;text-transform:none;white-space:nowrap;visibility:hidden;pointer-events:none;box-shadow:0 3px 10px #0005}
+#deck .sourcebar button:hover>.mode-label,#deck .sourcebar button:focus-visible>.mode-label{visibility:visible}
+#deck .sourcebar button:first-child>.mode-label{left:0;transform:none}
+#deck .sourcebar button:last-of-type>.mode-label{left:auto;right:0;transform:none}
+#deck .sourcebar #sky-alert{position:absolute;top:1px;right:calc(50% - 18px);height:auto;line-height:16px}
+/* The //e compact layout formerly hid icons when labels supplied the names. */
+#deck.retro.apple2 .sourcebar button>svg{display:block;width:18px;height:18px}

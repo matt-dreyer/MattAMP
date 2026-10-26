@@ -58,7 +58,7 @@ class MattSkyUI {
  }
  async refreshMeteors(){
   const loc=this.getState()?.skyLocation,key=JSON.stringify(loc);
-  if(!loc){this.meteorKey=null;this.meteorAt=0;this.$('meteor-headline').textContent='Choose a location for your seven-day outlook';this.$('meteor-content').hidden=true;this.$('sky-alert').hidden=true;this.$('source-sky').title='Explore your sky';return;}
+  if(!loc){this.meteorKey=null;this.meteorAt=0;this.$('meteor-headline').textContent='Choose a location for your seven-day outlook';this.$('meteor-content').hidden=true;this.$('sky-alert').hidden=true;this.$('source-sky').removeAttribute('aria-description');return;}
   if(this.meteorBusy||(this.meteorKey===key&&Date.now()-this.meteorAt<1800000))return;
   this.meteorBusy=true;
   try{
@@ -67,7 +67,7 @@ class MattSkyUI {
    this.meteorKey=key;this.meteorAt=Date.now();this.$('meteor-content').hidden=false;
    const peaks=data.showers.filter(s=>s.peakThisWeek),visible=peaks.filter(s=>s.window);
    this.$('sky-alert').hidden=!visible.length;
-   this.$('source-sky').title=visible.length?`Meteor watch: ${visible.map(s=>s.name).join(', ')} peak this week`:'Explore your sky';
+   this.$('source-sky').setAttribute('aria-description',visible.length?`Meteor watch: ${visible.map(s=>s.name).join(', ')} peak this week`:'Explore your sky');
    this.$('meteor-headline').textContent=peaks.length?`${peaks.map(s=>s.name).join(', ')} · peak this week`:`${data.showers.length} active shower${data.showers.length===1?'':'s'} · no peak this week`;
    const day=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'}),peak=t=>new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'}),time=t=>new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
    this.$('meteor-period').textContent=`Next 7 days · ${day(data.at)}–${day(data.until)} · times in ${Intl.DateTimeFormat().resolvedOptions().timeZone} (device timezone)`;
