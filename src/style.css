@@ -115,7 +115,7 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 #deck .window-actions button:enabled:hover{color:#fff}
 #deck .window-actions #quit-top:enabled:hover{color:#ffadb5}
 
-/* Mode navigation is icon/text, with a surface highlight only on hover. */
+/* Mode navigation keeps a surface highlight only on hover. */
 #deck .sourcebar button,
 #deck .sourcebar button:enabled:hover{
  background:transparent!important;border:0;box-shadow:none;backdrop-filter:none;
@@ -127,3 +127,61 @@ html{scroll-padding-top:var(--chrome-height,100px)}
 /* Keep navigation opaque when transparency is unavailable or unwanted. */
 @supports not (backdrop-filter:blur(1px)){.full>.sourcebar{background:var(--shell)}}
 @media(prefers-reduced-transparency:reduce){.full>.sourcebar{background:var(--shell);backdrop-filter:none}}
+
+/* Night Sky: the detailed chart is optional; the background stays behind the controls. */
+#sky-settings .settings-row{flex-wrap:wrap}#sky-settings details{margin:10px 0}.sky-coordinates{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin:10px 0}.sky-coordinates label{flex:1;min-width:95px}.sky-coordinates input{width:100%;margin-top:5px}
+#sky-view{padding:0;width:calc(100vw - 28px);height:calc(100vh - 28px);max-width:1400px;max-height:min(920px,calc(100vw + 150px));border:1px solid #47616c;border-radius:10px;background:#080f19;color:#cedcdd;overflow:hidden;box-shadow:0 12px 70px #0008}
+#sky-view[open]{display:flex;flex-direction:column}#sky-view::backdrop{background:rgba(4,10,17,.82)}.sky-view-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px 8px}.sky-view-header h2{font-size:20px;font-weight:500;margin:0}.sky-view-header p{font-size:11px;color:#91a9b6;margin:5px 0 0}.sky-view-header button{padding:8px 12px;color:#cfdbdc;background:#192b38;border:1px solid #47616c;border-radius:6px}
+#sky-map{width:100%;flex:1;min-height:0;display:block}.sky-view-footer{padding:4px 20px 14px}.sky-view-footer p{margin:4px 0;font-size:10px;color:#809ba9}.sky-view-footer #sky-view-moon{font-size:13px;color:#d4d8bd}
+@media(max-height:400px){.sky-view-header{padding:8px 14px}.sky-view-header h2{font-size:15px}.sky-view-footer{padding:2px 14px 8px}.sky-view-footer p:last-child{display:none}}
+
+.sky-view-tools{display:flex;align-items:center;gap:10px;padding:6px 20px;flex-wrap:wrap;font-size:11px;color:#94b2bd}.sky-view-tools label{display:flex;align-items:center;gap:3px}.sky-view-tools select{max-width:190px;padding:6px;background:#152635;color:#c7d9dd;border:1px solid #47616c;border-radius:4px}#sky-found{margin:2px 20px 0;font-size:11px;color:#a5c4ad;min-height:15px}
+
+.brand:has(#sky-clock-readout:not([hidden])){display:flex;flex-direction:column;align-items:flex-start;gap:0}#sky-clock-readout{font-size:9px;font-weight:400;letter-spacing:0;color:#a6c6c0;line-height:12px}
+
+/* Only the open sky surface is a shortcut; foreground controls keep their actions. */
+#deck.sky-clickable .content,#deck.sky-clickable .media,#deck.sky-clickable #radio-display,#deck.sky-clickable #system{cursor:zoom-in}
+#deck.sky-clickable :is(#transport,#podcast-tools,#game-panel,#youtube-box,#x-panel,#camera-panel){cursor:default}
+
+/* Sky is a full workspace, beside Game; its canvas owns the remaining viewport. */
+#deck.sky-mode{height:100dvh;min-height:0;display:flex;flex-direction:column}
+#deck.sky-mode>.full{display:flex;flex:1;min-height:0;flex-direction:column}
+.sky-mode .content{display:flex;flex:1;min-height:0;flex-direction:column}
+.sky-mode .sourcebar,.sky-mode>.titlebar{flex:none}
+.sky-mode #system,.sky-mode #compact-status{display:none}
+#sky-view:not([hidden]){display:flex;flex:1;flex-direction:column;min-height:0;width:100%;height:auto;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none;overflow:auto}
+#sky-view:fullscreen{height:100vh;width:100vw;padding:12px 18px;overflow:hidden}
+.sky-view-actions{display:flex;gap:8px;flex:none}
+#sky-location-controls{margin:0 20px 6px;font-size:11px;color:#a9c4cb;flex:none}
+#sky-location-controls>summary{cursor:pointer;padding:5px 0;width:fit-content}
+#sky-location-controls .settings-row{display:flex;gap:8px;flex-wrap:wrap}
+#sky-location-controls .sky-coordinates{max-width:540px}
+#sky-location-controls input{max-width:160px}
+#sky-empty{margin:24px 20px;max-width:480px;color:#a9c4cb}
+#sky-view #sky-map{min-height:140px}
+.sky-view-header,.sky-view-tools,.sky-view-footer,#sky-found{flex:none}
+#deck .sourcebar{flex-wrap:wrap}
+#deck.sky-clickable #sky-view{cursor:default}
+@media(max-width:550px){.sky-view-header{padding:10px 12px 6px;align-items:flex-start;flex-wrap:wrap}.sky-view-tools{padding:6px 12px;gap:8px}.sky-view-header h2{font-size:18px}.sky-view-actions button{padding:6px}.sky-view-footer{padding:4px 12px 8px}.sky-view-footer p:last-child{display:none}}
+
+/* Meteor watch stays compact until opened, leaving the sky center stage. */
+.meteor-watch{flex:none;margin:8px 20px 4px;border:1px solid #34515f;border-radius:7px;background:#10202bcc;color:#b9d2d7}
+.meteor-watch>summary{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 12px;cursor:pointer;font-size:12px}
+.meteor-watch>summary::before{content:'✧';color:#a9d5b7;font-size:18px}.meteor-watch>summary:hover{background:#23404b88}
+#meteor-headline{color:#a9d5b7;font-size:11px}#meteor-content{padding:0 12px 10px;max-height:220px;overflow:auto;font-size:11px}
+#meteor-period,.meteor-note,#meteor-next{color:#8faab5;line-height:1.5}#meteor-showers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+#meteor-showers article{border-top:1px solid #2c4551;padding-top:8px}#meteor-showers h3{margin:0;font-size:14px;font-weight:500;color:#d4e3d8}#meteor-showers p{margin:5px 0;line-height:1.5}
+#sky-alert{color:#b7e4a6;font-size:15px}.meteor-note{font-size:10px}
+@media(max-width:550px){.meteor-watch{margin:6px 12px}.meteor-watch>summary{gap:6px}#meteor-content{max-height:180px}}
+
+/* Icons retain roomy targets; mode names float below without reflowing the bar. */
+#deck .sourcebar{flex-wrap:nowrap}
+#deck .sourcebar button{position:relative;min-height:40px;flex-direction:row}
+#deck .sourcebar button>svg{display:block;width:18px;height:18px}
+#deck .sourcebar button>.mode-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:2;display:block;height:auto;padding:6px 9px;border:1px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);font:12px/1.4 system-ui,sans-serif;text-transform:none;white-space:nowrap;visibility:hidden;pointer-events:none;box-shadow:0 3px 10px #0005}
+#deck .sourcebar button:hover>.mode-label,#deck .sourcebar button:focus-visible>.mode-label{visibility:visible}
+#deck .sourcebar button:first-child>.mode-label{left:0;transform:none}
+#deck .sourcebar button:last-of-type>.mode-label{left:auto;right:0;transform:none}
+#deck .sourcebar #sky-alert{position:absolute;top:1px;right:calc(50% - 18px);height:auto;line-height:16px}
+/* The //e compact layout formerly hid icons when labels supplied the names. */
+#deck.retro.apple2 .sourcebar button>svg{display:block;width:18px;height:18px}

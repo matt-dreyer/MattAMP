@@ -246,6 +246,7 @@ class MattWindyFlow {
 class MattAmbient {
  constructor(canvas){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.mode='off';this.paused=false;this.timer=0;this.frame=0;this.time=0;this.last=0;this.width=0;this.height=0;this.particles=[];this.stars=[];this.fractal=null;this.fractalFailed=false;this.fractalStill=null;
+  this.nightSky=new MattNightSky();
   this.fractalCamera=new MattFractalCamera();this.trench=new MattTrenchScene();this.windySeed=Math.floor(Math.random()*4294967296);
   this.pointer={inside:false,x:.5,y:.5,targetX:.5,targetY:.5,strength:0};
   const host=canvas.parentElement;
@@ -282,7 +283,7 @@ class MattAmbient {
   this.draw(0);
  }
  configure(mode,paused=false){
-  const next=['flow','windy','waves','stars','mandelbrot','trench'].includes(mode)?mode:'off';
+  const next=['flow','windy','waves','stars','night-sky','mandelbrot','trench'].includes(mode)?mode:'off';
   if(next===this.mode&&paused===this.paused)return;
   this.mode=next;this.paused=paused;this.sync();
  }
@@ -302,7 +303,8 @@ class MattAmbient {
   pointer.x+=(pointer.targetX-pointer.x)*ease;pointer.y+=(pointer.targetY-pointer.y)*ease;
   pointer.strength+=((pointer.inside?1:0)-pointer.strength)*ease;
   const mx=pointer.x*w,my=pointer.y*h,power=pointer.strength,radius=130;
-  if(this.mode==='trench'){this.drawTrench();}
+  if(this.mode==='night-sky'){this.nightSky.draw(c,w,h,this.time,pointer);}
+  else if(this.mode==='trench'){this.drawTrench();}
   else if(this.mode==='windy'){this.drawWindy(dt);}
   else if(this.mode==='mandelbrot'){this.drawFractal(dt);}
   else if(this.mode==='waves'){

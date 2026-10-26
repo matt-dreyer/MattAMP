@@ -1,4 +1,8 @@
-const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme}=require('electron');
+const meteorOutlook=require('./meteor-showers.cjs').createOutlookCache();
+const {app,BrowserWindow,ipcMain,session,Tray,Menu,nativeImage,shell,safeStorage,screen,nativeTheme,dialog}=require('electron');
+const {skyAt,location:skyLocation}=require('./night-sky.cjs');
+const {Starlink,networkLocation}=require('./sky-services.cjs');
+let locationUntil=0,locationPrompt=false,skyCache=null,starlink;
 const {APPEARANCES,appearance}=require('./appearance.cjs');
 const {createStationImages}=require('./station-image.cjs');
 const path=require('node:path');
@@ -24,7 +28,7 @@ if(!primaryInstance){app.quit();}else{app.on('second-instance',()=>{win?.show();
 let lastResizeArgs,maximizeRestore,restoredWindowKey;
 let win,tray,server,origin,timer,fullBounds,gameBounds,gameSession,mode='full',busy=false,secret='',quitting=false,startupClaimed=false;
 const stateFile=()=>path.join(app.getPath('userData'),'state.json');
-let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
+let state={appearance:'modern',scanlines:false,retro:false,tabSounds:true,gameShotReadouts:true,cameraCycle:false,cameraCycleMinutes:15,cameras:normalizeCameras(),cameraId:'sierra-grandview',podcasts:normalizeLibrary(),layout:'sidecar',source:'radio',station:'futuresynthpop',show:'lastweek',podcastType:'youtube',volume:35,speed:1,alwaysOnTop:false,details:false,ambient:'flow',skyLocation:null,skySatellites:false,skyTime:'live',skyScan:true,chaos:'mixed',xAccounts:DEFAULT_ACCOUNTS,xAiOnly:true,positions:{},selected:{}};
 function save(){fs.mkdirSync(app.getPath('userData'),{recursive:true,mode:0o700});const target=stateFile();fs.writeFileSync(target+'.tmp',JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(target+'.tmp',target);}
 let keyringAvailable=false,keyringPending=false,keyringTask=null,keyRevision=0;
 function keyring(){return keyringAvailable;}
@@ -48,7 +52,11 @@ function update(patch){
  if([1,5,15,30,60].includes(patch.cameraCycleMinutes))state.cameraCycleMinutes=patch.cameraCycleMinutes;
  if(state.cameras.some(c=>c.id===patch.cameraId))state.cameraId=patch.cameraId;
  if(patch.xAccounts!==undefined)state.xAccounts=accounts(patch.xAccounts);
- if(['off','flow','windy','waves','stars','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(['off','flow','windy','waves','stars','night-sky','mandelbrot','trench'].includes(patch.ambient))state.ambient=patch.ambient;
+ if(patch.skyLocation!==undefined){state.skyLocation=skyLocation(patch.skyLocation);skyCache=null;meteorOutlook.clear();if(!state.skyLocation)locationUntil=0;}
+ if(typeof patch.skyScan==='boolean')state.skyScan=patch.skyScan;
+ if(['live','tour'].includes(patch.skyTime)){state.skyTime=patch.skyTime;skyCache=null;}
+ if(typeof patch.skySatellites==='boolean')state.skySatellites=patch.skySatellites;
  if(['off','mixed','unhinged'].includes(patch.chaos))state.chaos=patch.chaos;
  if(typeof patch.xAiOnly==='boolean')state.xAiOnly=patch.xAiOnly;
  if(['sidecar','stack'].includes(patch.layout))state.layout=patch.layout;
@@ -73,26 +81,27 @@ function update(patch){
 function send(channel,data){if(win&&!win.isDestroyed())win.webContents.send(channel,data);}
 function trusted(event){return event.sender===win?.webContents && event.senderFrame===win.webContents.mainFrame && event.senderFrame.url.startsWith(origin+'/');}
 function handle(name,fn){ipcMain.handle(name,async(event,...args)=>{if(!trusted(event))throw new Error('Unavailable');try{return {ok:true,data:await fn(...args)};}catch(e){return {ok:false,error:String(e.message).replace(/https?:\/\/\S+/g,'[service]').slice(0,250)};}});}
-function windowSizeKey(view,expanded,game){return [view,state.layout,!!game,expanded].join(':');}
+function windowSizeKey(view,expanded,game){return [view,state.layout,game==='sky'?'sky':!!game,expanded].join(':');}
 function resize(view,height,expanded=false,game=''){
  if(!win||!['full','compact','bug'].includes(view))return;
  lastResizeArgs=[view,height,expanded,game];const key=windowSizeKey(view,expanded,game);
+ if(win.isFullScreen())return;
  // Native maximize owns the bounds; content updates must not shrink it.
  // An explicit layout change or leaving Game returns to normal widget sizing.
  if(win.isMaximized()){if(maximizeRestore&&maximizeRestore.key!==key)win.unmaximize();return;}
  if(restoredWindowKey===key)return;
  restoredWindowKey=null;
  const area=screen.getDisplayMatching(win.getBounds()).workArea;
- const playing=game==='play'&&view==='full';
- if(!['play','settings','bug'].includes(game))gameSession=null;
+ const playing=['play','sky'].includes(game)&&view==='full';
+ if(!['play','sky','settings','bug'].includes(game))gameSession=null;
  else if(!playing&&gameSession&&!gameSession.suspended){gameSession.bounds=win.getBounds();gameSession.suspended=true;}
  // Content changes (replay, scores, heckles) must not resize a game window.
  // Temporary settings/bug views restore the latest user-chosen bounds on return.
- if(playing&&gameSession&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
+ if(playing&&gameSession&&gameSession.kind===game&&gameSession.layout===state.layout&&gameSession.expanded===expanded){
   if(gameSession.suspended){win.setResizable(true);win.setMinimumSize(expanded?Math.min(640,area.width):340,expanded?Math.min(480,area.height):260);win.setBounds(gameSession.bounds);gameSession.suspended=false;}
   mode='full';return;
  }
- const rememberGame=()=>{if(playing)gameSession={layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
+ const rememberGame=()=>{if(playing)gameSession={kind:game,layout:state.layout,expanded,bounds:win.getBounds(),suspended:false};};
  if(expanded===true&&view==='full'&&game!=='settings'){
   if(!gameBounds){gameBounds=win.getBounds();const h=Math.round(area.height*.9),w=Math.min(area.width-32,Math.max(900,Math.round(h*1.8)));win.setResizable(true);win.setMinimumSize(Math.min(640,area.width),Math.min(480,area.height));win.setBounds({x:area.x+Math.round((area.width-w)/2),y:area.y+Math.round((area.height-h)/2),width:w,height:h});}
   mode='full';rememberGame();return;
@@ -114,7 +123,7 @@ function resize(view,height,expanded=false,game=''){
 }
 function quit(){if(quitting)return;quitting=true;send('deck:quit');setTimeout(()=>app.quit(),350);}
 async function startServer(){
- const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/apple2.js':'apple2.js','/apple2.css':'apple2.css','/apple2-font.ttf':'../assets/fonts/VT323-Regular.ttf','/tab-sounds/apple2.wav':'../assets/tab-sounds/apple2.wav','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
+ const routes={ '/':'index.html','/app.js':'app.js','/ski-cams-ui.js':'ski-cams-ui.js','/apple2.js':'apple2.js','/apple2.css':'apple2.css','/apple2-font.ttf':'../assets/fonts/VT323-Regular.ttf','/tab-sounds/apple2.wav':'../assets/tab-sounds/apple2.wav','/retro.js':'retro.js','/retro.css':'retro.css','/ambient.js':'ambient.js','/night-sky.js':'night-sky.js','/sky-clock.js':'sky-clock.js','/sky-ui.js':'sky-ui.js','/victory.js':'victory.js','/three.module.js':'../node_modules/three/build/three.module.js','/three.core.js':'../node_modules/three/build/three.core.js','/victory-font.ttf':'../assets/arcade/victory-font.ttf','/artillery.js':'artillery.js','/artillery-ui.js':'artillery-ui.js','/artillery.css':'artillery.css','/style.css':'style.css','/tab-sounds/modem.wav':'../assets/tab-sounds/modem.wav','/startup.mp3':'../assets/startup.mp3','/lucide.js':'../node_modules/lucide/dist/umd/lucide.js' };
  for(const name of ['tank.png','tracks.png','blast.png','fire.ogg','blast.ogg','split.ogg','win.ogg','loss.ogg','metal-slug-tank.png','metal-slug-blasts.png','worms-fire.ogg','worms-split.ogg',...Array.from({length:3},(_,i)=>'worms-blast-'+(i+1)+'.ogg'),...Array.from({length:12},(_,i)=>'blast-'+(i+1)+'.png')])routes['/arcade/'+name]='../assets/arcade/'+name;
  for(const name of ['hell-yeah','send-it','meh','yeah'])routes['/tab-sounds/'+name+'.mp3']='../assets/tab-sounds/'+name+'.mp3';
  server=http.createServer((req,res)=>{
@@ -135,6 +144,10 @@ if(primaryInstance)app.whenReady().then(async()=>{
  try{state.podcasts=normalizeLibrary(state.podcasts);}catch{state.podcasts=normalizeLibrary();}
  Object.assign(state,selection(state.podcasts,state.show,state.podcastType));
  state.appearance=appearance(state);state.retro=state.appearance==='retro';state.scanlines=state.scanlines===true;
+ state.skyTime=state.skyTime==='tour'?'tour':'live';
+ state.skyScan=state.skyScan!==false;
+ state.skyLocation=skyLocation(state.skyLocation);state.skySatellites=state.skySatellites===true;
+ starlink=new Starlink(path.join(app.getPath('userData'),'sky-orbits.json'));
  state.alwaysOnTop=state.alwaysOnTop===true;
  state.tabSounds=state.tabSounds!==false;
  state.gameShotReadouts=state.gameShotReadouts!==false;
@@ -144,8 +157,10 @@ if(primaryInstance)app.whenReady().then(async()=>{
  if(!state.cameras.some(c=>c.id===state.cameraId))state.cameraId=state.cameras[0]?.id||'';
  state.positions ||= {};state.selected ||= {};
  await startServer();
- session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
- session.defaultSession.setPermissionCheckHandler(()=>false);
+ // Only our own main frame can enter fullscreen; remote players stay denied.
+ const allowMainPermission=(wc,permission,url,main)=>!!(wc===win?.webContents&&main&&url?.startsWith(origin+'/')&&(permission==='fullscreen'||permission==='geolocation'&&Date.now()<locationUntil));
+ session.defaultSession.setPermissionRequestHandler((wc,permission,callback,details)=>callback(allowMainPermission(wc,permission,details.requestingUrl,details.isMainFrame)));
+ session.defaultSession.setPermissionCheckHandler((wc,permission,_origin,details)=>allowMainPermission(wc,permission,details.requestingUrl,details.isMainFrame));
  session.defaultSession.webRequest.onBeforeSendHeaders({urls:['https://www.youtube.com/embed/*','https://www.youtube-nocookie.com/embed/*']},(details,callback)=>{
   details.requestHeaders.Referer='https://ai.fshbwl.deck/';callback({requestHeaders:details.requestHeaders});
  });
@@ -165,6 +180,7 @@ if(primaryInstance)app.whenReady().then(async()=>{
   send('deck:window-state',{maximized:false});
   if(lastResizeArgs)resize(...lastResizeArgs);
  });
+ win.on('leave-full-screen',()=>{if(lastResizeArgs)resize(...lastResizeArgs);});
  win.on('minimize',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('hide',()=>{xFeed?.hide();skiCams?.hide();send('deck:hidden');});
  win.on('show',()=>send('deck:shown'));
@@ -181,6 +197,25 @@ if(primaryInstance)app.whenReady().then(async()=>{
  handle('deck:x-bounds',rect=>xFeed.bounds(rect));
  handle('deck:x-action',(action,lane)=>xFeed.action(action,lane));
  handle('deck:artwork',async()=>Object.fromEntries(Object.keys(await stationArtwork()).filter(id=>STATIONS.some(station=>station.id===id)).map(id=>[id,'/station-art/'+id])));
+ handle('deck:sky-location',async action=>{
+  if(action==='cancel'){locationUntil=0;return false;}
+  if(action==='network'){
+   if(Date.now()>=locationUntil)throw new Error('Allow location first.');locationUntil=0;
+   return networkLocation();
+  }
+  if(action!=='request'||locationPrompt)return false;
+  locationPrompt=true;
+  try{const answer=await dialog.showMessageBox(win,{type:'question',title:'Night Sky location',message:'Use your approximate location for Night Sky?',detail:'MattAMP will ask your device for location. If that is unavailable, it will send your IP address to ipwho.is for a city-level estimate (VPNs may point elsewhere). Only coordinates rounded to 0.1° are saved on this device. They are never sent to the satellite service. You can forget them in Sky → Location.',buttons:['Cancel','Allow location'],defaultId:0,cancelId:0});locationUntil=answer.response===1?Date.now()+60000:0;return answer.response===1;}finally{locationPrompt=false;}
+ });
+ handle('deck:meteor-outlook',()=>meteorOutlook.get(state.skyLocation));
+ handle('deck:sky',offset=>{
+  if(!state.skyLocation)return null;
+  const now=Date.now(),tour=state.skyTime==='tour',date=now+(tour&&Number.isFinite(offset)?Math.max(-604800000,Math.min(604800000,offset)):0);
+  if(!skyCache||Math.abs(date-skyCache.at)>=(tour?1000:10000))skyCache=skyAt(state.skyLocation,new Date(date));
+  if(tour)return {...skyCache,satellites:[],satelliteStatus:'Starlink paused during time travel'};
+  if(state.skySatellites){if(!starlink.library||now>=starlink.next)void starlink.refresh();return {...skyCache,satellites:starlink.tracks(state.skyLocation,new Date(skyCache.at)),satelliteStatus:starlink.status};}
+  return {...skyCache,satellites:[],satelliteStatus:'Starlink off'};
+ });
  handle('deck:init',()=>{const playStartup=!startupClaimed;startupClaimed=true;return {state:publicState(),stations:STATIONS,shows:state.podcasts,origin,playStartup,maximized:win.isMaximized()};});
  const arcade=createArcadeStore(path.join(app.getPath('userData'),'arcade-scores.json'));
  handle('deck:arcade-read',()=>arcade.read());

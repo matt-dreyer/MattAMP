@@ -63,7 +63,7 @@ Browse the tabs, layouts, and backgrounds below, or jump to the new [Retro previ
 </details>
 
 <details>
-<summary>Backgrounds — particles, Windy, waves, stars, fractals, Trench Run, or none</summary>
+<summary>Backgrounds — particles, Windy, waves, real skies, fractals, Trench Run, or none</summary>
 
 | Particle flow | Water waves |
 | --- | --- |
@@ -112,7 +112,7 @@ Get the current installers and portable apps from **[GitHub Releases](https://gi
 | Apple Silicon Mac | `mac-arm64.dmg` or `.zip` |
 | Intel Mac | `mac-x64.dmg` or `.zip` |
 
-Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.5.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
+Windows packages are unsigned; Mac packages are ad-hoc signed and not notarized. See the [release notes](docs/release-1.1.6.md) for first-launch instructions and platform limitations. Check downloads against the release's `SHA256SUMS.txt`.
 
 <details>
 <summary>Earlier Linux bundle (before SkiCams)</summary>
@@ -350,7 +350,19 @@ workstation telemetry. Install version 1.1.0 or later to use //e.
 
 **Optional nonsense:** “Send it!” for SkiCams, an action-hero “Hell yeah!” for Game, “Meh” for Podcasts/Twitter, and a long “Yeeeeah” for DI.FM. Switch **Silly sound effects** off in Settings whenever civilization requires it.
 
-**Live backgrounds:** Particle flow, Windy, Water waves, Starfield, Mandelbrot zoom, Trench Run, or Off. They react to the mouse. Particle flow sends layered cyan, mint, and muted-blue trails through shifting eddies; hovering stirs a curling wake. Windy is a separate wind-map-inspired effect with long trails, subtle color shading, passing hurricane eyes and broad currents between storms. Its seeded three-minute chapters vary direction, size and rotation, including storm-free chapters; it is decorative local animation, not live weather. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Trench Run is an endless, Star Wars vector-arcade-inspired flight through a geometric canyon: sharp corners, narrowing passages, varied wall panels, recessed floor shafts, and occasional dim enemy cannon bolts. Tight gaps bring steep knife-edge banks and full barrel rolls about once a minute; the text and controls stay upright. Mouse movement adds a little steering feel. A new procedural route is seeded each launch; there is no short repeating loop. Animation pauses when hidden or in bug mode and respects reduced motion.
+**Live backgrounds:** Particle flow, Windy, Water waves, Starfield, Night Sky, Mandelbrot zoom, Trench Run, or Off. They react to the mouse. Particle flow sends layered cyan, mint, and muted-blue trails through shifting eddies; hovering stirs a curling wake. Windy is a separate wind-map-inspired effect with long trails, subtle color shading, passing hurricane eyes and broad currents between storms. Its seeded three-minute chapters vary direction, size and rotation, including storm-free chapters; it is decorative local animation, not live weather. Mandelbrot wanders through different regions with glides, curves, and spirals—a little Fractint affection, without turning the room into a flashlight. Trench Run is an endless, Star Wars vector-arcade-inspired flight through a geometric canyon: sharp corners, narrowing passages, varied wall panels, recessed floor shafts, and occasional dim enemy cannon bolts. Tight gaps bring steep knife-edge banks and full barrel rolls about once a minute; the text and controls stay upright. Mouse movement adds a little steering feel. A new procedural route is seeded each launch; there is no short repeating loop. Animation pauses when hidden or in bug mode and respects reduced motion.
+
+**Night Sky** turns your widget into a little planetarium. Give it permission to use approximate device location, or enter coordinates. It plots real stars, constellations, the Milky Way, the Moon’s phase, and planets against your horizon using the current clock. The **Sky** tab opens a dedicated, resizable workspace with location setup and a **Full screen** button. Radio keeps playing underneath. You can also click the sky background or title-bar telescope. The Sky Map–inspired chart comes with an object finder and layer switches. **Scan sky** is on by default: a slow camera sweep with gentle turns and zoom, independent of the sky clock. Turn it off for a fixed chart; choosing an object also settles the view until you return to Explore freely. Reduced-motion preferences keep it still.
+
+**Two-week drift** glides from last week into next week and eases back, with roughly one sky rotation per minute and a clearly marked simulated date. Optional Starlink trails in **Live now** use sampled, cached orbital data; they show predicted positions, including satellites you cannot actually see. Decorative **Starfield** remains a separate choice. [Location, satellite data, and sky details](docs/guide.md#night-sky)
+
+
+**Meteor watch:** Sky includes a location-aware seven-day outlook for selected annual showers, suggested dark viewing hours and moonlight conditions. A subtle Sky indicator flags upcoming peaks. Uses offline seasonal estimates from the [IMO calendar](https://www.imo.net/files/meteor-shower/cal2026.pdf), with no extra location sharing.
+
+![Sky mode with its own controls, shown using example Sierra Nevada coordinates](docs/images/night-sky.png)
+
+![Meteor watch with viewing windows for example Sierra Nevada coordinates](docs/images/meteor-watch.png)
+
 
 CPU, memory, and network readings update every two seconds. Download and upload rates display in Mbps in Modern, Kbps in ’90s, and bps in //e, including compact mode. RAM and GPU memory readouts use MiB. NVIDIA GPU readings use `nvidia-smi`; absent sensors show as unavailable. Expand network status for router/internet checks.
 

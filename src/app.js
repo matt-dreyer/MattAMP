@@ -5,7 +5,8 @@ const ambient=new MattAmbient($('ambient'));
 const retro=new MattRetro(root,audio);
 const apple2=new MattApple2();
 let appHidden=false;
-function syncAmbient(){if(state){ambient.configure(state.appearance!=='modern'?'off':state.ambient,appHidden||mode==='bug');retro.configure(state.appearance!=='modern',!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
+const skyUI=new MattSkyUI({ambient,getState:()=>state,onOpen:enterSky,onClose:exitSky,save:async patch=>{const saved=await unwrap(window.deck.save(patch));state.skyLocation=saved.skyLocation;state.skySatellites=saved.skySatellites;state.skyTime=saved.skyTime;state.skyScan=saved.skyScan;}});
+function syncAmbient(){if(state){ambient.configure(state.appearance!=='modern'?'off':state.ambient,appHidden||mode==='bug');skyUI.sync(state.appearance==='modern'&&state.ambient==='night-sky'&&!appHidden&&mode!=='bug',appHidden||mode==='bug');skyUI.render();retro.configure(state.appearance!=='modern',!appHidden&&!document.hidden&&mode!=='bug'&&!settings,state.source==='radio'&&!readingX&&!playingGame&&!watchingCams);}}
 const startupAudio=new Audio('/startup.mp3');
 startupAudio.preload='auto';
 const tabAudio=new Audio();
@@ -19,6 +20,7 @@ function playTabSound(tab){
 }
 function stopStartup(){startupAudio.pause();startupAudio.currentTime=0;}
 let artwork={};
+let viewingSky=false,skyReturn=null;
 let readingX=false,playingGame=false,watchingCams=false,cameraPanel=null,xLane='ai';
 const arcade=new MattArcade($('game-panel'),()=>resize());
 function syncWindowState({maximized}){
@@ -26,7 +28,7 @@ function syncWindowState({maximized}){
  button.setAttribute('aria-pressed',String(maximized));button.setAttribute('aria-label',maximized?'Restore window':'Maximize window');button.title=maximized?'Restore window':'Maximize window';button.innerHTML=icon(maximized?'copy':'square');
  if(state)render();
 }
-function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&mode==='full'&&!appHidden&&!document.hidden);}
+function syncGame(){if(!playingGame&&arcade.expanded)arcade.setExpanded(false);arcade.setVisible(playingGame&&!settings&&!skyUI.isOpen&&mode==='full'&&!appHidden&&!document.hidden);}
 function syncChrome(){
  const title=document.querySelector('.titlebar').offsetHeight,tabs=document.querySelector('.sourcebar').offsetHeight;
  root.style.setProperty('--titlebar-height',title+'px');root.style.setProperty('--sourcebar-height',tabs+'px');
@@ -35,15 +37,23 @@ function syncChrome(){
  syncXBounds();
 }
 function syncXBounds(){
- cameraPanel?.setVisible(watchingCams&&!settings&&mode==='full'&&!appHidden&&!document.hidden);
- const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&mode==='full'&&!document.hidden&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom;
+ cameraPanel?.setVisible(watchingCams&&!settings&&!skyUI.isOpen&&mode==='full'&&!appHidden&&!document.hidden);
+ const rect=$('x-viewport').getBoundingClientRect(),visible=readingX&&!settings&&!skyUI.isOpen&&mode==='full'&&!document.hidden&&rect.y>=document.querySelector('.sourcebar').getBoundingClientRect().bottom;
  void window.deck.xBounds({visible,x:rect.x,y:rect.y,width:rect.width,height:rect.height});
 }
-function toggleX(open){watchingCams=false;playingGame=false;readingX=open;if(open){mode='full';settings=false;if(isVideo())pause();}render();}
+function enterSky(){
+ if(!viewingSky)skyReturn={readingX,playingGame,watchingCams};
+ viewingSky=true;readingX=false;playingGame=false;watchingCams=false;mode='full';settings=false;
+ if(isVideo())pause();render();$('sky-fullscreen').focus({preventScroll:true});
+}
+function exitSky(){
+ viewingSky=false;if(skyReturn)({readingX,playingGame,watchingCams}=skyReturn);skyReturn=null;render();$('source-sky').focus({preventScroll:true});
+}
+function toggleX(open){viewingSky=false;watchingCams=false;playingGame=false;readingX=open;if(open){mode='full';settings=false;if(isVideo())pause();}render();}
 async function xAction(action,lane=xLane){try{await unwrap(window.deck.xAction(action,lane));}catch(err){$('x-status').textContent=err.message;}}
 function renderX(){
  const visible=readingX&&mode==='full';
- $('x-panel').hidden=!visible;document.querySelector('.media').hidden=visible||playingGame||watchingCams;
+ $('x-panel').hidden=!visible;document.querySelector('.media').hidden=visible||playingGame||watchingCams||viewingSky;
  $('x-ai').setAttribute('aria-pressed',String(xLane==='ai'));$('x-giggles').setAttribute('aria-pressed',String(xLane==='giggles'));
  $('x-summary').textContent=xLane==='giggles'?'@elonmusk · a little chaos on the side':state.xAccounts.map(name=>'@'+name).join(' · ')+(state.xAiOnly?' · AI topics':' · all topics');
 }
@@ -83,7 +93,7 @@ async function persist(){if(!state)return;try{await unwrap(window.deck.save({app
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{snapshot();void persist();},300);}
 function setStatus(value,isPlaying=false){status=value;playing=isPlaying;$('play-status').textContent=value;$('play').innerHTML=icon(isPlaying?'pause':'play')+'<span>'+(isPlaying?'Pause':'Play')+'</span>';$('play').setAttribute('aria-label',isPlaying?'Pause playback':'Play');updateBug();icons();}
 function updateBug(){if(!state)return;const online=metrics?.network?.status==='online';const color=online?'#9ccab0':metrics?.network?.status==='checking'?'#a8b9c7':'#dfb574';document.querySelector('.bug-led').style.background=color;const name=state.source==='radio'?activeStation()?.name:activeShow()?.name;const description='Open MattAMP · '+name+' · '+status+' · '+(online?'Online':'Network '+(metrics?.network?.status||'checking'));$('bug').title=description;$('bug').setAttribute('aria-label',description);const old=document.querySelector('.bug-playback');const replacement=document.createElement('i');replacement.className='bug-playback';replacement.dataset.lucide=playing?'play':'pause';old.replaceWith(replacement);}
-function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+parseFloat(getComputedStyle(root).borderTopWidth)+parseFloat(getComputedStyle(root).borderBottomWidth));const expanded=arcade.expanded&&playingGame;const game=playingGame?(mode==='bug'?'bug':settings?'settings':'play'):'';const key=[mode,state.layout,h,settings,expanded,game].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h,expanded,game).then(syncXBounds);});}
+function resize(){if(resizeQueued)return;resizeQueued=true;requestAnimationFrame(()=>{resizeQueued=false;if(!state)return;const full=document.querySelector('.full');const h=mode==='bug'?56:Math.ceil(document.querySelector('.titlebar').offsetHeight+(settings?$('settings').scrollHeight:full.scrollHeight)+parseFloat(getComputedStyle(root).borderTopWidth)+parseFloat(getComputedStyle(root).borderBottomWidth));const expanded=viewingSky||arcade.expanded&&playingGame;const game=viewingSky?(mode==='bug'?'bug':settings?'settings':'sky'):playingGame?(mode==='bug'?'bug':settings?'settings':'play'):'';const key=[mode,state.layout,h,settings,expanded,game].join(':');if(lastSize===key){syncXBounds();return;}lastSize=key;void window.deck.resize(mode,h,expanded,game).then(syncXBounds);});}
 function render(){
  root.classList.toggle('retro',state.appearance!=='modern');root.classList.toggle('apple2',state.appearance==='apple2');root.classList.toggle('scanlines',state.appearance==='apple2'&&state.scanlines);
  $('appearance').value=state.appearance;$('scanlines').checked=state.scanlines;$('scanlines-setting').hidden=state.appearance!=='apple2';
@@ -91,12 +101,13 @@ function render(){
  $('appearance-hint').textContent=state.appearance==='apple2'?'Color pixels, green outlines, and an optional robotic greeting. Silly sound effects controls the greeting.':state.appearance==='retro'?'Metal trim, green LEDs, and a modem greeting. Welcome back to 1997.':'Dark glass and your chosen live background.';
  renderBandwidth();
  const podcast=state.source==='podcast',video=isVideo();
+ skyUI.setVisible(viewingSky&&!settings&&mode==='full');root.classList.toggle('sky-mode',skyUI.isOpen);$('source-sky').setAttribute('aria-pressed',String(viewingSky));
  renderX();syncAmbient();syncGame();
  root.classList.toggle('arcade-expanded',(arcade.expanded||arcade.maximized)&&playingGame&&!settings&&mode==='full');
  root.classList.toggle('game-mode',playingGame&&!settings&&mode==='full');$('game-panel').hidden=!playingGame||settings||mode!=='full';$('source-game').setAttribute('aria-pressed',String(playingGame));
  root.classList.toggle('sidecar',state.layout==='sidecar');root.classList.toggle('stack',state.layout==='stack');root.classList.toggle('compact',mode==='compact');root.classList.toggle('bug-mode',mode==='bug');root.classList.toggle('youtube',video);root.classList.toggle('details',state.details);root.classList.toggle('settings-mode',settings);
  $('source-cameras').setAttribute('aria-pressed',String(watchingCams));
- $('source-radio').setAttribute('aria-pressed',String(!watchingCams&&!readingX&&!playingGame&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!watchingCams&&!readingX&&!playingGame&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
+ $('source-radio').setAttribute('aria-pressed',String(!viewingSky&&!watchingCams&&!readingX&&!playingGame&&!podcast));$('source-podcast').setAttribute('aria-pressed',String(!viewingSky&&!watchingCams&&!readingX&&!playingGame&&podcast));$('source-x').setAttribute('aria-pressed',String(readingX));
  $('radio-display').hidden=video;$('youtube-box').hidden=!video;$('transport').hidden=video;$('retro-prev').disabled=podcast;$('retro-next').disabled=podcast;$('podcast-tools').hidden=!podcast;$('stations').hidden=podcast;$('shows').hidden=!podcast;$('settings').hidden=!settings;$('manage-podcasts').hidden=!podcast;
  $('provider').textContent=podcast?'PODCAST / AUDIO':'DI.FM / RADIO';
  $('now-title').textContent=podcast?(activeShow()?.name||'Your podcasts'):activeStation()?.name;
@@ -287,7 +298,7 @@ async function savePodcastForm(e){
 async function init(){
  const boot=await unwrap(window.deck.init());state={...boot.state,origin:boot.origin};stations=boot.stations;shows=boot.shows;
  cameraPanel=new MattSkiCams({cameras:state.cameras,cameraId:state.cameraId,cycle:state.cameraCycle,cycleMinutes:state.cameraCycleMinutes,resize,icons,openSettings:()=>{settings=true;render();syncXBounds();}});
- $('source-cameras').onclick=()=>{watchingCams=true;readingX=false;playingGame=false;mode='full';settings=false;if(isVideo())pause();render();};
+ $('source-cameras').onclick=()=>{viewingSky=false;watchingCams=true;readingX=false;playingGame=false;mode='full';settings=false;if(isVideo())pause();render();};
  arcade.setShotReadouts(state.gameShotReadouts);
  $('game-chaos').value=state.chaos;arcade.refreshPreview();
  $('game-chaos').addEventListener('change',e=>{state.chaos=e.target.value;queueSave();});
@@ -309,7 +320,7 @@ async function init(){
  window.deck.onShown(()=>{appHidden=false;syncAmbient();syncGame();requestAnimationFrame(syncXBounds);});
  window.addEventListener('resize',syncXBounds);window.addEventListener('scroll',syncXBounds);
  document.addEventListener('visibilitychange',()=>{syncXBounds();syncGame();syncAmbient();});
- $('source-game').onclick=()=>{watchingCams=false;playingGame=true;readingX=false;mode='full';settings=false;if(isVideo())pause();render();};
+ $('source-game').onclick=()=>{viewingSky=false;watchingCams=false;playingGame=true;readingX=false;mode='full';settings=false;if(isVideo())pause();render();};
  $('source-x').onclick=()=>toggleX(true);$('source-radio').onclick=()=>{toggleX(false);void switchSource('radio');};$('source-podcast').onclick=()=>{toggleX(false);void switchSource('podcast');};$('play').onclick=()=>void play();$('stop').onclick=()=>{stopAll();queueSave();};
  for(const tab of ['radio','podcast','cameras','game','x'])$('source-'+tab).addEventListener('click',()=>playTabSound(tab));
  $('game-sound').addEventListener('click',()=>{if(!arcade.sound)tabAudio.pause();});
